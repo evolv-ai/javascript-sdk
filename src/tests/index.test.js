@@ -79,14 +79,10 @@ async function validateClient(evolv, options, uid, sid) {
   expect(initializedSpy).to.have.been.called.once.with(INITIALIZED, options);
   expect(contextInitializedSpy).to.have.been.called.once;
 
-  let subscriptionSpy = chai.spy();
-  evolv.subscribe(subscriptionSpy);
-
   let contextChangedSpy = chai.spy();
   evolv.on(CONTEXT_CHANGED, contextChangedSpy);
   evolv.preload(['web']);
 
-  expect(subscriptionSpy).to.not.have.been.called;
   expect(contextChangedSpy).to.not.have.been.called;
 
   const configWebKeySpy = chai.spy();
@@ -100,7 +96,6 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.getConfig('web')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
-  expect(subscriptionSpy).to.have.been.called.exactly(4);
   expect(contextChangedSpy).to.have.been.called(2);
 
   const valueWebKeySpy = chai.spy();
@@ -115,11 +110,9 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.7w3zpgfy9')).to.be.an('undefined');
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
   expect((await evolv.getActiveKeys('web')).length).to.equal(0);
-  expect(subscriptionSpy).to.have.been.called.exactly(4);
 
   evolv.context.set('user_attributes.country', 'usa');
   expect(contextChangedSpy).to.have.been.called(3);
-  expect(subscriptionSpy).to.have.been.called.exactly(5);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2.id')).to.equal('2fxe5dy5j');
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
@@ -152,7 +145,6 @@ async function validateClient(evolv, options, uid, sid) {
 
   evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
   expect(contextChangedSpy).to.have.been.called(4);
-  expect(subscriptionSpy).to.have.been.called.exactly(6);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
@@ -167,7 +159,6 @@ async function validateClient(evolv, options, uid, sid) {
 
   evolv.context.remove('web.url');
   expect(contextChangedSpy).to.have.been.called(5);
-  expect(subscriptionSpy).to.have.been.called.exactly(7);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
@@ -200,7 +191,8 @@ async function validateClient(evolv, options, uid, sid) {
         expect(analyticsPayloads.length).to.equal(6);
         expect(analyticsPayloads[5][0]).to.equal('context.value.removed');
         expect(eventPayloads.length).to.equal(1);
-        expect(eventPayloads[0]).to.have.members(['lunch-time', 33]);
+        expect(eventPayloads[0][0]).to.equal('lunch-time');
+        expect(eventPayloads[0][1].score).to.equal(33);
         resolve();
       } catch (ex) {
         reject(ex);

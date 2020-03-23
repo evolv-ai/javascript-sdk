@@ -76,7 +76,6 @@ export default function Emitter(endpoint) {
     const json = JSON.stringify(batch);
     if (!send(endpoint, json, sync)) {
       messages = batch;
-      timer = setTimeout(transmit, DELAY);
       console.error('Evolv: Unable to send beacon');
     }
   }

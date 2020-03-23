@@ -13,8 +13,6 @@ export const GENOME_REQUEST_SENT = 'genome.request.sent';
 export const CONFIG_REQUEST_SENT = 'config.request.sent';
 export const GENOME_REQUEST_RECEIVED = 'genome.request.received';
 export const CONFIG_REQUEST_RECEIVED = 'config.request.received';
-export const GENOME_REQUEST_FAILED = 'genome.request.failed';
-export const CONFIG_REQUEST_FAILED = 'config.request.failed';
 export const REQUEST_FAILED = 'request.failed';
 export const GENOME_UPDATED = 'genome.updated';
 export const CONFIG_UPDATED = 'config.updated';
@@ -409,13 +407,11 @@ function EvolvStore(options) {
     contaminated = true;
     console.log(err);
     let keyStates;
-    emit(context, REQUEST_FAILED, configRequest, requestedKeys, err);
+    emit(context, REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
     if (configRequest) {
       keyStates = configKeyStates;
-      emit(context, CONFIG_REQUEST_FAILED, requestedKeys, err);
     } else {
       keyStates = genomeKeyStates;
-      emit(context, GENOME_REQUEST_FAILED, requestedKeys, err);
     }
     moveKeys(requestedKeys, keyStates.requested, keyStates.needed);
 

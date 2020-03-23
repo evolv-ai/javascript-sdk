@@ -8,7 +8,7 @@
     "test": "mocha",
     "build": "webpack --config=webpack.dev.cjs",
     "build-prod": "webpack --config=webpack.prod.cjs",
-    "docs": "jsdoc -d ./docs/ src/index.js"
+    "docs": "jsdoc -c jsdocs.config.json -d ./docs/ src/index.js"
   },
   "author": "",
   "license": "MIT",

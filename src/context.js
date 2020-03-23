@@ -61,20 +61,20 @@ function EvolvContext() {
 
     const updated = this.resolve();
     if (typeof before === 'undefined') {
-      emit(this, CONTEXT_VALUE_ADDED, key, value, updated);
+      emit(this, CONTEXT_VALUE_ADDED, key, value, local, updated);
     } else {
-      emit(this, CONTEXT_VALUE_CHANGED, key, value, before, updated);
+      emit(this, CONTEXT_VALUE_CHANGED, key, value, before, local, updated);
     }
     emit(this, CONTEXT_CHANGED, updated);
   };
 
-  this.remove = function(key) {
+  this.remove = function(key, local) {
     ensureInitialized();
     objects.removeValueForKey(key, localContext);
     objects.removeValueForKey(key, remoteContext);
 
     const updated = this.resolve();
-    emit(this, CONTEXT_VALUE_REMOVED, key, updated);
+    emit(this, CONTEXT_VALUE_REMOVED, key, local, updated);
     emit(this, CONTEXT_CHANGED, updated);
   };
 
