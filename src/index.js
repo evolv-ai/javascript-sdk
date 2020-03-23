@@ -16,6 +16,14 @@ export const CONTAMINATED = 'contaminated';
 export const EVENT_EMITTED = 'event.emitted';
 
 /**
+ * @typedef {Promise} SubscribablePromise
+ * @property {function(function):undefined} then Then
+ * @property {function(function):undefined} listen Listen
+ * @property {function(function):undefined} catch Catch
+ * @property {function(function):undefined} finally Finally
+ */
+
+/**
  * The EvolvClient provides a low level integration with the Evolv participant APIs.
  *
  * The client provides asynchronous access to key states, values, contexts, and configurations.
@@ -90,24 +98,86 @@ function EvolvClient(options) {
    * @see {@link EvolvClient#on} for listeners that should be invoked on each event.
    */
   this.once = waitOnceFor.bind(undefined, context);
+
+  /**
+   * Preload all keys under under the specified prefixes.
+   *
+   * @param {Array.<String>} prefixes A list of prefixes to keys to load.
+   * @param {Boolean} configOnly If true, only the config would be loaded. (default: false)
+   * @param {Boolean} immediate Forces the requests to the server. (default: false)
+   * @method
+   */
   this.preload = store.preload.bind(store);
+
+  /**
+   * Get the value of a specified key.
+   *
+   * @param {String} key The key of the value to retrieve.
+   * @returns {SubscribablePromise.<any|Error>} A SubscribablePromise that resolves to the value of the specified key.
+   * @method
+   */
   this.get = store.get.bind(store);
+
+  /**
+   * Check if a specified key is currently active.
+   *
+   * @param {String} key The key to check.
+   * @returns {SubscribablePromise.<Boolean|Error>} A SubscribablePromise that resolves to true if the specified key is
+   * active.
+   * @method
+   */
   this.isActive = store.isActive.bind(store);
+
+  /**
+   * Check all active keys that start with the specified prefix.
+   *
+   * @param {String} prefix The prefix of the keys to check.
+   * @returns {SubscribablePromise.<Array.<String>|Error>} A SubscribablePromise that resolves to an array of keys when
+   * the specified prefix.
+   * @method
+   */
   this.getActiveKeys = store.getActiveKeys.bind(store);
+
+  /**
+   * Get the configuration for a specified key.
+   *
+   * @param {String} key The key to retrieve the configuration for.
+   * @returns {SubscribablePromise.<any|Error>} A SubscribablePromise that resolves to the configuration of the
+   * specified key.
+   * @method
+   */
   this.getConfig = store.getConfig.bind(store);
   this.emit = function(type, score, flush) {
     eventBeacon.emit(type, assign({score: score}, context.remoteContext), flush);
     emit(context, EVENT_EMITTED, type, score);
   };
+
+  /**
+   * Confirm that the consumer has successfully received and applied values, making them eligible for inclusion in
+   * optimization statistics.
+   */
   this.confirm = function() {
     eventBeacon.emit('confirmation', context.remoteContext, true);
     emit(context, CONFIRMED);
   };
+
+  /**
+   * Marks a consumer as unsuccessfully retrieving and / or applying requested values, making them ineligible for
+   * inclusion in optimization statistics.
+   */
   this.contaminate = function() {
     eventBeacon.emit('contaminated', context.remoteContext, true);
     emit(context, CONTAMINATED);
   };
 
+  /**
+   * Initializes the client with required context information.
+   *
+   * @param {String} uid A globally unique identifier for the current participant.
+   * @param {String} sid A globally unique session identifier for the current participant.
+   * @param {Object} remoteContext A map of data used for evaluating context predicates and analytics.
+   * @param {Object} localContext A map of data used only for evaluating context predicates.
+   */
   this.initialize = function (uid, sid, remoteContext, localContext) {
     if (initialized) {
       throw Error('Evolv: Client is already initialized');
@@ -158,11 +228,17 @@ function EvolvClient(options) {
     emit(context, INITIALIZED, options);
   };
 
+  /**
+   * Force all beacons to transmit.
+   */
   this.flush = function() {
     eventBeacon.flush();
     contextBeacon.flush();
   };
 
+  /**
+   * Destroy the client and its dependencies.
+   */
   this.destroy = function () {
     this.flush();
     store.destroy();
