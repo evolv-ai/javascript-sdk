@@ -40,9 +40,9 @@
     "deepmerge": "^4.2.2"
   },
   "devDependencies": {
-    "jsdoc": "^3.6.3",
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
+    "jsdoc": "^3.6.3",
     "mocha": "^7.1.0",
     "webcrypto": "git+https://github.com/nodejs/webcrypto.git",
     "webpack": "^4.42.0",
