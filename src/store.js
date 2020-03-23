@@ -125,7 +125,6 @@ function transmit(method, prefix, suffix, signatureKeyId, signatureKey, payload)
     xhr.open(method,  prefix + suffix);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('Accept', 'application/json');
-    xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36');
     const encodedPayload = !payload ? '' : JSON.stringify(payload);
     if (signatureKey) {
       sign(signatureKey, str2ab(encodedPayload))

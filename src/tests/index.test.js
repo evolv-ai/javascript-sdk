@@ -1,4 +1,3 @@
-import assert from 'assert';
 import chai from 'chai';
 import spies from 'chai-spies';
 import Evolv, { INITIALIZED } from '../index.js';

@@ -9,6 +9,21 @@
     "require": "./dist/index.js"
   },
   "type": "module",
+  "homepage": "https://www.evolv.ai",
+  "bugs": {
+    "url": "https://github.com/evolv-ai/javascript-sdk/issues",
+    "email": "support@evolv.ai"
+  },
+  "directories": {
+    "doc": "./docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evolv-ai/javascript-sdk"
+  },
+  "engines": {
+    "node": ">=13"
+  },
   "scripts": {
     "prepublish": "webpack --config=webpack.prod.cjs",
     "test": "mocha",
@@ -22,10 +37,10 @@
   "license": "MIT",
   "dependencies": {
     "base64-arraybuffer": "^0.2.0",
-    "deepmerge": "^4.2.2",
-    "jsdoc": "^3.6.3"
+    "deepmerge": "^4.2.2"
   },
   "devDependencies": {
+    "jsdoc": "^3.6.3",
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "mocha": "^7.1.0",
