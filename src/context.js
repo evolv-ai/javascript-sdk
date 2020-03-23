@@ -8,6 +8,14 @@ export const CONTEXT_VALUE_ADDED = 'context.value.added';
 export const CONTEXT_VALUE_CHANGED = 'context.value.changed';
 export const CONTEXT_DESTROYED = 'context.destroyed';
 
+/**
+ * The EvolvContext provides functionality to manage data relating to the client state, or context in which the
+ * variants will be applied.
+ *
+ * This data is used for determining which variables are active, and for general analytics.
+ *
+ * @constructor
+ */
 function EvolvContext() {
   let uid;
   let sid;
@@ -15,9 +23,24 @@ function EvolvContext() {
   let localContext;
   let initialized = false;
 
+  /**
+   * A unique identifier for the participant.
+   */
   Object.defineProperty(this, 'uid', { get: function() { return uid; } });
+
+  /**
+   * A unique identifier for the current session of the participant.
+   */
   Object.defineProperty(this, 'sid', { get: function() { return sid; } });
+
+  /**
+   * The context information for evaluation of predicates and analytics.
+   */
   Object.defineProperty(this, 'remoteContext', { get: function() { return objects.deepClone(remoteContext); } });
+
+  /**
+   * The context information for evaluation of predicates only, and not used for analytics.
+   */
   Object.defineProperty(this, 'localContext', { get: function() { return objects.deepClone(localContext); } });
 
   function mutableResolve() {
@@ -48,11 +71,25 @@ function EvolvContext() {
     emit(this, CONTEXT_DESTROYED, this);
   };
 
+  /**
+   * Computes the effective context from the local and remote contexts.
+   *
+   * @returns {Object} The effective context from the local and remote contexts.
+   */
   this.resolve = function() {
     ensureInitialized();
     return objects.deepClone(mutableResolve());
   };
 
+  /**
+   * Sets a value in the current context.
+   *
+   * This will cause the effective genome to be recomputed.
+   *
+   * @param key {String} The key to associate the value to.
+   * @param value {*} The value to associate with the key.
+   * @param local {Boolean} If true, the value will only be added to the localContext.
+   */
   this.set = function(key, value, local) {
     ensureInitialized();
     const context = local ? localContext : remoteContext;
@@ -68,21 +105,40 @@ function EvolvContext() {
     emit(this, CONTEXT_CHANGED, updated);
   };
 
-  this.remove = function(key, local) {
+  /**
+   * Remove a specified key from the context.
+   *
+   * This will cause the effective genome to be recomputed.
+   *
+   * @param key {String} The key to remove from the context.
+   */
+  this.remove = function(key) {
     ensureInitialized();
     objects.removeValueForKey(key, localContext);
     objects.removeValueForKey(key, remoteContext);
 
     const updated = this.resolve();
-    emit(this, CONTEXT_VALUE_REMOVED, key, local, updated);
+    emit(this, CONTEXT_VALUE_REMOVED, key, updated);
     emit(this, CONTEXT_CHANGED, updated);
   };
 
+  /**
+   * Retrieve a value from the context.
+   *
+   * @param {String} key The kay associated with the value to retrieve.
+   * @returns {*} The value associated with the specified key.
+   */
   this.get = function(key) {
     ensureInitialized();
     return (remoteContext[key] || localContext[key]);
   };
 
+  /**
+   * Checks if the specified key is currently defined in the context.
+   *
+   * @param key The key to check.
+   * @returns {boolean} True if the key has an associated value in the context.
+   */
   this.contains = function(key) {
     ensureInitialized();
     return key in remoteContext || key in localContext;

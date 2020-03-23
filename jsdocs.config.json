@@ -2,6 +2,10 @@
   "plugins": ["plugins/markdown"],
   "opts": {
     "encoding": "utf8",
-    "destination": "./docs/"
+    "destination": "./docs/",
+    "template": "src/docs/template"
+  },
+  "templates": {
+    "referenceTitle": "Evolv Technologies JavaScript Client"
   }
 }
