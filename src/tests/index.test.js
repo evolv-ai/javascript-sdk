@@ -51,9 +51,9 @@ async function validateClient(evolv, options, uid, sid) {
     const data = JSON.parse(body);
 
     if (req.url().path.endsWith('analytics')) {
-      analyticsPayloads = analyticsPayloads.concat(data);
+      analyticsPayloads.push(data);
     } else if (req.url().path.endsWith('events')) {
-      eventPayloads = eventPayloads.concat(data);
+      eventPayloads.push(data);
     } else {
       res.status(500);
     }

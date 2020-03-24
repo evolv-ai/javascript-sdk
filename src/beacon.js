@@ -1,6 +1,6 @@
 import retrieve from './retrieve.js';
 
-const DELAY = 500;
+const DELAY = 1;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -43,10 +43,16 @@ export default function Emitter(endpoint) {
       clearTimeout(timer);
     }
     timer = undefined;
-    const json = JSON.stringify(batch);
-    if (!send(endpoint, json, sync)) {
-      messages = batch;
-      console.error('Evolv: Unable to send beacon');
+
+    batch.forEach(function(message) {
+      if (!send(endpoint, JSON.stringify(message), sync)) {
+        messages.push(message);
+        console.error('Evolv: Unable to send beacon');
+      }
+    });
+
+    if (messages.length) {
+      timer = setTimeout(transmit, DELAY);
     }
   }
 
