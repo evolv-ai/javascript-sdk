@@ -1,48 +1,17 @@
-const DELAY = 1000;
+import retrieve from './retrieve.js';
 
-const URL_PATTERN = /^([a-z]+):\/\/([a-z\-_\.]+)(\/.*)/i;
+const DELAY = 500;
 
-function xhrSendJsonBeacon(url, data, sync) {
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', url, !sync);
-  xhr.withCredentials = true;
-  xhr.setRequestHeader('Accept', '*/*');
-  xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-
-  try {
-    xhr.send(data);
-  } catch (e) {
-    return false;
-  }
-
-  return true;
-}
-
-function nodeSendBeacon(url, data) {
-  const parts = URL_PATTERN.exec(url);
-  if (!parts) {
-    throw new Error('Evolv: Invalid beacon URL');
-  }
-
-  import('http').then(function(http) {
-    const schema = parts[1];
-    const hostname = parts[2];
-    const path = parts[3];
-    const req = http.request({
-      hostname: hostname,
-      port: schema === 'http' ? 80 : 443,
-      path: path,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;charset=UTF-8',
-        'Accept': '*/*',
-        'Content-Length': Buffer.byteLength(data)
-      }
+function fallbackBeacon(url, data, sync) {
+  retrieve({
+    method: 'post',
+    url: url,
+    data: data,
+    sync: sync
+  })
+    .catch(function(err) {
+      console.log(err);
     });
-    req.write(data);
-    req.end();
-  });
-
   return true;
 }
 
@@ -53,10 +22,8 @@ export default function Emitter(endpoint) {
   let send;
   if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
     send = window.navigator.sendBeacon;
-  } else if (typeof XMLHttpRequest !== 'undefined') {
-    send = xhrSendJsonBeacon;
   } else {
-    send = nodeSendBeacon;
+    send = fallbackBeacon;
   }
 
   function transmit() {

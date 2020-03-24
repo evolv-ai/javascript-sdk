@@ -1,10 +1,10 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import * as objects from './ponyfills/objects.js';
-import base64 from './ponyfills/base64.js';
 
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
-import { CONTEXT_CHANGED } from "./context.js";
+import { CONTEXT_CHANGED } from './context.js';
+import retrieve from './retrieve.js';
 
 const CONFIG_SOURCE = 'config';
 const GENOME_SOURCE = 'genome';
@@ -18,81 +18,6 @@ export const GENOME_UPDATED = 'genome.updated';
 export const CONFIG_UPDATED = 'config.updated';
 export const EFFECTIVE_GENOME_UPDATED = 'effective.genome.updated';
 export const STORE_DESTROYED = 'store.destroyed';
-
-function cryptography() {
-  return typeof crypto !== 'undefined' ? crypto : msCrypto;
-}
-
-/**
- * Convert a String to an ArrayBuffer
- *
- * ie11 Supported
- *
- * @param str The String to convert to an ArrayBuffer
- * @returns {ArrayBuffer} The resulting array buffer encoded as utf-8
- */
-export function str2ab(str) {
-  if (typeof TextEncoder !== 'undefined') {
-    return (new TextEncoder()).encode(str).buffer;
-  }
-
-  const buf = new ArrayBuffer(str.length);
-  const bufView = new Uint8Array(buf);
-  for (let i = 0, strLen = str.length; i < strLen; i++) {
-    bufView[i] = str.charCodeAt(i);
-  }
-  return buf;
-}
-
-/**
- * Converts an msCrypto operation to a promise if needed.
- *
- * @param op The op (or Promise) to convert if needed.
- * @returns {{PromiseLike} A promise
- */
-function cryptoOperationToPromise(op) {
-  if (op.then) {
-    return op;
-  }
-
-  return MiniPromise.createPromise(function(resolve, reject) {
-    op.oncomplete = function(evt) {
-      resolve(evt.target.result);
-    };
-
-    function rejectHandler(evt) {
-      reject(evt.toString());
-    }
-    op.onerror = rejectHandler;
-    op.onabort = rejectHandler;
-  });
-}
-
-/**
- * Sign a String with HMAC-SHA384
- *
- * @param {String} key The HMAC key to use for signing
- * @param {String} payload The String to sign
- * @returns {PromiseLike<ArrayBuffer>} The cryptographic signature
- */
-function sign(key, payload) {
-  const keyFormat = 'raw';
-  const algorithm = { name: 'HMAC', hash: 'SHA-384' };
-  const keyUsages = ['sign'];
-  const crypto = cryptography();
-
-  return MiniPromise.createPromise(function(resolve, reject) {
-    cryptoOperationToPromise(crypto.subtle.importKey(keyFormat, str2ab(key), algorithm, true, keyUsages))
-      .then(function (cryptoKey) {
-        cryptoOperationToPromise(crypto.subtle.sign(algorithm, cryptoKey, payload))
-          .then(function(bytes) {
-            resolve(base64.encodeFromArrayBuffer(bytes));
-          })
-          .catch(reject);
-      })
-      .catch(reject);
-  });
-}
 
 function moveKeys(keys, from, to) {
   keys.forEach(function(key) {
@@ -109,34 +34,6 @@ function wrapListener(listener) {
       console.log(ex);
     }
   };
-}
-
-function transmit(method, prefix, suffix, signatureKeyId, signatureKey, payload) {
-  return MiniPromise.createPromise(function(resolve, reject) {
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('load', function() {
-      if (this.status >= 400) {
-        reject(this.statusText || ('Evolv: Request failed ' + this.status));
-        return;
-      }
-      resolve(JSON.parse(this.responseText));
-    });
-    xhr.addEventListener('error', reject);
-    xhr.open(method,  prefix + suffix);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Accept', 'application/json');
-    const encodedPayload = !payload ? '' : JSON.stringify(payload);
-    if (signatureKey) {
-      sign(signatureKey, str2ab(encodedPayload))
-        .then(function(signature) {
-          xhr.setRequestHeader('Signature', 'keyId="' + signatureKeyId + '",algorithm="hmac-sha384",signature="' + signature + '"');
-          xhr.send(encodedPayload);
-        })
-        .catch(reject);
-    } else {
-      xhr.send(encodedPayload);
-    }
-  });
 }
 
 function getValue(key, genome) {
@@ -472,7 +369,12 @@ function EvolvStore(options) {
       const requestedKeys = [];
       configKeyStates.needed.forEach(requestedKeys.push.bind(requestedKeys));
       configKeyStates.needed.clear();
-      transmit('get', prefix, '/configuration.json', keyId, key)
+      retrieve({
+        method: 'get',
+        url: prefix + '/configuration.json',
+        keyId: keyId,
+        key: key
+      })
         .then(update.bind(this, true, requestedKeys))
         .catch(failed.bind(this, true, requestedKeys));
       moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
@@ -483,7 +385,13 @@ function EvolvStore(options) {
       const requestedKeys = [];
       genomeKeyStates.needed.forEach(requestedKeys.push.bind(requestedKeys));
       genomeKeyStates.needed.clear();
-      transmit('post', prefix, '/allocations', keyId, key, { uid: context.uid, sid: context.sid })
+      retrieve({
+        method: 'post',
+        url: prefix + '/allocations',
+        keyId: keyId,
+        key: key,
+        data: {uid: context.uid, sid: context.sid}
+      })
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));
       moveKeys(requestedKeys, genomeKeyStates.needed, genomeKeyStates.requested);
