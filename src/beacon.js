@@ -1,6 +1,6 @@
 import retrieve from './retrieve.js';
 
-const DELAY = 500;
+const DELAY = 1;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -19,11 +19,12 @@ export default function Emitter(endpoint) {
   let messages = [];
   let timer;
 
-  let send;
-  if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
-    send = window.navigator.sendBeacon;
-  } else {
-    send = fallbackBeacon;
+  function send(url, data, sync) {
+    if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
+      return window.navigator.sendBeacon(url, data);
+    } else {
+      return fallbackBeacon(url, data, sync);
+    }
   }
 
   function transmit() {
@@ -43,10 +44,28 @@ export default function Emitter(endpoint) {
       clearTimeout(timer);
     }
     timer = undefined;
-    const json = JSON.stringify(batch);
-    if (!send(endpoint, json, sync)) {
-      messages = batch;
-      console.error('Evolv: Unable to send beacon');
+
+    batch.forEach(function(message) {
+      const endpointMatch = endpoint.match(new RegExp('\\/(v\\d+)\\/\\w+\\/([a-z]+)$'));
+      if (endpointMatch[2] === 'analytics' && endpointMatch[1] === 'v1') {
+        return;
+      }
+
+      let editedMessage = message;
+      if (endpointMatch[1] === 'v1') {
+        // change needed to support v1 of the participants api
+        editedMessage = message[1] || {};
+        editedMessage.type = message[0];
+      }
+
+      if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
+        messages.push(message);
+        console.error('Evolv: Unable to send beacon');
+      }
+    });
+
+    if (messages.length) {
+      timer = setTimeout(transmit, DELAY);
     }
   }
 

@@ -2,7 +2,7 @@ import MiniPromise from './ponyfills/minipromise.js';
 import base64 from './ponyfills/base64.js';
 import { assign} from './ponyfills/objects.js';
 
-const URL_PATTERN = /^([a-z]+):\/\/([a-z\-_\.]+)(\/.*)/i;
+const URL_PATTERN = /^([a-z]+):\/\/([^/]+)(.*)/i;
 
 function cryptography() {
   return typeof crypto !== 'undefined' ? crypto : msCrypto;
@@ -98,6 +98,7 @@ function xhrRequest(options) {
         resolve();
       } else {
         console.error('Evolv: Invalid status ' + this.status + ' for response ' + this.responseText);
+        reject(msg);
       }
     });
     xhr.addEventListener('error', reject);
