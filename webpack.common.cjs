@@ -1,5 +1,4 @@
 const path = require('path');
-const nodeExternals = require('webpack-node-externals');
 const webpack = require('webpack');
 
 module.exports = {
@@ -16,6 +15,7 @@ module.exports = {
     })
   ],
   externals: {
-    http: "http"
+    http: 'http',
+    https: 'https'
   }
 };
