@@ -27,8 +27,11 @@ export default function Emitter(endpoint) {
   }
 
   function transmit() {
-    const currentEvent = this.event && this.event.type;
-    const sync = currentEvent === 'unload' || currentEvent === 'beforeunload';
+    let sync = false;
+    if (typeof this !== 'undefined') {
+      const currentEvent = this.event && this.event.type;
+      sync = currentEvent === 'unload' || currentEvent === 'beforeunload';
+    }
 
     if (!messages.length) {
       return;

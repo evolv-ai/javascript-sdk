@@ -167,7 +167,9 @@ async function validateClient(evolv, options, uid, sid) {
   expect(initializedSpy).to.have.been.called.once;
   expect(contextInitializedSpy).to.have.been.called.once;
 
+  evolv.confirm();
   evolv.emit('lunch-time', 33);
+  evolv.contaminate();
 
   evolv.flush();
 
@@ -189,9 +191,19 @@ async function validateClient(evolv, options, uid, sid) {
       try {
         expect(analyticsPayloads.length).to.equal(6);
         expect(analyticsPayloads[5][0]).to.equal('context.value.removed');
-        expect(eventPayloads.length).to.equal(1);
-        expect(eventPayloads[0][0]).to.equal('lunch-time');
-        expect(eventPayloads[0][1].score).to.equal(33);
+        expect(eventPayloads.length).to.equal(3);
+        expect(eventPayloads[0][0]).to.equal('confirmation');
+        expect(eventPayloads[0][1].uid).to.equal(uid);
+        expect(eventPayloads[0][1].sid).to.equal(sid);
+        expect(eventPayloads[0][1].eid).to.equal('0f39849197');
+        expect(eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
+        expect(eventPayloads[1][0]).to.equal('lunch-time');
+        expect(eventPayloads[1][1].score).to.equal(33);
+        expect(eventPayloads[2][0]).to.equal('contamination');
+        expect(eventPayloads[2][1].uid).to.equal(uid);
+        expect(eventPayloads[2][1].sid).to.equal(sid);
+        expect(eventPayloads[2][1].eid).to.equal('0f39849197');
+        expect(eventPayloads[2][1].cid).to.equal('0cf8ffcedea2:0f39849197');
         resolve();
       } catch (ex) {
         reject(ex);
@@ -280,8 +292,8 @@ describe('Evolv client', () => {
         allocSignature = req.header('Signature');
         return res.status(200).body(JSON.stringify([
           {
-            uid: "testing",
-            sid: "testing",
+            uid: uid,
+            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -407,8 +419,8 @@ describe('Evolv client', () => {
         allocBody = req.body() || '';
         return res.status(200).body(JSON.stringify([
           {
-            uid: "testing",
-            sid: "testing",
+            uid: uid,
+            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -530,8 +542,8 @@ describe('Evolv client', () => {
       xhrMock.post(`${endpoint}/${env}/allocations`, (req, res) => {
         return res.status(200).body(JSON.stringify([
           {
-            uid: "testing",
-            sid: "testing",
+            uid: uid,
+            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
