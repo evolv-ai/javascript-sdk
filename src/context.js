@@ -114,12 +114,17 @@ function EvolvContext() {
    */
   this.remove = function(key) {
     ensureInitialized();
-    objects.removeValueForKey(key, localContext);
-    objects.removeValueForKey(key, remoteContext);
+    const local = objects.removeValueForKey(key, localContext);
+    const remote = objects.removeValueForKey(key, remoteContext);
+    const removed = local || remote;
 
-    const updated = this.resolve();
-    emit(this, CONTEXT_VALUE_REMOVED, key, updated);
-    emit(this, CONTEXT_CHANGED, updated);
+    if (removed) {
+      const updated = this.resolve();
+      emit(this, CONTEXT_VALUE_REMOVED, key, !remote, updated);
+      emit(this, CONTEXT_CHANGED, updated);
+    }
+
+    return removed;
   };
 
   /**
