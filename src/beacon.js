@@ -45,7 +45,19 @@ export default function Emitter(endpoint) {
     timer = undefined;
 
     batch.forEach(function(message) {
-      if (!send(endpoint, JSON.stringify(message), sync)) {
+      const endpointMatch = endpoint.match(new RegExp('\\/(v\\d+)\\/\\w+\\/([a-z]+)$'));
+      if (endpointMatch[2] === 'analytics' && endpointMatch[1] === 'v1') {
+        return;
+      }
+
+      let editedMessage = message
+      if (endpointMatch[1] === 'v1') {
+        // change needed to support v1 of the participants api
+        editedMessage = message[1] || {};
+        editedMessage.type = message[0];
+      }
+
+      if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
         messages.push(message);
         console.error('Evolv: Unable to send beacon');
       }
