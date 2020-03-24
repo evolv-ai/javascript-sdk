@@ -143,7 +143,11 @@ function EvolvClient(options) {
    */
   this.getConfig = store.getConfig.bind(store);
   this.emit = function(type, score, flush) {
-    eventBeacon.emit(type, assign({score: score}, context.remoteContext), flush);
+    eventBeacon.emit(type, assign({
+      uid: context.uid,
+      sid: context.sid,
+      score: score
+    }, context.remoteContext), flush);
     emit(context, EvolvClient.EVENT_EMITTED, type, score);
   };
 
@@ -152,7 +156,23 @@ function EvolvClient(options) {
    * optimization statistics.
    */
   this.confirm = function() {
-    eventBeacon.emit('confirmation', context.remoteContext, true);
+    const remoteContext = context.remoteContext;
+    if (
+      !remoteContext.experiments ||
+      !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
+    ) {
+      return [];
+    }
+
+    remoteContext.experiments.allocations.forEach(function(alloc) {
+      eventBeacon.emit('confirmation', assign({
+        uid: alloc.uid,
+        sid: alloc.sid,
+        eid: alloc.eid,
+        cid: alloc.cid
+      }, context.remoteContext));
+    });
+    eventBeacon.flush();
     emit(context, EvolvClient.CONFIRMED);
   };
 
@@ -161,7 +181,23 @@ function EvolvClient(options) {
    * inclusion in optimization statistics.
    */
   this.contaminate = function() {
-    eventBeacon.emit('contaminated', context.remoteContext, true);
+    const remoteContext = context.remoteContext;
+    if (
+      !remoteContext.experiments ||
+      !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
+    ) {
+      return [];
+    }
+
+    remoteContext.experiments.allocations.forEach(function(alloc) {
+      eventBeacon.emit('contamination', assign({
+        uid: alloc.uid,
+        sid: alloc.sid,
+        eid: alloc.eid,
+        cid: alloc.cid
+      }, context.remoteContext));
+    });
+    eventBeacon.flush();
     emit(context, EvolvClient.CONTAMINATED);
   };
 
