@@ -28,7 +28,7 @@ export default class MiniPromise {
     const resolve = response.bind(this, false, this._thens);
 
     try {
-      executor(reject, resolve);
+      executor(resolve, reject);
     } catch (err) {
       reject(err);
     }
