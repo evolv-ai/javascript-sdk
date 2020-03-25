@@ -98,6 +98,7 @@ function xhrRequest(options) {
         resolve();
       } else {
         console.error('Evolv: Invalid status ' + this.status + ' for response ' + this.responseText);
+        reject(msg);
       }
     });
     xhr.addEventListener('error', reject);
