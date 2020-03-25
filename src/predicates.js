@@ -22,6 +22,10 @@ const FILTER_OPERATORS = {
 };
 
 function regexFromString (string) {
+  if (!string.startsWith('/')) {
+    return new RegExp(string);
+  }
+
   const split = string.lastIndexOf('/');
   return new RegExp(string.substring(1, split), string.substring(split + 1));
 }

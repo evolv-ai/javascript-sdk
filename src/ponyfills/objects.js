@@ -76,13 +76,13 @@ export function removeValueForKey(key, map) {
     }
   }
 
-  return recurse(key.split('\.'), 0, map);
+  return recurse(key.split('.'), 0, map);
 }
 
 export function getValueForKey(key, map) {
   let value;
   let current = map;
-  let keys = key.split('\.');
+  let keys = key.split('.');
   for (let i = 0; i < keys.length; i++) {
     let k = keys[i];
     if (i === (keys.length - 1)) {
@@ -102,7 +102,7 @@ export function getValueForKey(key, map) {
 
 export function setKeyToValue(key, value, map) {
   let current = map;
-  let keys = key.split('\.');
+  let keys = key.split('.');
   for (let i = 0; i < keys.length; i++) {
     let k = keys[i];
     if (i === (keys.length - 1)) {
