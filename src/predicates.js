@@ -13,7 +13,7 @@ const FILTER_OPERATORS = {
   not_regex64_match: function(value, pattern) { return !regex64Match(value, pattern) },
   not_starts_with: function(a, b) { return !a.startsWith(b); },
   kv_contains: function(obj, params) { return (params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0; },
-  kv_equal: (obj, params) => obj[params[0]] === params[1],
+  kv_equal: function(obj, params) { return obj[params[0]] === params[1]; },
   kv_not_contains: function(obj, params) { return !((params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0)); },
   kv_not_equal: (obj, params) => obj[params[0]] !== params[1],
   regex_match: function(value, pattern) { return value && value.match(pattern); },
