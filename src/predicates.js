@@ -14,7 +14,7 @@ const FILTER_OPERATORS = {
   not_starts_with: function(a, b) { return !a.startsWith(b); },
   kv_contains: function(obj, params) { return (params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0; },
   kv_equal: (obj, params) => obj[params[0]] === params[1],
-  kv_not_contains: (obj, params) => !((params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0)),
+  kv_not_contains: function(obj, params) { return !((params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0)); },
   kv_not_equal: (obj, params) => obj[params[0]] !== params[1],
   regex_match: function(value, pattern) { return value && value.match(pattern); },
   regex64_match: regex64Match,
