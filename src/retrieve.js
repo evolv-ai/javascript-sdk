@@ -103,7 +103,6 @@ function xhrRequest(options) {
     });
     xhr.addEventListener('error', reject);
     xhr.open(options.method, options.url, options.sync);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.setRequestHeader('Accept', 'application/json');
     if (options.signature) {
       xhr.setRequestHeader('Signature', createSignatureHeader(options.keyId, options.signature));
@@ -124,6 +123,7 @@ function nodeRequest(options) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
+        'Content-Type': 'application/json;charset=UTF-8',
         'Accept': 'application/json',
         'Content-Length': Buffer.byteLength(options.payload)
       };
