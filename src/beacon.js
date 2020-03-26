@@ -74,7 +74,7 @@ export default function Emitter(endpoint) {
     window.addEventListener('beforeunload', transmit);
   }
 
-  this.emit = function(type, data, flush=false) {
+  this.emit = function(type, data, flush) {
     messages.push([type, data]);
     if (flush) {
       transmit();
