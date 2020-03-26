@@ -130,4 +130,4 @@ export function evaluate(context, predicate) {
   result.rejected = !evaluatePredicate(context, predicate, result.passed, result.failed);
 
   return result;
-};
+}

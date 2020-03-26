@@ -25,8 +25,6 @@ async function validateSignature(keys, signature, body) {
 
   const cryptoKey = await crypto.subtle.importKey(
     'raw', (new TextEncoder()).encode(keys[id]).buffer, algorithm, true, ['sign', 'verify']);
-  const cryptoKey1 = await crypto.subtle.importKey(
-    'raw', (new TextEncoder()).encode(keys[id]).buffer, algorithm, true, ['sign', 'verify']);
   let textEncoder = new TextEncoder();
   let signatureData = base64.decodeToArrayBuffer(signatureParts[3]);
   return await crypto.subtle.verify(algorithm, cryptoKey, signatureData, textEncoder.encode(body).buffer);
@@ -270,7 +268,7 @@ describe('Evolv client', () => {
                 }
               },
                 id: "0f39849197",
-                  _predicate: {
+                _predicate: {
                   combinator: "and",
                     rules: [
                     {
@@ -339,6 +337,28 @@ describe('Evolv client', () => {
         endpoint
       };
       const evolv = new Evolv(options);
+
+      evolv.initialize(uid, sid, {
+        remote: true,
+        web: {
+          url: 'https://www.lunch.com/dev1/index.html'
+        }
+      }, {
+        local: true,
+        user_attributes: {
+          country: 'usa'
+        }
+      });
+
+      evolv.preload(['web']);
+      evolv.context.set('user_attributes.country', 'usa');
+      const oneVariant = await evolv.get('web.7w3zpgfy9.azevlvf5g');
+      evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
+      const twoVariant = await evolv.get('web.ab8numq2j.am94yhwo2');
+
+      evolv.confirm();
+      evolv.emit('lunch-time', 33);
+      evolv.contaminate();
 
       await validateClient(evolv, options, uid, sid);
 
