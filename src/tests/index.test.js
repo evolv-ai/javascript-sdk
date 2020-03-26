@@ -187,22 +187,7 @@ async function validateClient(evolv, options, uid, sid) {
   return new Promise((resolve, reject) => {
     setTimeout(function() {
       try {
-        expect(analyticsPayloads.length).to.equal(6);
-        expect(analyticsPayloads[5][0]).to.equal('context.value.removed');
-        expect(eventPayloads.length).to.equal(3);
-        expect(eventPayloads[0][0]).to.equal('confirmation');
-        expect(eventPayloads[0][1].uid).to.equal(uid);
-        expect(eventPayloads[0][1].sid).to.equal(sid);
-        expect(eventPayloads[0][1].eid).to.equal('0f39849197');
-        expect(eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
-        expect(eventPayloads[1][0]).to.equal('lunch-time');
-        expect(eventPayloads[1][1].score).to.equal(33);
-        expect(eventPayloads[2][0]).to.equal('contamination');
-        expect(eventPayloads[2][1].uid).to.equal(uid);
-        expect(eventPayloads[2][1].sid).to.equal(sid);
-        expect(eventPayloads[2][1].eid).to.equal('0f39849197');
-        expect(eventPayloads[2][1].cid).to.equal('0cf8ffcedea2:0f39849197');
-        resolve();
+        resolve({analyticsPayloads, eventPayloads});
       } catch (ex) {
         reject(ex);
       }
@@ -337,28 +322,6 @@ describe('Evolv client', () => {
         endpoint
       };
       const evolv = new Evolv(options);
-
-      evolv.initialize(uid, sid, {
-        remote: true,
-        web: {
-          url: 'https://www.lunch.com/dev1/index.html'
-        }
-      }, {
-        local: true,
-        user_attributes: {
-          country: 'usa'
-        }
-      });
-
-      evolv.preload(['web']);
-      evolv.context.set('user_attributes.country', 'usa');
-      const oneVariant = await evolv.get('web.7w3zpgfy9.azevlvf5g');
-      evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
-      const twoVariant = await evolv.get('web.ab8numq2j.am94yhwo2');
-
-      evolv.confirm();
-      evolv.emit('lunch-time', 33);
-      evolv.contaminate();
 
       await validateClient(evolv, options, uid, sid);
 
@@ -505,7 +468,7 @@ describe('Evolv client', () => {
       const uid = 123;
       const sid = 321;
       const env = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/v1';
+      const endpoint = 'https://participants-frazer.evolv.ai/v2';
 
       xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -611,7 +574,23 @@ describe('Evolv client', () => {
       };
       const evolv = new Evolv(options);
 
-      await validateClient(evolv, options, uid, sid);
+      const results = await validateClient(evolv, options, uid, sid);
+
+      expect(results.analyticsPayloads.length).to.equal(6);
+      expect(results.analyticsPayloads[5][0]).to.equal('context.value.removed');
+      expect(results.eventPayloads.length).to.equal(3);
+      expect(results.eventPayloads[0][0]).to.equal('confirmation');
+      expect(results.eventPayloads[0][1].uid).to.equal(uid);
+      expect(results.eventPayloads[0][1].sid).to.equal(sid);
+      expect(results.eventPayloads[0][1].eid).to.equal('0f39849197');
+      expect(results.eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
+      expect(results.eventPayloads[1][0]).to.equal('lunch-time');
+      expect(results.eventPayloads[1][1].score).to.equal(33);
+      expect(results.eventPayloads[2][0]).to.equal('contamination');
+      expect(results.eventPayloads[2][1].uid).to.equal(uid);
+      expect(results.eventPayloads[2][1].sid).to.equal(sid);
+      expect(results.eventPayloads[2][1].eid).to.equal('0f39849197');
+      expect(results.eventPayloads[2][1].cid).to.equal('0cf8ffcedea2:0f39849197');
     });
   });
 });

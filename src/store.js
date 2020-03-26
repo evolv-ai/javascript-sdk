@@ -164,7 +164,7 @@ function EvolvStore(options) {
     });
     outstandingConfigPromises = undefined;
     subscriptions = undefined;
-    emit(context, STORE_DESTROYED, this);
+    emit(context, EvolvStore.STORE_DESTROYED, this);
     context = undefined;
   };
 
@@ -201,7 +201,7 @@ function EvolvStore(options) {
       }
     });
 
-    emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
+    emit(context, EvolvStore.EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
       try {
         listener(effectiveGenome, config);
@@ -254,10 +254,10 @@ function EvolvStore(options) {
 
     requestedKeys.forEach(keyStates.requested.delete.bind(keyStates.requested));
     if (configRequest) {
-      emit(context, CONFIG_REQUEST_RECEIVED, requestedKeys);
+      emit(context, EvolvStore.CONFIG_REQUEST_RECEIVED, requestedKeys);
       updateConfig(value);
     } else {
-      emit(context, GENOME_REQUEST_RECEIVED, requestedKeys);
+      emit(context, EvolvStore.GENOME_REQUEST_RECEIVED, requestedKeys);
       updateGenome(value);
     }
 
@@ -296,14 +296,14 @@ function EvolvStore(options) {
       return removeConfig.indexOf(promise) < 0;
     });
 
-    emit(context,configRequest ? CONFIG_UPDATED : GENOME_UPDATED, value);
+    emit(context,configRequest ? EvolvStore.CONFIG_UPDATED : EvolvStore.GENOME_UPDATED, value);
   }
 
   function failed(configRequest, requestedKeys, err) {
     contaminated = true;
     console.log(err);
     let keyStates;
-    emit(context, REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
+    emit(context, EvolvStore.REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
     if (configRequest) {
       keyStates = configKeyStates;
     } else {
@@ -378,7 +378,7 @@ function EvolvStore(options) {
         .then(update.bind(this, true, requestedKeys))
         .catch(failed.bind(this, true, requestedKeys));
       moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
-      emit(context, CONFIG_REQUEST_SENT, requestedKeys);
+      emit(context, EvolvStore.CONFIG_REQUEST_SENT, requestedKeys);
     }
 
     if (genomeKeyStates.needed.size || version === 1) {
@@ -395,7 +395,7 @@ function EvolvStore(options) {
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));
       moveKeys(requestedKeys, genomeKeyStates.needed, genomeKeyStates.requested);
-      emit(context, GENOME_REQUEST_SENT, requestedKeys);
+      emit(context, EvolvStore.GENOME_REQUEST_SENT, requestedKeys);
     }
 
     waitingToPull = false;

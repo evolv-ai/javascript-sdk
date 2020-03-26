@@ -51,7 +51,7 @@ export default function Emitter(endpoint) {
         return;
       }
 
-      let editedMessage = message
+      let editedMessage = message;
       if (endpointMatch[1] === 'v1') {
         // change needed to support v1 of the participants api
         editedMessage = message[1] || {};
