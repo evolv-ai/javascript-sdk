@@ -19,11 +19,12 @@ export default function Emitter(endpoint) {
   let messages = [];
   let timer;
 
-  let send;
-  if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
-    send = window.navigator.sendBeacon;
-  } else {
-    send = fallbackBeacon;
+  function send(url, data, sync) {
+    if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
+      return window.navigator.sendBeacon(url, data);
+    } else {
+      return fallbackBeacon(url, data, sync);
+    }
   }
 
   function transmit() {

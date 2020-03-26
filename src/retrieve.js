@@ -124,7 +124,6 @@ function nodeRequest(options) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
-        'Content-Type': 'application/json;charset=UTF-8',
         'Accept': 'application/json',
         'Content-Length': Buffer.byteLength(options.payload)
       };
