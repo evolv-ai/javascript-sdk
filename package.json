@@ -48,7 +48,7 @@
     "extension": [
       "js"
     ],
-    "spec": "src/tests/*.test.js",
+    "spec": "src/**/*.test.js",
     "recursive": true
   }
 }
