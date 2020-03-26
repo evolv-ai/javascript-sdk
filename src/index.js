@@ -10,11 +10,6 @@ import { waitFor, waitOnceFor, emit, destroyScope } from './waitforit.js';
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
 
-export const INITIALIZED = 'initialized';
-export const CONFIRMED = 'confirmed';
-export const CONTAMINATED = 'contaminated';
-export const EVENT_EMITTED = 'event.emitted';
-
 /**
  * @typedef {Promise} SubscribablePromise
  * @property {function(function):undefined} then Then
@@ -153,7 +148,7 @@ function EvolvClient(options) {
       sid: context.sid,
       score: score
     }, context.remoteContext), flush);
-    emit(context, EVENT_EMITTED, type, score);
+    emit(context, EvolvClient.EVENT_EMITTED, type, score);
   };
 
   /**
@@ -178,7 +173,7 @@ function EvolvClient(options) {
       }, context.remoteContext));
     });
     eventBeacon.flush();
-    emit(context, CONFIRMED);
+    emit(context, EvolvClient.CONFIRMED);
   };
 
   /**
@@ -203,7 +198,7 @@ function EvolvClient(options) {
       }, context.remoteContext));
     });
     eventBeacon.flush();
-    emit(context, CONTAMINATED);
+    emit(context, EvolvClient.CONTAMINATED);
   };
 
   /**
@@ -261,7 +256,7 @@ function EvolvClient(options) {
     }
 
     initialized = true;
-    emit(context, INITIALIZED, options);
+    emit(context, EvolvClient.INITIALIZED, options);
   };
 
   /**
@@ -282,5 +277,10 @@ function EvolvClient(options) {
     destroyScope(context);
   };
 }
+
+EvolvClient.INITIALIZED = 'initialized';
+EvolvClient.CONFIRMED = 'confirmed';
+EvolvClient.CONTAMINATED = 'contaminated';
+EvolvClient.EVENT_EMITTED = 'event.emitted';
 
 export default EvolvClient;

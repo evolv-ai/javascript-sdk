@@ -8,7 +8,7 @@ module.exports = {
     filename: 'index.js'
   },
   node: false,
-  target: 'web',
+  target: 'node',
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1,
@@ -16,6 +16,8 @@ module.exports = {
   ],
   externals: {
     http: 'http',
-    https: 'https'
+    https: 'https',
+    deepmerge: 'deepmerge',
+    'base64-arraybuffer': 'base64-arraybuffer'
   }
 };

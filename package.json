@@ -2,7 +2,8 @@
   "name": "@evolv/javascript-sdk",
   "version": "1.0.0",
   "description": "This is the official JavaScript client for the Evolv Technologies optimization platform.",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "module": "src/index.js",
   "type": "module",
   "homepage": "https://www.evolv.ai",
   "bugs": {
@@ -15,9 +16,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/evolv-ai/javascript-sdk"
-  },
-  "engines": {
-    "node": ">=13"
   },
   "scripts": {
     "test": "mocha",
