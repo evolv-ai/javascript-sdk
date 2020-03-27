@@ -4,6 +4,10 @@
   "description": "This is the official JavaScript client for the Evolv Technologies optimization platform.",
   "main": "dist/index.js",
   "module": "src/index.js",
+  "exports": {
+    "import": "./src/index.js",
+    "require": "./dist/index.js"
+  },
   "type": "module",
   "homepage": "https://www.evolv.ai",
   "bugs": {
@@ -18,9 +22,9 @@
     "url": "https://github.com/evolv-ai/javascript-sdk"
   },
   "scripts": {
+    "prepublish": "webpack --config=webpack.prod.cjs",
     "test": "mocha",
     "build": "webpack --config=webpack.dev.cjs",
-    "build-prod": "webpack --config=webpack.prod.cjs --display-modules",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md"
   },
   "author": {
