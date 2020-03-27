@@ -390,7 +390,7 @@ function EvolvStore(options) {
         url: prefix + '/allocations',
         keyId: keyId,
         key: key,
-        data: {uid: context.uid, sid: context.uid}
+        data: {uid: context.uid, sid: context.sid}
       })
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));
