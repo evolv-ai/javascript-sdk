@@ -15,9 +15,9 @@ module.exports = {
     })
   ],
   externals: {
-    http: 'http',
-    https: 'https',
-    deepmerge: 'deepmerge',
-    'base64-arraybuffer': 'base64-arraybuffer'
+    http: { commonjs: 'http' },
+    https: { commonjs: 'https' },
+    deepmerge: { commonjs2: 'deepmerge' },
+    'base64-arraybuffer': { commonjs2: 'base64-arraybuffer' }
   }
 };
