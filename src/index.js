@@ -143,13 +143,21 @@ function EvolvClient(options) {
    * @method
    */
   this.getConfig = store.getConfig.bind(store);
-  this.emit = function(type, score, flush) {
+
+  /**
+   * Send an event to the events endpoint.
+   *
+   * @param {String} type The type associated with the event.
+   * @param metadata {Object} Any metadata to attach to the event.
+   * @param flush {Boolean} If true, the event will be sent immediately.
+   */
+  this.emit = function(type, metadata, flush) {
     eventBeacon.emit(type, assign({
       uid: context.uid,
       sid: context.sid,
-      score: score
-    }, context.remoteContext), flush);
-    emit(context, EvolvClient.EVENT_EMITTED, type, score);
+      metadata: metadata
+    }), flush);
+    emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
 
   /**

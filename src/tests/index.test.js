@@ -136,7 +136,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.isActive('web.ab8numq2j.am94yhwo2').listen(isActiveWebAb8numq2jAm94yhwo2KeySpy);
 
   evolv.confirm();
-  evolv.emit('lunch-time', 33);
+  evolv.emit('lunch-time', {score:33});
   evolv.contaminate();
 
   const allKeysSpy = chai.spy();
@@ -598,7 +598,7 @@ describe('Evolv client', () => {
       expect(results.eventPayloads[0][1].eid).to.equal('0f39849197');
       expect(results.eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
       expect(results.eventPayloads[1][0]).to.equal('lunch-time');
-      expect(results.eventPayloads[1][1].score).to.equal(33);
+      expect(results.eventPayloads[1][1].metadata.score).to.equal(33);
       expect(results.eventPayloads[2][0]).to.equal('contamination');
       expect(results.eventPayloads[2][1].uid).to.equal(uid);
       expect(results.eventPayloads[2][1].sid).to.equal(sid);
