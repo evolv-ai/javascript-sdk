@@ -261,8 +261,8 @@ function EvolvClient(options) {
     });
 
     if (options.autoConfirm) {
-      waitFor(EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
-      waitFor(REQUEST_FAILED, this.contaminate.bind(this));
+      waitFor(context, EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
+      waitFor(context, REQUEST_FAILED, this.contaminate.bind(this));
     }
 
     initialized = true;
