@@ -110,10 +110,10 @@ export function evaluatePredicates(version, context, config) {
 }
 
 function EvolvStore(options) {
+  const version = options.version || 1;
   const prefix = options.endpoint + '/' + options.env;
   const keyId = options.auth && options.auth.id;
   const key = options.auth && options.auth.secret;
-  const version = options.version || 1;
 
   let context;
   let initialized = false;

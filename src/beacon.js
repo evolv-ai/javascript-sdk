@@ -1,6 +1,7 @@
 import retrieve from './retrieve.js';
 
 const DELAY = 1;
+const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -16,6 +17,10 @@ function fallbackBeacon(url, data, sync) {
 }
 
 export default function Emitter(endpoint) {
+  const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
+  const v1api = endpointMatch && endpointMatch[1] === 'v1';
+  const disabled = v1api && endpointMatch[2] === 'analytics';
+
   let messages = [];
   let timer;
 
@@ -46,17 +51,8 @@ export default function Emitter(endpoint) {
     timer = undefined;
 
     batch.forEach(function(message) {
-      const endpointMatch = endpoint.match(new RegExp('\\/(v\\d+)\\/\\w+\\/([a-z]+)$'));
-      if (!endpointMatch) {
-        throw new Error('Evolv: Invalid endpoint');
-      }
-
-      if (endpointMatch[2] === 'analytics' && endpointMatch[1] === 'v1') {
-        return;
-      }
-
       let editedMessage = message;
-      if (endpointMatch[1] === 'v1') {
+      if (v1api) {
         // change needed to support v1 of the participants api
         editedMessage = message[1] || {};
         editedMessage.type = message[0];
@@ -79,6 +75,10 @@ export default function Emitter(endpoint) {
   }
 
   this.emit = function(type, data, flush) {
+    if (disabled) {
+      return;
+    }
+
     messages.push([type, data]);
     if (flush) {
       transmit();
