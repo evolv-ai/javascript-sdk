@@ -59,6 +59,10 @@ function getActiveKeys(activeKeys, prefix) {
   return result;
 }
 
+function isEntryPoint(entryKeys) {
+  return entryKeys.size > 0;
+}
+
 // Exposed for testing
 export function evaluatePredicates(version, context, config) {
   if (!config._experiments || !config._experiments.length) {
@@ -164,7 +168,7 @@ function EvolvStore(options) {
     });
     outstandingConfigPromises = undefined;
     subscriptions = undefined;
-    emit(context, EvolvStore.STORE_DESTROYED, this);
+    emit(context, STORE_DESTROYED, this);
     context = undefined;
   };
 
@@ -201,7 +205,7 @@ function EvolvStore(options) {
       }
     });
 
-    emit(context, EvolvStore.EFFECTIVE_GENOME_UPDATED, effectiveGenome);
+    emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
       try {
         listener(effectiveGenome, config);
@@ -254,10 +258,10 @@ function EvolvStore(options) {
 
     requestedKeys.forEach(keyStates.requested.delete.bind(keyStates.requested));
     if (configRequest) {
-      emit(context, EvolvStore.CONFIG_REQUEST_RECEIVED, requestedKeys);
+      emit(context, CONFIG_REQUEST_RECEIVED, requestedKeys);
       updateConfig(value);
     } else {
-      emit(context, EvolvStore.GENOME_REQUEST_RECEIVED, requestedKeys);
+      emit(context, GENOME_REQUEST_RECEIVED, requestedKeys);
       updateGenome(value);
     }
 
@@ -296,14 +300,14 @@ function EvolvStore(options) {
       return removeConfig.indexOf(promise) < 0;
     });
 
-    emit(context,configRequest ? EvolvStore.CONFIG_UPDATED : EvolvStore.GENOME_UPDATED, value);
+    emit(context,configRequest ? CONFIG_UPDATED : GENOME_UPDATED, value);
   }
 
   function failed(configRequest, requestedKeys, err) {
     contaminated = true;
     console.log(err);
     let keyStates;
-    emit(context, EvolvStore.REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
+    emit(context, REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
     if (configRequest) {
       keyStates = configKeyStates;
     } else {
@@ -378,7 +382,7 @@ function EvolvStore(options) {
         .then(update.bind(this, true, requestedKeys))
         .catch(failed.bind(this, true, requestedKeys));
       moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
-      emit(context, EvolvStore.CONFIG_REQUEST_SENT, requestedKeys);
+      emit(context, CONFIG_REQUEST_SENT, requestedKeys);
     }
 
     if (genomeKeyStates.needed.size || version === 1) {
@@ -395,7 +399,7 @@ function EvolvStore(options) {
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));
       moveKeys(requestedKeys, genomeKeyStates.needed, genomeKeyStates.requested);
-      emit(context, EvolvStore.GENOME_REQUEST_SENT, requestedKeys);
+      emit(context, GENOME_REQUEST_SENT, requestedKeys);
     }
 
     waitingToPull = false;
@@ -513,6 +517,8 @@ function EvolvStore(options) {
 
   this.get = createRequestSubscribablePromise.bind(this, GENOME_SOURCE, getValue.bind(this));
   this.getConfig = createRequestSubscribablePromise.bind(this, CONFIG_SOURCE, getConfigValue.bind(this));
+  this.isEntryPoint = createRequestSubscribablePromise.bind(
+    this, CONFIG_SOURCE, isEntryPoint.bind(this, configKeyStates.entry));
   this.isActive = createRequestSubscribablePromise.bind(
     this, CONFIG_SOURCE, getValueActive.bind(this, configKeyStates.active));
   this.getActiveKeys = createRequestSubscribablePromise.bind(
