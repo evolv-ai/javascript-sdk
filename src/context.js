@@ -139,9 +139,9 @@ function EvolvContext() {
     const updated = this.resolve();
     Object.keys(flattened).forEach(function(key) {
       if (typeof flattenedBefore[key] === 'undefined') {
-        emit(this, CONTEXT_VALUE_ADDED, key, value, local, updated);
+        emit(this, CONTEXT_VALUE_ADDED, key, context[key], local, updated);
       } else if (flattenedBefore[key] !== context[key]) {
-        emit(this, CONTEXT_VALUE_CHANGED, key, value, flattenedBefore[key], local, updated);
+        emit(this, CONTEXT_VALUE_CHANGED, key, context[key], flattenedBefore[key], local, updated);
       }
     });
     emit(this, CONTEXT_CHANGED, updated);
@@ -177,7 +177,7 @@ function EvolvContext() {
    */
   this.get = function(key) {
     ensureInitialized();
-    return (remoteContext[key] || localContext[key]);
+    return objects.getValueForKey(key, remoteContext) || objects.getValueForKey(key, localContext);
   };
 
   /**
