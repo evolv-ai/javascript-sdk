@@ -33,16 +33,17 @@ function EvolvClient(options) {
     throw new Error('"env" must be specified');
   }
 
-  if (typeof options.autoConfirm === 'undefined') {
+  if (!('autoConfirm' in options)) {
     options.autoConfirm = true;
   }
 
-  options.endpoint = options.endpoint || 'https://participants.evolv.ai/';
   options.version = options.version || 1;
+  options.endpoint = options.endpoint || 'https://participants.evolv.ai/v' + options.version;
+  options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
 
-  const context = new Context(options);
+  const context = new Context();
   const store = new Store(options);
-  const contextBeacon = new Beacon(options.endpoint + '/' + options.env + '/analytics');
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.env + '/analytics') : null;
   const eventBeacon = new Beacon(options.endpoint + '/' + options.env + '/events');
 
   /**
@@ -235,30 +236,32 @@ function EvolvClient(options) {
     context.initialize(uid, sid, remoteContext, localContext);
     store.initialize(context);
 
-    waitFor(context, CONTEXT_INITIALIZED, function(type, ctx) {
-      contextBeacon.emit(type, context.remoteContext);
-    });
-    waitFor(context, CONTEXT_VALUE_ADDED, function(type, key, value, local) {
-      if (local) {
-        return;
-      }
+    if (options.analytics) {
+      waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
+        contextBeacon.emit(type, context.remoteContext);
+      });
+      waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
+        if (local) {
+          return;
+        }
 
-      contextBeacon.emit(type, { key: key, value: value });
-    });
-    waitFor(context, CONTEXT_VALUE_CHANGED, function(type, key, value, before, local) {
-      if (local) {
-        return;
-      }
+        contextBeacon.emit(type, {key: key, value: value});
+      });
+      waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
+        if (local) {
+          return;
+        }
 
-      contextBeacon.emit(type, { key: key, value: value });
-    });
-    waitFor(context, CONTEXT_VALUE_REMOVED, function(type, key, local) {
-      if (local) {
-        return;
-      }
+        contextBeacon.emit(type, {key: key, value: value});
+      });
+      waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
+        if (local) {
+          return;
+        }
 
-      contextBeacon.emit(type, { key: key });
-    });
+        contextBeacon.emit(type, {key: key});
+      });
+    }
 
     if (options.autoConfirm) {
       waitFor(context, EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
@@ -274,7 +277,9 @@ function EvolvClient(options) {
    */
   this.flush = function() {
     eventBeacon.flush();
-    contextBeacon.flush();
+    if (options.analytics) {
+      contextBeacon.flush();
+    }
   };
 
   /**
