@@ -32,7 +32,7 @@
     "email": "support@evolv.ai"
   },
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "base64-arraybuffer": "^0.2.0",
     "deepmerge": "^4.2.2"
   },
