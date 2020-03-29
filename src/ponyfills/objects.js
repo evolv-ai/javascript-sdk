@@ -70,10 +70,12 @@ export function removeValueForKey(key, map) {
       return false;
     }
 
-    if (recurse(keys, index + 1, map[key]) && Object.keys(map[key]).length === 0) {
+    const removed = recurse(keys, index + 1, map[key]);
+    if (removed && Object.keys(map[key]).length === 0) {
       delete map[key];
-      return true;
     }
+
+    return removed;
   }
 
   return recurse(key.split('.'), 0, map);

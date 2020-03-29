@@ -22,7 +22,7 @@
     "url": "https://github.com/evolv-ai/javascript-sdk"
   },
   "scripts": {
-    "prepublish": "webpack --config=webpack.prod.cjs",
+    "prepublishOnly": "webpack --config=webpack.prod.cjs",
     "test": "mocha",
     "build": "webpack --config=webpack.dev.cjs",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md"
@@ -32,7 +32,7 @@
     "email": "support@evolv.ai"
   },
   "license": "MIT",
-  "peerDependencies": {
+  "dependencies": {
     "base64-arraybuffer": "^0.2.0",
     "deepmerge": "^4.2.2"
   },

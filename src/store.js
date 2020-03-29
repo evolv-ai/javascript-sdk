@@ -116,6 +116,7 @@ function EvolvStore(options) {
   const key = options.auth && options.auth.secret;
 
   let context;
+  let clientContext = null;
   let initialized = false;
   let waitingToPull = false;
   let waitingToPullImmediate = true;
@@ -243,6 +244,9 @@ function EvolvStore(options) {
   function updateConfig(value) {
     config = value;
     configFailed = false;
+    if ('_client' in config) {
+      clientContext = config._client;
+    }
     value._experiments.forEach(function(exp) {
       const clean = objects.assign({}, exp);
       delete clean.id;
@@ -510,6 +514,12 @@ function EvolvStore(options) {
     initialized = true;
     pull();
     waitFor(context, CONTEXT_CHANGED, reevaluateContext);
+  };
+
+  this.getClientContext = function() {
+    return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
+      return clientContext;
+    });
   };
 
   this.subscribe = subscriptions.add.bind(subscriptions);

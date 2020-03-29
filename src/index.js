@@ -236,6 +236,25 @@ function EvolvClient(options) {
     context.initialize(uid, sid, remoteContext, localContext);
     store.initialize(context);
 
+    store.getClientContext()
+      .then(function(c) {
+        if (!c) {
+          return;
+        }
+
+        const updated = assign({}, c);
+        updated.web = {
+          client: {
+            browser: updated.browser
+          }
+        };
+        delete updated.browser;
+        context.update(updated, false);
+      })
+      .catch(function(err) {
+        console.log('Evolv: Failed to retrieve client context');
+      });
+
     if (options.analytics) {
       waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
         contextBeacon.emit(type, context.remoteContext);
