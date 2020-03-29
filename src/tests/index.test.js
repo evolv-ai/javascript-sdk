@@ -93,7 +93,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.getConfig('web')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
-  expect(contextChangedSpy).to.have.been.called(2);
+  expect(contextChangedSpy).to.have.been.called(3);
 
   const valueWebKeySpy = chai.spy();
   const valueWebAb8numq2jKeySpy = chai.spy();
@@ -111,7 +111,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.set('user_attributes.country', 'usa');
-  expect(contextChangedSpy).to.have.been.called(3);
+  expect(contextChangedSpy).to.have.been.called(4);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2.id')).to.equal('2fxe5dy5j');
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
@@ -147,7 +147,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.getActiveKeys('nope').listen(noKeysSpy);
 
   evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
-  expect(contextChangedSpy).to.have.been.called(4);
+  expect(contextChangedSpy).to.have.been.called(5);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
@@ -163,7 +163,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.remove('web.url');
-  expect(contextChangedSpy).to.have.been.called(5);
+  expect(contextChangedSpy).to.have.been.called(6);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
@@ -226,6 +226,10 @@ describe('Evolv client', () => {
         configSignature = req.header('Signature');
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows'
+          },
           _experiments: [
             {
               web: {
@@ -329,6 +333,9 @@ describe('Evolv client', () => {
 
       await validateClient(evolv, options, uid, sid);
 
+      expect(evolv.context.get('web.client.browser')).to.equal('chrome');
+      expect(evolv.context.get('platform')).to.equal('windows');
+
       expect(configSignature).to.equal(null);
       expect(allocSignature).to.equal(null);
     });
@@ -352,6 +359,7 @@ describe('Evolv client', () => {
         configBody = req.body() || '';
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
+          _client: {},
           _experiments: [
             {
               web: {
@@ -477,6 +485,7 @@ describe('Evolv client', () => {
       xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
+          _client: {},
           _experiments: [
             {
               web: {
