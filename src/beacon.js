@@ -47,6 +47,10 @@ export default function Emitter(endpoint) {
 
     batch.forEach(function(message) {
       const endpointMatch = endpoint.match(new RegExp('\\/(v\\d+)\\/\\w+\\/([a-z]+)$'));
+      if (!endpointMatch) {
+        throw new Error('Evolv: Invalid endpoint');
+      }
+
       if (endpointMatch[2] === 'analytics' && endpointMatch[1] === 'v1') {
         return;
       }

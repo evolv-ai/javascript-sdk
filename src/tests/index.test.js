@@ -1,6 +1,6 @@
 import chai from 'chai';
 import spies from 'chai-spies';
-import Evolv, { INITIALIZED } from '../index.js';
+import Evolv from '../index.js';
 
 import xmlhttprequest from 'xmlhttprequest';
 import _xhrMock from 'xhr-mock';
@@ -32,7 +32,7 @@ async function validateSignature(keys, signature, body) {
 
 async function validateClient(evolv, options, uid, sid) {
   let initializedSpy = chai.spy();
-  evolv.once(INITIALIZED, initializedSpy);
+  evolv.once(Evolv.INITIALIZED, initializedSpy);
   expect(initializedSpy).to.not.have.been.called;
 
   let contextInitializedSpy = chai.spy();
@@ -73,7 +73,7 @@ async function validateClient(evolv, options, uid, sid) {
   );
 
   expect(initializedSpy).to.have.been.called.once;
-  expect(initializedSpy).to.have.been.called.once.with(INITIALIZED, options);
+  expect(initializedSpy).to.have.been.called.once.with(Evolv.INITIALIZED, options);
   expect(contextInitializedSpy).to.have.been.called.once;
 
   let contextChangedSpy = chai.spy();
@@ -108,6 +108,8 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
   expect((await evolv.getActiveKeys('web')).length).to.equal(0);
 
+  evolv.confirm();
+
   evolv.context.set('user_attributes.country', 'usa');
   expect(contextChangedSpy).to.have.been.called(3);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
@@ -133,6 +135,10 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.isActive('web.ab8numq2j').listen(isActiveWebAb8numq2jKeySpy);
   evolv.isActive('web.ab8numq2j.am94yhwo2').listen(isActiveWebAb8numq2jAm94yhwo2KeySpy);
 
+  evolv.confirm();
+  evolv.emit('lunch-time', 33);
+  evolv.contaminate();
+
   const allKeysSpy = chai.spy();
   const webKeysSpy = chai.spy();
   const noKeysSpy = chai.spy();
@@ -154,6 +160,8 @@ async function validateClient(evolv, options, uid, sid) {
     "web.7w3zpgfy9.azevlvf5g.type",
   ]);
 
+  evolv.confirm();
+
   evolv.context.remove('web.url');
   expect(contextChangedSpy).to.have.been.called(5);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
@@ -164,10 +172,6 @@ async function validateClient(evolv, options, uid, sid) {
 
   expect(initializedSpy).to.have.been.called.once;
   expect(contextInitializedSpy).to.have.been.called.once;
-
-  evolv.confirm();
-  evolv.emit('lunch-time', 33);
-  evolv.contaminate();
 
   evolv.flush();
 
@@ -579,14 +583,14 @@ describe('Evolv client', () => {
       expect(results.analyticsPayloads.length).to.equal(6);
       expect(results.analyticsPayloads[5][0]).to.equal('context.value.removed');
       expect(results.eventPayloads.length).to.equal(3);
-      expect(results.eventPayloads[0][0]).to.equal('confirmation');
-      expect(results.eventPayloads[0][1].uid).to.equal(uid);
-      expect(results.eventPayloads[0][1].sid).to.equal(sid);
-      expect(results.eventPayloads[0][1].eid).to.equal('0f39849197');
-      expect(results.eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
-      expect(results.eventPayloads[1][0]).to.equal('lunch-time');
-      expect(results.eventPayloads[1][1].score).to.equal(33);
-      expect(results.eventPayloads[2][0]).to.equal('contamination');
+      expect(results.eventPayloads[0][0]).to.equal('lunch-time');
+      expect(results.eventPayloads[0][1].score).to.equal(33);
+      expect(results.eventPayloads[1][0]).to.equal('contamination');
+      expect(results.eventPayloads[1][1].uid).to.equal(uid);
+      expect(results.eventPayloads[1][1].sid).to.equal(sid);
+      expect(results.eventPayloads[1][1].eid).to.equal('0f39849197');
+      expect(results.eventPayloads[1][1].cid).to.equal('0cf8ffcedea2:0f39849197');
+      expect(results.eventPayloads[2][0]).to.equal('confirmation');
       expect(results.eventPayloads[2][1].uid).to.equal(uid);
       expect(results.eventPayloads[2][1].sid).to.equal(sid);
       expect(results.eventPayloads[2][1].eid).to.equal('0f39849197');
