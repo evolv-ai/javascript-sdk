@@ -84,7 +84,7 @@ function EvolvContext() {
   /**
    * Sets a value in the current context.
    *
-   * This will cause the effective genome to be recomputed.
+   * Note: This will cause the effective genome to be recomputed.
    *
    * @param key {String} The key to associate the value to.
    * @param value {*} The value to associate with the key.
@@ -94,6 +94,11 @@ function EvolvContext() {
     ensureInitialized();
     const context = local ? localContext : remoteContext;
     const before = objects.getValueForKey(key, context);
+
+    if (before === value) {
+      return false;
+    }
+
     objects.setKeyToValue(key, value, context);
 
     const updated = this.resolve();
@@ -103,12 +108,49 @@ function EvolvContext() {
       emit(this, CONTEXT_VALUE_CHANGED, key, value, before, local, updated);
     }
     emit(this, CONTEXT_CHANGED, updated);
+    return true;
+  };
+
+  /**
+   * Merge the specified object into the current context.
+   *
+   * Note: This will cause the effective genome to be recomputed.
+   *
+   * @param update {Object} The values to update the context with.
+   * @param local {Boolean} If true, the values will only be added to the localContext.
+   */
+  this.update = function(update, local) {
+    ensureInitialized();
+    let context = local ? localContext : remoteContext;
+    const flattened = objects.flatten(update);
+    const flattenedBefore = {};
+    Object.keys(flattened).forEach(function(key) {
+      flattenedBefore[key] = context[key];
+    });
+
+    if (local) {
+      localContext = objects.deepMerge(localContext, update);
+      context = localContext;
+    } else {
+      remoteContext = objects.deepMerge(remoteContext, update);
+      context = remoteContext;
+    }
+
+    const updated = this.resolve();
+    Object.keys(flattened).forEach(function(key) {
+      if (typeof flattenedBefore[key] === 'undefined') {
+        emit(this, CONTEXT_VALUE_ADDED, key, value, local, updated);
+      } else if (flattenedBefore[key] !== context[key]) {
+        emit(this, CONTEXT_VALUE_CHANGED, key, value, flattenedBefore[key], local, updated);
+      }
+    });
+    emit(this, CONTEXT_CHANGED, updated);
   };
 
   /**
    * Remove a specified key from the context.
    *
-   * This will cause the effective genome to be recomputed.
+   * Note: This will cause the effective genome to be recomputed.
    *
    * @param key {String} The key to remove from the context.
    */
