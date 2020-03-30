@@ -230,7 +230,7 @@ function EvolvClient(options) {
    */
   this.initialize = function (uid, sid, remoteContext, localContext) {
     if (initialized) {
-      throw Error('Evolv: Client is already initialized');
+      throw new Error('Evolv: Client is already initialized');
     }
 
     if (!uid) {
