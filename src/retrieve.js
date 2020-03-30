@@ -97,13 +97,16 @@ function xhrRequest(options) {
       } else if (this.status === 202) {
         resolve();
       } else {
-        console.error('Evolv: Invalid status ' + this.status + ' for response ' + this.responseText);
-        reject(msg);
+        const message = 'Evolv: Invalid status ' + this.status + ' for response ' + this.responseText;
+        console.error(message);
+        reject(message);
       }
     });
     xhr.addEventListener('error', reject);
     xhr.open(options.method, options.url, options.sync);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    if (options.method.toUpperCase() === 'POST' || options.method.toUpperCase() === 'PUT') {
+      xhr.setRequestHeader('Content-Type', options.encoding);
+    }
     xhr.setRequestHeader('Accept', 'application/json');
     if (options.signature) {
       xhr.setRequestHeader('Signature', createSignatureHeader(options.keyId, options.signature));
@@ -124,7 +127,7 @@ function nodeRequest(options) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
-        'Content-Type': 'application/json;charset=UTF-8',
+        'Content-Type': options.encoding,
         'Accept': 'application/json',
         'Content-Length': Buffer.byteLength(options.payload)
       };
@@ -149,15 +152,24 @@ function nodeRequest(options) {
 
 export default function retrieve(options) {
   return MiniPromise.createPromise(function(resolve, reject) {
+    const completeOptions = assign({}, options);
+    completeOptions.encoding = completeOptions.encoding || 'application/json; charset=UTF-8';
+
     let payload;
-    if (!options.data) {
+    if (!completeOptions.data) {
       payload = '';
-    } else if (typeof options.data === 'object') {
-      payload = JSON.stringify(options.data);
+    } else if (typeof completeOptions.data === 'object') {
+      if (completeOptions.encoding === 'application/x-www-form-urlencoded') {
+        payload = Object.keys(completeOptions.data).map(function(key) {
+          return encodeURIComponent(key) + '=' + encodeURIComponent(completeOptions.data[key]);
+        }).join('&');
+      } else {
+        payload = JSON.stringify(completeOptions.data);
+      }
     } else {
-      payload = options.data;
+      payload = completeOptions.data;
     }
-    options = assign({ payload:  payload }, options);
+    completeOptions.payload = payload;
 
     let rx;
     if (typeof XMLHttpRequest !== 'undefined') {
@@ -166,16 +178,16 @@ export default function retrieve(options) {
       rx = nodeRequest;
     }
 
-    if (!options.key) {
-      rx(options)
+    if (!completeOptions.key) {
+      rx(completeOptions)
         .then(resolve)
         .catch(reject);
       return;
     }
 
-    sign(options.key, str2ab(options.payload))
+    sign(completeOptions.key, str2ab(completeOptions.payload))
       .then(function (signature) {
-        rx(assign({signature:signature}, options))
+        rx(assign({signature:signature}, completeOptions))
           .then(resolve)
           .catch(reject);
       })
