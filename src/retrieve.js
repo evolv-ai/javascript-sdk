@@ -103,7 +103,8 @@ function xhrRequest(options) {
     });
     xhr.addEventListener('error', reject);
     xhr.open(options.method, options.url, options.sync);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    // TODO: use correct encoding, avoid CORS errors: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+    // xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     xhr.setRequestHeader('Accept', 'application/json');
     if (options.signature) {
       xhr.setRequestHeader('Signature', createSignatureHeader(options.keyId, options.signature));
