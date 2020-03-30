@@ -43,7 +43,7 @@ async function validateClient(evolv, options, uid, sid) {
   let eventPayloads = [];
   const beaconHandler = (req, res) => {
     expect(req.method()).to.equal('POST');
-    expect(req.header('Content-Type')).to.equal('application/json;charset=UTF-8');
+    expect(req.header('Content-Type')).to.equal('application/json; charset=UTF-8');
 
     const body = req.body();
     const data = JSON.parse(body);
@@ -224,6 +224,14 @@ describe('Evolv client', () => {
 
       xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
         configSignature = req.header('Signature');
+        if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
+          return res.status(415);
+        }
+
+        if (req.method() !== 'GET') {
+          return res.status(405);
+        }
+
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
           _client: {
@@ -281,6 +289,14 @@ describe('Evolv client', () => {
 
       xhrMock.post(`${endpoint}/${env}/allocations`, (req, res) => {
         allocSignature = req.header('Signature');
+        if (req.header('Content-Type') !== 'application/x-www-form-urlencoded') {
+          return res.status(415);
+        }
+
+        if (req.method() !== 'POST') {
+          return res.status(405);
+        }
+
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,

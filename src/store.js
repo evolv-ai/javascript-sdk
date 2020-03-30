@@ -395,6 +395,7 @@ function EvolvStore(options) {
       genomeKeyStates.needed.clear();
       retrieve({
         method: 'post',
+        encoding: 'application/x-www-form-urlencoded',
         url: prefix + '/allocations',
         keyId: keyId,
         key: key,
