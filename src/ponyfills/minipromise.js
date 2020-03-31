@@ -18,9 +18,9 @@ export default function MiniPromise(executor) {
     args.shift();
     args.shift();
     this._errored = errored;
-    this._responseArgs = arguments;
-    this._catches.forEach(invoker.bind(this, arguments));
-    this._finallys.forEach(invoker.bind(this, arguments));
+    this._responseArgs = args;
+    this._catches.forEach(invoker.bind(this, args));
+    this._finallys.forEach(invoker.bind(this, args));
   };
 
   const reject = response.bind(this, true, this._catches);
