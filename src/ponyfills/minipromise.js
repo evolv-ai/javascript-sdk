@@ -1,5 +1,5 @@
 const invoker = function(args, fn) {
-  fn.call(this, args);
+  fn.apply(this, args);
 };
 
 export default function MiniPromise(executor) {
@@ -19,11 +19,11 @@ export default function MiniPromise(executor) {
     args.shift();
     this._errored = errored;
     this._responseArgs = args;
-    this._catches.forEach(invoker.bind(this, args));
+    handlers.forEach(invoker.bind(this, args));
     this._finallys.forEach(invoker.bind(this, args));
   };
 
-  const reject = response.bind(this, true, this._catches);
+  const reject = response.bind(this, true, this.handlers);
   const resolve = response.bind(this, false, this._thens);
 
   try {
