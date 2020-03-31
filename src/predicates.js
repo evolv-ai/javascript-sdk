@@ -1,4 +1,5 @@
 import base64 from './ponyfills/base64.js';
+import * as strings from './ponyfills/strings.js';
 
 const AND = 'and';
 const OR = 'or';
@@ -11,18 +12,18 @@ const FILTER_OPERATORS = {
   not_equal: function(a, b) { return a !== b; },
   not_regex_match: function(value, pattern) { return value && !value.match(pattern); },
   not_regex64_match: function(value, pattern) { return !regex64Match(value, pattern) },
-  not_starts_with: function(a, b) { return !a.startsWith(b); },
+  not_starts_with: function(a, b) { return !strings.startsWith(a, b); },
   kv_contains: function(obj, params) { return (params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0) },
   kv_equal: function(obj, params) { return obj[params[0]] === params[1]; },
   kv_not_contains: function(obj, params) { return !((params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0)); },
   kv_not_equal: function(obj, params) { return obj[params[0]] !== params[1]; },
   regex_match: function(value, pattern) { return value && value.match(pattern); },
   regex64_match: regex64Match,
-  starts_with: function(a, b){ return a.startsWith(b); }
+  starts_with: function(a, b){ return strings.startsWith(a, b); }
 };
 
 function regexFromString (string) {
-  if (!string.startsWith('/')) {
+  if (!strings.startsWith(string, '/')) {
     return new RegExp(string);
   }
 
@@ -59,7 +60,7 @@ function valueFromKey(context, key) {
 function evaluateFilter(user, rule) {
   const value = valueFromKey(user, rule.field);
 
-  if (rule.operator.startsWith('kv_') && !value) {
+  if (strings.startsWith(rule.operator, 'kv_') && !value) {
     return false;
   }
 
@@ -91,7 +92,7 @@ function evaluateRule(user, query, rule, passedRules, failedRules) {
 
 
 function evaluatePredicate(user, query, passedRules, failedRules) {
-  const { rules } = query;
+  const rules = query.rules;
 
   if (!rules) {
     return true;
