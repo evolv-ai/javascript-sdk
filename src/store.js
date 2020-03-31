@@ -1,5 +1,6 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import * as objects from './ponyfills/objects.js';
+import * as strings from './ponyfills/strings.js';
 
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
@@ -51,7 +52,7 @@ function getValueActive(activeKeys, key) {
 function getActiveKeys(activeKeys, prefix) {
   const result = [];
   activeKeys.forEach(function(key) {
-    if (!prefix || key.startsWith(prefix)) {
+    if (!prefix || strings.startsWith(key, prefix)) {
       result.push(key);
     }
   });
@@ -83,7 +84,7 @@ export function evaluatePredicates(version, context, config) {
     }
 
     Object.keys(config).forEach(function (key) {
-      if (key.startsWith('_')) {
+      if (strings.startsWith(key, '_')) {
         return;
       }
 
@@ -186,13 +187,13 @@ function EvolvStore(options) {
       const result = results[eid];
       genomeKeyStates.loaded.forEach(function(key) {
         const active = !result.disabled.some(function(disabledKey) {
-          return key.startsWith(disabledKey);
+          return strings.startsWith(key, disabledKey);
         });
 
         if (active) {
           configKeyStates.active.add(key);
           const entry = result.entry.some(function(entryKey) {
-            return key.startsWith(entryKey);
+            return strings.startsWith(key, entryKey);
           });
 
           if (entry) {
@@ -234,7 +235,7 @@ function EvolvStore(options) {
 
       genomes[clean.eid] = alloc.genome;
       objects.flattenKeys(alloc.genome, function(key) {
-        return !key.startsWith('_');
+        return !strings.startsWith(key, '_');
       }).forEach(genomeKeyStates.loaded.add.bind(genomeKeyStates.loaded));
     });
     context.set('experiments.allocations', allocs);
@@ -251,7 +252,7 @@ function EvolvStore(options) {
       const clean = objects.assign({}, exp);
       delete clean.id;
       objects.flattenKeys(clean, function(key) {
-        return !key.startsWith('_');
+        return !strings.startsWith(key, '_');
       }).forEach(configKeyStates.loaded.add.bind(configKeyStates.loaded));
     });
   }
@@ -282,7 +283,7 @@ function EvolvStore(options) {
       if (promise.key) {
         configLoaded = false;
         configKeyStates.loaded.forEach(function(prefix) {
-          if (promise.key.startsWith(prefix)) {
+          if (strings.startsWith(promise.key, prefix)) {
             configLoaded = true;
           }
         });
@@ -438,7 +439,7 @@ function EvolvStore(options) {
       failed = configFailed;
       outstandingPromises = outstandingConfigPromises;
       keyStates.loaded.forEach(function(prefix) {
-        if (!key || key.startsWith(prefix)) {
+        if (!key || strings.startsWith(key, prefix)) {
           loaded = true;
         }
       });
