@@ -190,7 +190,7 @@ function EvolvClient(options) {
         eventBeacon.flush();
         emit(context, EvolvClient.CONFIRMED);
       })
-      .catch(function() {
+      .catch(function(err) {
         console.error('Evolv: Failed to confirm rendering');
       });
   };
