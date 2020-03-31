@@ -91,7 +91,7 @@ function evaluateRule(user, query, rule, passedRules, failedRules) {
 
 
 function evaluatePredicate(user, query, passedRules, failedRules) {
-  const { rules } = query;
+  const rules = query.rules;
 
   if (!rules) {
     return true;

@@ -1,6 +1,6 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import base64 from './ponyfills/base64.js';
-import { assign} from './ponyfills/objects.js';
+import { assign } from './ponyfills/objects.js';
 
 const URL_PATTERN = /^([a-z]+):\/\/([^/]+)(.*)/i;
 
@@ -116,6 +116,8 @@ function xhrRequest(options) {
 }
 
 function nodeRequest(options) {
+  const self = this;
+
   return MiniPromise.createPromise(function(resolve, reject) {
     const parts = URL_PATTERN.exec(options.url);
     if (!parts) {
@@ -123,7 +125,7 @@ function nodeRequest(options) {
     }
 
     const schema = parts[1];
-    (schema === 'http' ? import('http') : import('https')).then(function (http) {
+    (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
