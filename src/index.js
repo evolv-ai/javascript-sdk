@@ -40,9 +40,6 @@ function EvolvClient(options) {
   options.version = options.version || 1;
   options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
   options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
-  console.log('ANALYTICS')
-  console.log(options.version)
-  console.log(options.analytics)
 
   const context = new Context();
   const store = new Store(options);

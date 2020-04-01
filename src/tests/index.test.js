@@ -58,9 +58,9 @@ async function validateClient(evolv, options, uid, sid) {
     return res.status(202);
   };
 
-  xhrMock.post(`${options.endpoint}v${options.version}/${options.environment}/analytics`, beaconHandler);
+  xhrMock.post(`${options.endpoint}/${options.environment}/analytics`, beaconHandler);
 
-  xhrMock.post(`${options.endpoint}v${options.version}/${options.environment}/events`, beaconHandler);
+  xhrMock.post(`${options.endpoint}/${options.environment}/events`, beaconHandler);
 
   evolv.initialize(uid, sid, {
       remote: true,
