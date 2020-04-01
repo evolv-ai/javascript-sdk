@@ -52,6 +52,11 @@ function EvolvClient(options) {
   Object.defineProperty(this, 'context', { get: function() { return context; } });
 
   /**
+   * The current environment id.
+   */
+  Object.defineProperty(this, 'environmentId', { get: function() { return options.env; } });
+
+  /**
    * Add listeners to lifecycle events that take place in to client.
    *
    * Currently supported events:
