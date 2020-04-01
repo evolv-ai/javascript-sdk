@@ -26,8 +26,10 @@ export default function Emitter(endpoint) {
 
   function send(url, data, sync) {
     if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
-      const encoded = new Blob([data], { type: 'application/json; charset=UTF-8' });
-      return window.navigator.sendBeacon(url, encoded);
+      // Chrome does not yet support this
+      // const encoded = new Blob([data], { type: 'application/json; charset=UTF-8' });
+      // return window.navigator.sendBeacon(url, encoded);
+      return window.navigator.sendBeacon(url, data);
     } else {
       return fallbackBeacon(url, data, sync);
     }
