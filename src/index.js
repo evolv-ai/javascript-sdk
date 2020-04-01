@@ -29,8 +29,8 @@ import { assign } from './ponyfills/objects.js';
 function EvolvClient(options) {
   let initialized = false;
 
-  if (!options.env) {
-    throw new Error('"env" must be specified');
+  if (!options.environment) {
+    throw new Error('"environment" must be specified');
   }
 
   if (!('autoConfirm' in options)) {
@@ -38,18 +38,23 @@ function EvolvClient(options) {
   }
 
   options.version = options.version || 1;
-  options.endpoint = options.endpoint || 'https://participants.evolv.ai/v' + options.version;
+  options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
   options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
 
   const context = new Context();
   const store = new Store(options);
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.env + '/analytics') : null;
-  const eventBeacon = new Beacon(options.endpoint + '/' + options.env + '/events');
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/analytics') : null;
+  const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events');
 
   /**
    * The context against which the key predicates will be evaluated.
    */
   Object.defineProperty(this, 'context', { get: function() { return context; } });
+
+  /**
+   * The current environment id.
+   */
+  Object.defineProperty(this, 'environment', { get: function() { return options.environment; } });
 
   /**
    * Add listeners to lifecycle events that take place in to client.
