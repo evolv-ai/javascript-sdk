@@ -58,9 +58,9 @@ async function validateClient(evolv, options, uid, sid) {
     return res.status(202);
   };
 
-  xhrMock.post(`${options.endpoint}/${options.env}/analytics`, beaconHandler);
+  xhrMock.post(`${options.endpoint}v${options.version}/${options.environment}/analytics`, beaconHandler);
 
-  xhrMock.post(`${options.endpoint}/${options.env}/events`, beaconHandler);
+  xhrMock.post(`${options.endpoint}v${options.version}/${options.environment}/events`, beaconHandler);
 
   evolv.initialize(uid, sid, {
       remote: true,
@@ -216,13 +216,14 @@ describe('Evolv client', () => {
     it('should load variants and reevaluate context correctly', async () => {
       const uid = 123;
       const sid = 321;
-      const env = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/v1';
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
+      const version = 1
 
       let configSignature = null;
       let allocSignature = null;
 
-      xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
         configSignature = req.header('Signature');
         if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
           return res.status(415);
@@ -287,7 +288,7 @@ describe('Evolv client', () => {
           }));
       });
 
-      xhrMock.post(`${endpoint}/${env}/allocations`, (req, res) => {
+      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
         allocSignature = req.header('Signature');
         if (req.header('Content-Type') !== 'application/x-www-form-urlencoded') {
           return res.status(415);
@@ -342,8 +343,9 @@ describe('Evolv client', () => {
       });
 
       const options = {
-        env,
-        endpoint
+        environment,
+        endpoint,
+        version
       };
       const evolv = new Evolv(options);
 
@@ -359,18 +361,19 @@ describe('Evolv client', () => {
     it('should load variants and reevaluate context correctly with authentication', async () => {
       const uid = 123;
       const sid = 321;
-      const env = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/v1';
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
       const id = 'mine';
       const secret = 'yep, lunch';
       const algorithm = { name: 'HMAC', hash: 'SHA-384' };
+      const version = 1;
 
       let configSignature = undefined;
       let configBody = undefined;
       let allocSignature = undefined;
       let allocBody = undefined;
 
-      xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
         configSignature = req.header('Signature');
         configBody = req.body() || '';
         return res.status(200).body(JSON.stringify({
@@ -425,7 +428,7 @@ describe('Evolv client', () => {
         }));
       });
 
-      xhrMock.post(`${endpoint}/${env}/allocations`, (req, res) => {
+      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
         allocSignature = req.header('Signature');
         allocBody = req.body() || '';
         return res.status(200).body(JSON.stringify([
@@ -473,8 +476,9 @@ describe('Evolv client', () => {
       });
 
       const options = {
-        env,
+        environment,
         endpoint,
+        version,
         auth: {
           id,
           secret
@@ -495,10 +499,11 @@ describe('Evolv client', () => {
     it('should load variants and reevaluate context correctly', async () => {
       const uid = 123;
       const sid = 321;
-      const env = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/v2';
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
+      const version = 2;
 
-      xhrMock.get(`${endpoint}/${env}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
           _client: {},
@@ -551,7 +556,7 @@ describe('Evolv client', () => {
         }));
       });
 
-      xhrMock.post(`${endpoint}/${env}/allocations`, (req, res) => {
+      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
@@ -597,9 +602,9 @@ describe('Evolv client', () => {
       });
 
       const options = {
-        env,
+        environment,
         endpoint,
-        version: 2,
+        version,
       };
       const evolv = new Evolv(options);
 
