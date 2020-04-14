@@ -1,8 +1,7 @@
+import xmlhttprequest from 'xmlhttprequest';
 import MiniPromise from './ponyfills/minipromise.js';
 import base64 from './ponyfills/base64.js';
 import { assign } from './ponyfills/objects.js';
-
-const URL_PATTERN = /^([a-z]+):\/\/([^/]+)(.*)/i;
 
 function cryptography() {
   return typeof crypto !== 'undefined' ? crypto : msCrypto;
@@ -83,9 +82,9 @@ function createSignatureHeader(signatureKeyId, signature) {
   return 'keyId="' + signatureKeyId + '",algorithm="hmac-sha384",signature="' + signature + '"';
 }
 
-function xhrRequest(options) {
+function request(options) {
   return MiniPromise.createPromise(function(resolve, reject) {
-    const xhr = new XMLHttpRequest();
+    const xhr = new xmlhttprequest.XMLHttpRequest();
     xhr.addEventListener('load', function () {
       if (this.status >= 400) {
         reject(this.statusText || ('Evolv: Request failed ' + this.status));
@@ -109,46 +108,9 @@ function xhrRequest(options) {
     }
     xhr.setRequestHeader('Accept', 'application/json');
     if (options.signature) {
-      xhr.setRequestHeader('Signature', createSignatureHeader(options.keyId, options.signature));
+      xhr.setRequestHeader('Signature', options.signature);
     }
     xhr.send(options.payload);
-  });
-}
-
-function nodeRequest(options) {
-  const self = this;
-
-  return MiniPromise.createPromise(function(resolve, reject) {
-    const parts = URL_PATTERN.exec(options.url);
-    if (!parts) {
-      throw new Error('Evolv: Invalid endpoint URL');
-    }
-
-    const schema = parts[1];
-    (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
-      const hostname = parts[2];
-      const path = parts[3];
-      const headers = {
-        'Content-Type': options.encoding,
-        'Accept': 'application/json',
-        'Content-Length': Buffer.byteLength(options.payload)
-      };
-
-      if (options.signature) {
-        headers['Signature'] = createSignatureHeader(options.keyId, options.signature);
-      }
-      const req = http.request({
-        hostname: hostname,
-        path: path,
-        method: options.method,
-        headers: headers
-      }, function (res) {
-        res.on('data', resolve);
-      });
-      req.on('error', reject);
-      req.write(options.payload);
-      req.end();
-    });
   });
 }
 
@@ -173,15 +135,8 @@ export default function retrieve(options) {
     }
     completeOptions.payload = payload;
 
-    let rx;
-    if (typeof XMLHttpRequest !== 'undefined') {
-      rx = xhrRequest;
-    } else {
-      rx = nodeRequest;
-    }
-
     if (!completeOptions.key) {
-      rx(completeOptions)
+      request(completeOptions)
         .then(resolve)
         .catch(reject);
       return;
@@ -189,7 +144,7 @@ export default function retrieve(options) {
 
     sign(completeOptions.key, str2ab(completeOptions.payload))
       .then(function (signature) {
-        rx(assign({signature:signature}, completeOptions))
+        request(assign({signature: createSignatureHeader(options.keyId, signature)}, completeOptions))
           .then(resolve)
           .catch(reject);
       })

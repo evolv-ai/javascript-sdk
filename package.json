@@ -5,8 +5,10 @@
   "main": "dist/index.js",
   "module": "src/index.js",
   "exports": {
-    "import": "./src/index.js",
-    "require": "./dist/index.js"
+    ".": {
+      "default": "./src/index.js",
+      "require": "./dist/index.js"
+    }
   },
   "type": "module",
   "homepage": "https://www.evolv.ai",
@@ -22,7 +24,7 @@
     "url": "https://github.com/evolv-ai/javascript-sdk"
   },
   "engines": {
-    "node": ">=13"
+    "node": ">=12"
   },
   "scripts": {
     "prepublishOnly": "webpack --experimental-modules --config=webpack.prod.cjs",
@@ -37,7 +39,8 @@
   "license": "MIT",
   "dependencies": {
     "base64-arraybuffer": "^0.2.0",
-    "deepmerge": "^4.2.2"
+    "deepmerge": "^4.2.2",
+    "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -48,8 +51,7 @@
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2",
-    "xhr-mock": "^2.5.1",
-    "xmlhttprequest": "^1.8.0"
+    "xhr-mock": "^2.5.1"
   },
   "mocha": {
     "extension": [
