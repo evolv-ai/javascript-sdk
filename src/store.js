@@ -380,7 +380,7 @@ function EvolvStore(options) {
       configKeyStates.needed.clear();
       retrieve({
         method: 'get',
-        url: prefix + '/configuration.json',
+        url: prefix + '/' + context.uid + '/configuration.json',
         keyId: keyId,
         key: key
       })
