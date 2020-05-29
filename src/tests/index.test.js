@@ -223,7 +223,7 @@ describe('Evolv client', () => {
       let configSignature = null;
       let allocSignature = null;
 
-      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         configSignature = req.header('Signature');
         if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
           return res.status(415);
@@ -373,7 +373,7 @@ describe('Evolv client', () => {
       let allocSignature = undefined;
       let allocBody = undefined;
 
-      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         configSignature = req.header('Signature');
         configBody = req.body() || '';
         return res.status(200).body(JSON.stringify({
@@ -503,7 +503,7 @@ describe('Evolv client', () => {
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
 
-      xhrMock.get(`${endpoint}v${version}/${environment}/configuration.json`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
           _client: {},
