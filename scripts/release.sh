@@ -11,7 +11,6 @@ if [[ "$EVOLV_STAGE" == "prod" ]]; then
 	npm run release
 	echo "Done releasing javascript-sdk to prod"
 elif [[ "$EVOLV_STAGE" == "staging" ]]; then
-	pip install awscli
 	echo "Releasing javascript-sdk to staging"
 	npm run staging:release
 	echo "Done releasing javascript-sdk to staging"
