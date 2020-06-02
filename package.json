@@ -1,6 +1,6 @@
 {
   "name": "@evolv/javascript-sdk",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "This is the official JavaScript client for the Evolv Technologies optimization platform.",
   "main": "dist/index.js",
   "module": "src/index.js",
@@ -30,7 +30,9 @@
     "prepublishOnly": "webpack --experimental-modules --config=webpack.prod.cjs",
     "test": "mocha --experimental-modules",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
-    "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md"
+    "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md",
+    "release": "npm version $SEM_VER --no-git-tag-version && npm publish --access public",
+    "staging:release": "npm version $SEM_VER --no-git-tag-version && npm publish --tag next --access public"
   },
   "author": {
     "name": "Evolv Technologies",
