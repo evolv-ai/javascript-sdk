@@ -1,0 +1,117 @@
+name: Deploy to Environment
+
+on:
+  deployment
+
+jobs:
+  deploy:
+    name: Deploy to Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Variables
+        id: set_variables
+        run: |
+          export RELEASE_TAG=${{github.event.deployment.ref}}
+          export SEM_VER=${RELEASE_TAG/release\/}
+          echo ::set-output name=SEM_VER::${SEM_VER}
+          if [[ "${{github.event.deployment.environment}}" == "prod" ]]
+          then
+            echo ::set-output name=SLACK_CHANNEL::deploy-prod
+            echo ::set-output name=CREATE_RELEASE::true
+            echo ::set-output name=PRERELEASE::false
+            echo ::set-output name=SLACK_WEBHOOK::${{ secrets.PROD_SLACK_WEBHOOK }}
+          elif [[ "${{github.event.deployment.environment}}" == "staging" ]]
+          then
+            echo ::set-output name=SLACK_CHANNEL::deploy-staging
+            echo ::set-output name=CREATE_RELEASE::true
+            echo ::set-output name=PRERELEASE::true
+            echo ::set-output name=SEM_VER::${SEM_VER}-${GITHUB_SHA:0:9}
+            echo ::set-output name=SLACK_WEBHOOK::${{ secrets.STAGING_SLACK_WEBHOOK }}
+          else
+            echo ::set-output name=SLACK_CHANNEL::deploy
+            echo ::set-output name=CREATE_RELEASE::false
+            echo ::set-output name=SLACK_WEBHOOK::${{ secrets.SLACK_WEBHOOK }}
+          fi
+      - name: Checkout Ref
+        uses: actions/checkout@v1
+        with: 
+          ref: ${{ github.event.deployment.ref }}
+      - name: Create Tag
+        id: create_tag
+        run: |
+          if [[ "${{github.event.deployment.environment}}" == "prod" ]] || [[ "${{github.event.deployment.environment}}" == "staging" ]]
+          then
+            export NEW_TAG="v${{ steps.set_variables.outputs.SEM_VER }}"
+            echo ::set-output name=NEW_TAG::${NEW_TAG}
+            # POST a new ref to repo via Github API
+            curl -s -X POST https://api.github.com/repos/${{ github.repository }}/git/refs \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"refs/tags/'"$NEW_TAG"'", "sha":"${{ github.event.deployment.sha }}"}'
+          fi
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '13'
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2.0.2
+        env:
+          SLACK_WEBHOOK: ${{ steps.set_variables.outputs.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ${{ steps.set_variables.outputs.SLACK_CHANNEL }}
+          SLACK_TITLE: '${{ github.repository }} deployment to ${{ github.event.deployment.environment }} starting :crossed_fingers:'
+          SLACK_MESSAGE: 'Deploying tag <https://github.com/${{ github.repository }}/tree/${{ github.event.deployment.ref }}|${{ github.event.deployment.ref }}> to ${{ github.event.deployment.environment }}.'
+          SLACK_COLOR: '#ffff00'
+      - name: Deploy Code
+        run: bash -e ./scripts/release.sh
+        env:
+          EVOLV_STAGE: ${{ github.event.deployment.environment }}
+          SEM_VER: ${{ steps.set_variables.outputs.SEM_VER }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-west-2
+      - name: Update Deployment Status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          state: "success"
+          deployment_id: ${{ github.event.deployment.id }}
+      - name: Create Github Release (success)
+        uses: meeDamian/github-release@2.0
+        if: success() && ${{ steps.set_variables.outputs.CREATE_RELEASE }}
+        with:
+          token: ${{ github.token }}
+          tag: ${{ steps.create_tag.outputs.NEW_TAG }}
+          name: ${{ steps.set_variables.outputs.SEM_VER }}
+          prerelease: ${{ steps.set_variables.outputs.PRERELEASE }}
+          allow_override: true
+      - name: Slack Notification (success)
+        if: success()
+        uses: rtCamp/action-slack-notify@v2.0.2
+        env:
+          SLACK_WEBHOOK: ${{ steps.set_variables.outputs.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ${{ steps.set_variables.outputs.SLACK_CHANNEL }}
+          SLACK_TITLE: '${{ github.repository }} deployment to ${{ github.event.deployment.environment }} success :rocket:'
+          SLACK_MESSAGE: 'Deployment of tag <https://github.com/${{ github.repository }}/tree/${{ github.event.deployment.ref }}|${{ github.event.deployment.ref }}> to ${{ github.event.deployment.environment }} succeeded.'
+          SLACK_COLOR: '#33cc33'
+      - name: Update Deployment Status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Slack Notification (failure)
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2.0.2
+        env:
+          SLACK_WEBHOOK: ${{ steps.set_variables.outputs.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ${{ steps.set_variables.outputs.SLACK_CHANNEL }}
+          SLACK_TITLE: '${{ github.repository }} deployment to ${{ github.event.deployment.environment }} failure :boom:'
+          SLACK_MESSAGE: 'Deployment of tag <https://github.com/${{ github.repository }}/tree/${{ github.event.deployment.ref }}|${{ github.event.deployment.ref }}> to ${{ github.event.deployment.environment }} failed.'
+          SLACK_COLOR: '#ff0000'
