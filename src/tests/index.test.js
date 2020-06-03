@@ -202,13 +202,13 @@ async function validateClient(evolv, options, uid, sid) {
 describe('Evolv client', () => {
   beforeEach(() => {
     xhrMock.setup();
-    xmlhttprequest.XMLHttpRequest = XMLHttpRequest;
     // Uncomment to hit Frazer's endpoint
-    //global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
+    // global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
     global.crypto = webcrypto.crypto;
   });
   afterEach(() => {
     delete global.crypto;
+    delete global.XMLHttpRequest;
     xhrMock.teardown();
   });
 
