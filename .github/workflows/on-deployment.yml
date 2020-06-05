@@ -18,6 +18,8 @@ jobs:
           node-version: '13'
       - name: Build JsDoc
         run: npm run docs
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Deploy JsDoc
         uses: peaceiris/actions-gh-pages@v3
         if: ${{github.event.deployment.environment }} == "staging"
