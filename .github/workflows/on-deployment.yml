@@ -93,7 +93,7 @@ jobs:
         with:
           token: "${{ github.token }}"
           state: "failure"
-          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          deployment_id: ${{ github.event.deployment.id }}
       - name: Slack Notification (failure)
         if: failure()
         uses: rtCamp/action-slack-notify@v2.0.2
