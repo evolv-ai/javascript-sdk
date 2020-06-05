@@ -26,7 +26,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         if: ${{github.event.deployment.environment }} == "staging"
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           publish_dir: ./docs
           publish_branch: master
       # - name: Set Variables
