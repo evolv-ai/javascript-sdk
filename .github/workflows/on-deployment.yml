@@ -45,6 +45,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '13'
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2.0.2
         env:
