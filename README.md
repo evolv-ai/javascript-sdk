@@ -12,6 +12,8 @@
 
 > This is the official JavaScript client for the Evolv Technologies optimization platform.
 
+Documentation can be found here: https://media.evolv.ai/javascript-sdk/releases/latest/docs/EvolvClient.html
+
 ### [Homepage](https://www.evolv.ai)
 
 ## Prerequisites

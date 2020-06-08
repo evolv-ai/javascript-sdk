@@ -29,8 +29,13 @@
     "test": "mocha --experimental-modules",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md",
-    "release": "npm version $SEM_VER --no-git-tag-version && npm publish --access public",
-    "staging:release": "npm version $SEM_VER --no-git-tag-version && npm publish --tag next --access public"
+    "staging:release": "npm run deploy:version:s3 && npm run deploy:next:s3 && npm run deploy:next:npm",
+    "release": "npm run deploy:version:s3 && npm run deploy:latest:s3 && npm run deploy:latest:npm",
+    "deploy:next:s3": "aws s3 cp ./dist/index.js  s3://evolv-execution-plan-binaries/javascript-sdk/releases/next/index.js --acl public-read && aws s3 cp ./docs/  s3://evolv-execution-plan-binaries/javascript-sdk/releases/next/docs/ --recursive --acl public-read && aws cloudfront create-invalidation --distribution-id E2FG4SLRW595GE --paths /javascript-sdk/releases/next/*",
+    "deploy:version:s3": "aws s3 cp ./dist/index.js  s3://evolv-execution-plan-binaries/javascript-sdk/releases/$SEM_VER/index.js --acl public-read && aws s3 cp ./docs/  s3://evolv-execution-plan-binaries/javascript-sdk/releases/$SEM_VER/docs/ --recursive --acl public-read",
+    "deploy:latest:s3": "aws s3 cp ./dist/index.js  s3://evolv-execution-plan-binaries/javascript-sdk/releases/latest/index.js --acl public-read && aws s3 cp ./docs/  s3://evolv-execution-plan-binaries/javascript-sdk/releases/latest/docs/ --recursive --acl public-read && aws cloudfront create-invalidation --distribution-id E2FG4SLRW595GE --paths /javascript-sdk/releases/latest/*",
+    "deploy:next:npm": "npm version $SEM_VER --no-git-tag-version && npm publish --tag next --access public",
+    "deploy:latest:npm": "npm version $SEM_VER --no-git-tag-version && npm publish --access public"
   },
   "author": {
     "name": "Evolv Technologies",
