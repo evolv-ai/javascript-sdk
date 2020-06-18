@@ -35,7 +35,7 @@ jobs:
         env: 
           NPM_TOKEN: ""
       - name: Bump n Tag
-        uses: evolv-ai/github-actions/semver-bump-tag@v2
+        uses: evolv-ai/github-actions/semver-bump-tag@v4
         id: semver_bump
         with:
           token: "${{ github.token }}"
