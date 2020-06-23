@@ -80,6 +80,7 @@ function getCurrentHashName() {
   var pageSubSectionHash = window.location.hash;
 
   if (pageSubSectionHash) {
+    //  deepcode ignore GlobalReplacementRegex: jsdoc code for displaying documentation
     pageSubSectionId = pageSubSectionHash.substring(1).replace('.', '');
 
     return pageSubSectionId;

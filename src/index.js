@@ -312,6 +312,12 @@ function EvolvClient(options) {
     if (options.analytics) {
       contextBeacon.flush();
     }
+
+    return;
+
+    var a  = 1;
+
+    return a;
   };
 
   /**
