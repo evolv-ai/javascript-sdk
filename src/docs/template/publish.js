@@ -1,5 +1,6 @@
 /* global env: true */
 /* eslint-disable vars-on-top, valid-jsdoc */
+// file deepcode ignore GlobalReplacementRegex: jsdoc template code
 'use strict';
 
 var doop = require('jsdoc/util/doop');
