@@ -19,7 +19,8 @@ function fallbackBeacon(url, data, sync) {
 export default function Emitter(endpoint) {
   const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
   const v1api = endpointMatch && endpointMatch[1] === 'v1';
-  const disabled = v1api && endpointMatch[2] === 'analytics';
+  // const disabled = v1api && endpointMatch[2] === 'analytics';
+  const disabled = false;
 
   let messages = [];
   let timer;
