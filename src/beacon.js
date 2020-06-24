@@ -64,8 +64,8 @@ export default function Emitter(endpoint, context) {
       // change needed to support v1 of the participants api
       batch.forEach(function(message) {
         let editedMessage = message;
-        editedMessage = message[1] || {};
-        editedMessage.type = message[0];
+        editedMessage = message.payload || {};
+        editedMessage.type = message.type;
 
         if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
           messages.push(message);
@@ -87,9 +87,14 @@ export default function Emitter(endpoint, context) {
     window.addEventListener('beforeunload', transmit);
   }
 
-  this.emit = function(type, data, flush) {
-    data.timestamp = new Date().getTime();
-    messages.push([type, data]);
+  this.emit = function(type, payload, flush) {
+    const timestamp = new Date().getTime();
+    messages.push({
+      type,
+      timestamp,
+      payload
+    });
+
     if (flush) {
       transmit();
       return;
