@@ -44,7 +44,8 @@
   "license": "MIT",
   "dependencies": {
     "base64-arraybuffer": "^0.2.0",
-    "deepmerge": "^4.2.2"
+    "deepmerge": "^4.2.2",
+    "kind-of": "^5.1.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

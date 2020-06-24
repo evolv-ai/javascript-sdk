@@ -313,11 +313,7 @@ function EvolvClient(options) {
       contextBeacon.flush();
     }
 
-    return;
-
-    var a  = 1;
-
-    return a;
+    this.html.push('<a class="quiz-au" data-src="' + this.au + '"><span class="quiz-au-icon"></span>Click to play</a>');
   };
 
   /**
