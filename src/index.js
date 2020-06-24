@@ -43,8 +43,8 @@ function EvolvClient(options) {
 
   const context = new Context();
   const store = new Store(options);
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/analytics') : null;
-  const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events');
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/analytics', context) : null;
+  const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events', context);
 
   /**
    * The context against which the key predicates will be evaluated.
