@@ -16,11 +16,9 @@ function fallbackBeacon(url, data, sync) {
   return true;
 }
 
-export default function Emitter(endpoint) {
+export default function Emitter(endpoint, context) {
   const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
-  const v1api = endpointMatch && endpointMatch[1] === 'v1';
-  // const disabled = v1api && endpointMatch[2] === 'analytics';
-  const disabled = false;
+  const v1Events = endpointMatch && endpointMatch[1] === 'v1' && endpointMatch[2] === 'events';
 
   let messages = [];
   let timer;
@@ -33,6 +31,14 @@ export default function Emitter(endpoint) {
       return window.navigator.sendBeacon(url, data);
     } else {
       return fallbackBeacon(url, data, sync);
+    }
+  }
+
+  function wrapMessages(messages) {
+    return {
+      uid: context.uid,
+      sid: context.sid,
+      messages
     }
   }
 
@@ -54,19 +60,22 @@ export default function Emitter(endpoint) {
     }
     timer = undefined;
 
-    batch.forEach(function(message) {
-      let editedMessage = message;
-      if (v1api) {
-        // change needed to support v1 of the participants api
+    if (v1Events) {
+      // change needed to support v1 of the participants api
+      batch.forEach(function(message) {
+        let editedMessage = message;
         editedMessage = message[1] || {};
         editedMessage.type = message[0];
-      }
 
-      if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
-        messages.push(message);
-        console.error('Evolv: Unable to send beacon');
-      }
-    });
+        if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
+          messages.push(message);
+          console.error('Evolv: Unable to send event beacon');
+        }
+      });
+    } else if (!send(endpoint, JSON.stringify(wrapMessages(batch)), sync)) {
+      messages = batch
+      console.error('Evolv: Unable to send analytics beacon');
+    }
 
     if (messages.length) {
       timer = setTimeout(transmit, DELAY);
@@ -79,10 +88,7 @@ export default function Emitter(endpoint) {
   }
 
   this.emit = function(type, data, flush) {
-    if (disabled) {
-      return;
-    }
-
+    data.timestamp = new Date().getTime();
     messages.push([type, data]);
     if (flush) {
       transmit();
