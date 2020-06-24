@@ -54,6 +54,7 @@ export function waitOnceFor(scope, it, handler) {
 }
 
 export function emit(scope, it) {
+  return;
   ensureScope(scope);
 
   const handlers = scopedHandlers.get(scope);
