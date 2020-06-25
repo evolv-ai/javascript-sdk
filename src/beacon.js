@@ -34,10 +34,10 @@ export default function Emitter(endpoint, context) {
     }
   }
 
-  function wrapMessages(messages) {
+  function wrapMessages(msgs) {
     return {
       uid: context.uid,
-      messages
+      messages: msgs
     }
   }
 
