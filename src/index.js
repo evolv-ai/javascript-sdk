@@ -43,7 +43,7 @@ function EvolvClient(options) {
 
   const context = new Context();
   const store = new Store(options);
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/analytics', context) : null;
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context) : null;
   const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events', context);
 
   /**
