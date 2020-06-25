@@ -37,7 +37,6 @@ export default function Emitter(endpoint, context) {
   function wrapMessages(messages) {
     return {
       uid: context.uid,
-      sid: context.sid,
       messages
     }
   }
@@ -88,11 +87,11 @@ export default function Emitter(endpoint, context) {
   }
 
   this.emit = function(type, payload, flush) {
-    const timestamp = new Date().getTime();
     messages.push({
       type,
-      timestamp,
-      payload
+      payload,
+      sid: context.sid,
+      timestamp: new Date().getTime(),
     });
 
     if (flush) {
