@@ -48,7 +48,7 @@ async function validateClient(evolv, options, uid, sid) {
     const body = req.body();
     const data = JSON.parse(body);
 
-    if (req.url().path.endsWith('analytics')) {
+    if (req.url().path.endsWith('data')) {
       analyticsPayloads.push(data);
     } else if (req.url().path.endsWith('events')) {
       eventPayloads.push(data);
@@ -58,7 +58,7 @@ async function validateClient(evolv, options, uid, sid) {
     return res.status(202);
   };
 
-  xhrMock.post(`${options.endpoint}/${options.environment}/analytics`, beaconHandler);
+  xhrMock.post(`${options.endpoint}/${options.environment}/data`, beaconHandler);
 
   xhrMock.post(`${options.endpoint}/${options.environment}/events`, beaconHandler);
 
@@ -502,6 +502,7 @@ describe('Evolv client', () => {
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
+      const analytics = true;
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -605,31 +606,29 @@ describe('Evolv client', () => {
         environment,
         endpoint,
         version,
+        analytics
       };
       const evolv = new Evolv(options);
 
       const results = await validateClient(evolv, options, uid, sid);
 
-      expect(results.analyticsPayloads.length).to.equal(6);
-      expect(results.analyticsPayloads[5][0]).to.equal('context.value.removed');
-      expect(results.eventPayloads.length).to.equal(4);
-      expect(results.eventPayloads[0][0]).to.equal('confirmation');
-      expect(results.eventPayloads[0][1].uid).to.equal(uid);
-      expect(results.eventPayloads[0][1].sid).to.equal(sid);
-      expect(results.eventPayloads[0][1].eid).to.equal('0f39849197');
-      expect(results.eventPayloads[0][1].cid).to.equal('0cf8ffcedea2:0f39849197');
-      expect(results.eventPayloads[1][0]).to.equal('lunch-time');
-      expect(results.eventPayloads[1][1].metadata.score).to.equal(33);
-      expect(results.eventPayloads[2][0]).to.equal('contamination');
-      expect(results.eventPayloads[2][1].uid).to.equal(uid);
-      expect(results.eventPayloads[2][1].sid).to.equal(sid);
-      expect(results.eventPayloads[2][1].eid).to.equal('0f39849197');
-      expect(results.eventPayloads[2][1].cid).to.equal('0cf8ffcedea2:0f39849197');
-      expect(results.eventPayloads[3][0]).to.equal('confirmation');
-      expect(results.eventPayloads[3][1].uid).to.equal(uid);
-      expect(results.eventPayloads[3][1].sid).to.equal(sid);
-      expect(results.eventPayloads[3][1].eid).to.equal('0f39849197');
-      expect(results.eventPayloads[3][1].cid).to.equal('0cf8ffcedea2:0f39849197');
+      console.log(JSON.stringify(results.analyticsPayloads))
+
+      expect(results.analyticsPayloads.length).to.equal(1);
+      expect(results.analyticsPayloads[0].uid).to.equal(uid);
+      expect(results.analyticsPayloads[0].messages.length).to.equal(6)
+      expect(results.analyticsPayloads[0].messages[0].type).to.equal("context.initialized")
+      expect(results.analyticsPayloads[0].messages[0].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[1].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[1].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[2].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[2].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[3].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[3].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[4].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[4].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[5].type).to.equal("context.value.removed")
+      expect(results.analyticsPayloads[0].messages[5].sid).to.equal(sid)
     });
   });
 });
