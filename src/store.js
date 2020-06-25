@@ -521,6 +521,8 @@ function EvolvStore(options) {
   this.getClientContext = function() {
     return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
       return clientContext;
+
+      return 'nonsense' // test to see if this is picked up by code quality tool
     });
   };
 
