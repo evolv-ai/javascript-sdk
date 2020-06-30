@@ -2,6 +2,7 @@ import retrieve from './retrieve.js';
 
 const DELAY = 1;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
+const BATCH_SIZE = 25;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -16,10 +17,9 @@ function fallbackBeacon(url, data, sync) {
   return true;
 }
 
-export default function Emitter(endpoint) {
+export default function Emitter(endpoint, context) {
   const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
-  const v1api = endpointMatch && endpointMatch[1] === 'v1';
-  const disabled = v1api && endpointMatch[2] === 'analytics';
+  const v1Events = endpointMatch && endpointMatch[1] === 'v1' && endpointMatch[2] === 'events';
 
   let messages = [];
   let timer;
@@ -35,6 +35,13 @@ export default function Emitter(endpoint) {
     }
   }
 
+  function wrapMessages(msgs) {
+    return {
+      uid: context.uid,
+      messages: msgs
+    }
+  }
+
   function transmit() {
     let sync = false;
     if (typeof this !== 'undefined') {
@@ -46,26 +53,41 @@ export default function Emitter(endpoint) {
       return;
     }
 
-    const batch = messages;
+    let batch = messages;
     messages = [];
     if (timer) {
       clearTimeout(timer);
     }
     timer = undefined;
 
-    batch.forEach(function(message) {
-      let editedMessage = message;
-      if (v1api) {
-        // change needed to support v1 of the participants api
-        editedMessage = message[1] || {};
-        editedMessage.type = message[0];
-      }
+    if (v1Events) {
+      // change needed to support v1 of the participants api
+      batch.forEach(function(message) {
+        let editedMessage = message;
+        editedMessage = message.payload || {};
+        editedMessage.type = message.type;
 
-      if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
-        messages.push(message);
-        console.error('Evolv: Unable to send beacon');
+        if (!send(endpoint, JSON.stringify(editedMessage), sync)) {
+          messages.push(message);
+          console.error('Evolv: Unable to send event beacon');
+        }
+      });
+    } else {
+      while (true) {
+        const smallBatch = batch.slice(0, BATCH_SIZE);
+        if (smallBatch.length === 0) {
+          break;
+        }
+
+        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync)) {
+          messages = batch
+          console.error('Evolv: Unable to send analytics beacon');
+          break;
+        }
+
+        batch = batch.slice(BATCH_SIZE)
       }
-    });
+    }
 
     if (messages.length) {
       timer = setTimeout(transmit, DELAY);
@@ -77,12 +99,14 @@ export default function Emitter(endpoint) {
     window.addEventListener('beforeunload', transmit);
   }
 
-  this.emit = function(type, data, flush) {
-    if (disabled) {
-      return;
-    }
+  this.emit = function(type, payload, flush) {
+    messages.push({
+      type,
+      payload,
+      sid: context.sid,
+      timestamp: new Date().getTime(),
+    });
 
-    messages.push([type, data]);
     if (flush) {
       transmit();
       return;
