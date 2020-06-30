@@ -23,7 +23,7 @@ export default function MiniPromise(executor) {
     this._finallys.forEach(invoker.bind(this, args));
   };
 
-  const reject = response.bind(this, true, this.handlers);
+  const reject = response.bind(this, true, this._catches);
   const resolve = response.bind(this, false, this._thens);
 
   try {
