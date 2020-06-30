@@ -2,6 +2,7 @@ import retrieve from './retrieve.js';
 
 const DELAY = 1;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
+const BATCH_SIZE = 25;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -71,9 +72,21 @@ export default function Emitter(endpoint, context) {
           console.error('Evolv: Unable to send event beacon');
         }
       });
-    } else if (!send(endpoint, JSON.stringify(wrapMessages(batch)), sync)) {
-      messages = batch
-      console.error('Evolv: Unable to send analytics beacon');
+    } else {
+      while (true) {
+        const smallBatch = batch.slice(0, BATCH_SIZE);
+        if (smallBatch.length === 0) {
+          break;
+        }
+
+        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync)) {
+          messages = batch
+          console.error('Evolv: Unable to send analytics beacon');
+          break;
+        }
+
+        batch = batch.slice(BATCH_SIZE)
+      }
     }
 
     if (messages.length) {
