@@ -53,7 +53,7 @@ export default function Emitter(endpoint, context) {
       return;
     }
 
-    const batch = messages;
+    let batch = messages;
     messages = [];
     if (timer) {
       clearTimeout(timer);
