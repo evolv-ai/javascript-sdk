@@ -331,3 +331,4 @@ EvolvClient.CONTAMINATED = 'contaminated';
 EvolvClient.EVENT_EMITTED = 'event.emitted';
 
 export default EvolvClient;
+export { default as MiniPromise } from './ponyfills/minipromise.js'
