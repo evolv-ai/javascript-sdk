@@ -29,7 +29,7 @@
     "lint": "eslint src",
     "test": "mocha --experimental-modules",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
-    "docs": "jsdoc -c jsdocs.config.json src/index.js src/docs/README.md",
+    "docs": "jsdoc -c jsdocs.config.json src/index.js src/context.js src/docs/README.md",
     "staging:release": "npm run deploy:version:s3 && npm run deploy:next:s3 && npm run deploy:next:npm",
     "release": "npm run deploy:version:s3 && npm run deploy:latest:s3 && npm run deploy:latest:npm",
     "deploy:next:s3": "aws s3 cp ./dist/index.js  s3://evolv-execution-plan-binaries/javascript-sdk/releases/next/index.js --acl public-read && aws s3 cp ./docs/  s3://evolv-execution-plan-binaries/javascript-sdk/releases/next/docs/ --recursive --acl public-read && aws cloudfront create-invalidation --distribution-id $CF_DISTRIBUTION_ID --paths /javascript-sdk/releases/next/*",
