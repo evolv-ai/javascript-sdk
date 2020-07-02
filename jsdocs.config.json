@@ -2,7 +2,7 @@
   "plugins": ["plugins/markdown"],
   "opts": {
     "encoding": "utf8",
-    "destination": "./docs/",
+    "destination": "./dist/docs/",
     "template": "src/docs/template"
   },
   "templates": {
