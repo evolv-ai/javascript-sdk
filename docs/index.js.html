@@ -75,7 +75,7 @@
 
     
 
-    <h3>Classes</h3><ul><li id="EvolvClient-nav"><a href="EvolvClient.html">EvolvClient</a><ul class='methods'><li data-type="method" id="EvolvClient-confirm-nav"><a href="EvolvClient.html#confirm">confirm</a></li><li data-type="method" id="EvolvClient-contaminate-nav"><a href="EvolvClient.html#contaminate">contaminate</a></li><li data-type="method" id="EvolvClient-destroy-nav"><a href="EvolvClient.html#destroy">destroy</a></li><li data-type="method" id="EvolvClient-flush-nav"><a href="EvolvClient.html#flush">flush</a></li><li data-type="method" id="EvolvClient-get-nav"><a href="EvolvClient.html#get">get</a></li><li data-type="method" id="EvolvClient-getActiveKeys-nav"><a href="EvolvClient.html#getActiveKeys">getActiveKeys</a></li><li data-type="method" id="EvolvClient-getConfig-nav"><a href="EvolvClient.html#getConfig">getConfig</a></li><li data-type="method" id="EvolvClient-initialize-nav"><a href="EvolvClient.html#initialize">initialize</a></li><li data-type="method" id="EvolvClient-isActive-nav"><a href="EvolvClient.html#isActive">isActive</a></li><li data-type="method" id="EvolvClient-on-nav"><a href="EvolvClient.html#on">on</a></li><li data-type="method" id="EvolvClient-once-nav"><a href="EvolvClient.html#once">once</a></li><li data-type="method" id="EvolvClient-preload-nav"><a href="EvolvClient.html#preload">preload</a></li></ul></li></ul><h3 id="global-nav"><a href="global.html">Global</a></h3>
+    <h3>Classes</h3><ul><li id="EvolvClient-nav"><a href="EvolvClient.html">EvolvClient</a><ul class='methods'><li data-type="method" id="EvolvClient-confirm-nav"><a href="EvolvClient.html#confirm">confirm</a></li><li data-type="method" id="EvolvClient-contaminate-nav"><a href="EvolvClient.html#contaminate">contaminate</a></li><li data-type="method" id="EvolvClient-destroy-nav"><a href="EvolvClient.html#destroy">destroy</a></li><li data-type="method" id="EvolvClient-emit-nav"><a href="EvolvClient.html#emit">emit</a></li><li data-type="method" id="EvolvClient-flush-nav"><a href="EvolvClient.html#flush">flush</a></li><li data-type="method" id="EvolvClient-get-nav"><a href="EvolvClient.html#get">get</a></li><li data-type="method" id="EvolvClient-getActiveKeys-nav"><a href="EvolvClient.html#getActiveKeys">getActiveKeys</a></li><li data-type="method" id="EvolvClient-getConfig-nav"><a href="EvolvClient.html#getConfig">getConfig</a></li><li data-type="method" id="EvolvClient-initialize-nav"><a href="EvolvClient.html#initialize">initialize</a></li><li data-type="method" id="EvolvClient-isActive-nav"><a href="EvolvClient.html#isActive">isActive</a></li><li data-type="method" id="EvolvClient-on-nav"><a href="EvolvClient.html#on">on</a></li><li data-type="method" id="EvolvClient-once-nav"><a href="EvolvClient.html#once">once</a></li><li data-type="method" id="EvolvClient-preload-nav"><a href="EvolvClient.html#preload">preload</a></li></ul></li><li id="EvolvContext-nav"><a href="EvolvContext.html">EvolvContext</a><ul class='methods'><li data-type="method" id="EvolvContext-contains-nav"><a href="EvolvContext.html#contains">contains</a></li><li data-type="method" id="EvolvContext-get-nav"><a href="EvolvContext.html#get">get</a></li><li data-type="method" id="EvolvContext-remove-nav"><a href="EvolvContext.html#remove">remove</a></li><li data-type="method" id="EvolvContext-resolve-nav"><a href="EvolvContext.html#resolve">resolve</a></li><li data-type="method" id="EvolvContext-set-nav"><a href="EvolvContext.html#set">set</a></li><li data-type="method" id="EvolvContext-update-nav"><a href="EvolvContext.html#update">update</a></li></ul></li></ul><h3 id="global-nav"><a href="global.html">Global</a></h3>
   </nav>
 
   <div id="main">
@@ -102,11 +102,6 @@ import { waitFor, waitOnceFor, emit, destroyScope } from './waitforit.js';
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
 
-export const INITIALIZED = 'initialized';
-export const CONFIRMED = 'confirmed';
-export const CONTAMINATED = 'contaminated';
-export const EVENT_EMITTED = 'event.emitted';
-
 /**
  * @typedef {Promise} SubscribablePromise
  * @property {function(function):undefined} then Then
@@ -126,21 +121,22 @@ export const EVENT_EMITTED = 'event.emitted';
 function EvolvClient(options) {
   let initialized = false;
 
-  if (!options.env) {
-    throw new Error('"env" must be specified');
+  if (!options.environment) {
+    throw new Error('"environment" must be specified');
   }
 
-  if (typeof options.autoConfirm === 'undefined') {
+  if (!('autoConfirm' in options)) {
     options.autoConfirm = true;
   }
 
-  options.endpoint = options.endpoint || 'https://participants.evolv.ai/';
   options.version = options.version || 1;
+  options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
+  options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
 
-  const context = new Context(options);
+  const context = new Context();
   const store = new Store(options);
-  const contextBeacon = new Beacon(options.endpoint + '/' + options.env + '/analytics');
-  const eventBeacon = new Beacon(options.endpoint + '/' + options.env + '/events');
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/analytics') : null;
+  const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events');
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -148,28 +144,33 @@ function EvolvClient(options) {
   Object.defineProperty(this, 'context', { get: function() { return context; } });
 
   /**
+   * The current environment id.
+   */
+  Object.defineProperty(this, 'environment', { get: function() { return options.environment; } });
+
+  /**
    * Add listeners to lifecycle events that take place in to client.
    *
    * Currently supported events:
-   * * INITIALIZED - Called when the client is fully initialized and ready for use with (topic, options)
-   * * CONTEXT_INITIALIZED = Called when the context is fully initialized and ready for use with (topic, updated_context)
-   * * CONTEXT_CHANGED - Called whenever a change is made to the context values with (topic, updated_context)
-   * * CONTEXT_VALUE_REMOVED - Called when a value is removed from context with (topic, key, updated_context)
-   * * CONTEXT_VALUE_ADDED - Called when a new value is added to the context with (topic, key, value, local, updated_context)
-   * * CONTEXT_VALUE_CHANGED - Called when a value is changed in the context (topic, key, value, before, local, updated_context)
-   * * CONTEXT_DESTROYED - Called when the context is destroyed with (topic, context)
-   * * GENOME_REQUEST_SENT - Called when a request for a genome is sent with (topic, requested_keys)
-   * * CONFIG_REQUEST_SENT - Called when a request for a config is sent with (topic, requested_keys)
-   * * GENOME_REQUEST_RECEIVED - Called when the result of a request for a genome is received (topic, requested_keys)
-   * * CONFIG_REQUEST_RECEIVED - Called when the result of a request for a config is received (topic, requested_keys)
-   * * REQUEST_FAILED - Called when a request fails (topic, source, requested_keys, error)
-   * * GENOME_UPDATED - Called when the stored genome is updated (topic, allocation_response)
-   * * CONFIG_UPDATED - Called when the stored config is updated (topic, config_response)
-   * * EFFECTIVE_GENOME_UPDATED - Called when the effective genome is updated (topic, effectiveGenome)
-   * * STORE_DESTROYED - Called when the store is destroyed (topic, store)
-   * * CONFIRMED - Called when the consumer is confirmed (topic)
-   * * CONTAMINATED - Called when the consumer is contaminated (topic)
-   * * EVENT_EMITTED - Called when an event is emitted through the beacon (topic, type, score)
+   * * "initialized" - Called when the client is fully initialized and ready for use with (topic, options)
+   * * "context.initialized" - Called when the context is fully initialized and ready for use with (topic, updated_context)
+   * * "context.changed" - Called whenever a change is made to the context values with (topic, updated_context)
+   * * "context.value.removed" - Called when a value is removed from context with (topic, key, updated_context)
+   * * "context.value.added" - Called when a new value is added to the context with (topic, key, value, local, updated_context)
+   * * "context.value.changed" - Called when a value is changed in the context (topic, key, value, before, local, updated_context)
+   * * "context.destroyed" - Called when the context is destroyed with (topic, context)
+   * * "genome.request.sent" - Called when a request for a genome is sent with (topic, requested_keys)
+   * * "config.request.sent" - Called when a request for a config is sent with (topic, requested_keys)
+   * * "genome.request.received" - Called when the result of a request for a genome is received (topic, requested_keys)
+   * * "config.request.received" - Called when the result of a request for a config is received (topic, requested_keys)
+   * * "request.failed" - Called when a request fails (topic, source, requested_keys, error)
+   * * "genome.updated" - Called when the stored genome is updated (topic, allocation_response)
+   * * "config.updated" - Called when the stored config is updated (topic, config_response)
+   * * "effective.genome.updated" - Called when the effective genome is updated (topic, effectiveGenome)
+   * * "store.destroyed" - Called when the store is destroyed (topic, store)
+   * * "confirmed" - Called when the consumer is confirmed (topic)
+   * * "contaminated" - Called when the consumer is contaminated (topic)
+   * * "event.emitted" - Called when an event is emitted through the beacon (topic, type, score)
    *
    * @param {String} topic The event topic on which the listener should be invoked.
    * @param {Function} listener The listener to be invoked for the specified topic.
@@ -239,9 +240,21 @@ function EvolvClient(options) {
    * @method
    */
   this.getConfig = store.getConfig.bind(store);
-  this.emit = function(type, score, flush) {
-    eventBeacon.emit(type, assign({score: score}, context.remoteContext), flush);
-    emit(context, EVENT_EMITTED, type, score);
+
+  /**
+   * Send an event to the events endpoint.
+   *
+   * @param {String} type The type associated with the event.
+   * @param metadata {Object} Any metadata to attach to the event.
+   * @param flush {Boolean} If true, the event will be sent immediately.
+   */
+  this.emit = function(type, metadata, flush) {
+    eventBeacon.emit(type, assign({
+      uid: context.uid,
+      sid: context.sid,
+      metadata: metadata
+    }), flush);
+    emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
 
   /**
@@ -249,8 +262,34 @@ function EvolvClient(options) {
    * optimization statistics.
    */
   this.confirm = function() {
-    eventBeacon.emit('confirmation', context.remoteContext, true);
-    emit(context, CONFIRMED);
+    store.isEntryPoint()
+      .then(function(entryPoint) {
+        if (!entryPoint) {
+          return;
+        }
+
+        const remoteContext = context.remoteContext;
+        if (
+          !remoteContext.experiments ||
+          !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
+        ) {
+          return [];
+        }
+
+        remoteContext.experiments.allocations.forEach(function(alloc) {
+          eventBeacon.emit('confirmation', assign({
+            uid: alloc.uid,
+            sid: alloc.sid,
+            eid: alloc.eid,
+            cid: alloc.cid
+          }, context.remoteContext));
+        });
+        eventBeacon.flush();
+        emit(context, EvolvClient.CONFIRMED);
+      })
+      .catch(function(err) {
+        console.error('Evolv: Failed to confirm rendering');
+      });
   };
 
   /**
@@ -258,8 +297,24 @@ function EvolvClient(options) {
    * inclusion in optimization statistics.
    */
   this.contaminate = function() {
-    eventBeacon.emit('contaminated', context.remoteContext, true);
-    emit(context, CONTAMINATED);
+    const remoteContext = context.remoteContext;
+    if (
+      !remoteContext.experiments ||
+      !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
+    ) {
+      return [];
+    }
+
+    remoteContext.experiments.allocations.forEach(function(alloc) {
+      eventBeacon.emit('contamination', assign({
+        uid: alloc.uid,
+        sid: alloc.sid,
+        eid: alloc.eid,
+        cid: alloc.cid
+      }, context.remoteContext));
+    });
+    eventBeacon.flush();
+    emit(context, EvolvClient.CONTAMINATED);
   };
 
   /**
@@ -272,7 +327,7 @@ function EvolvClient(options) {
    */
   this.initialize = function (uid, sid, remoteContext, localContext) {
     if (initialized) {
-      throw Error('Evolv: Client is already initialized');
+      throw new Error('Evolv: Client is already initialized');
     }
 
     if (!uid) {
@@ -286,38 +341,59 @@ function EvolvClient(options) {
     context.initialize(uid, sid, remoteContext, localContext);
     store.initialize(context);
 
-    waitFor(context, CONTEXT_INITIALIZED, function(type, ctx) {
-      contextBeacon.emit(type, context.remoteContext);
-    });
-    waitFor(context, CONTEXT_VALUE_ADDED, function(type, key, value, local) {
-      if (local) {
-        return;
-      }
+    store.getClientContext()
+      .then(function(c) {
+        if (!c) {
+          return;
+        }
 
-      contextBeacon.emit(type, { key: key, value: value });
-    });
-    waitFor(context, CONTEXT_VALUE_CHANGED, function(type, key, value, before, local) {
-      if (local) {
-        return;
-      }
+        const updated = assign({}, c);
+        updated.web = {
+          client: {
+            browser: updated.browser
+          }
+        };
+        delete updated.browser;
+        context.update(updated, false);
+      })
+      .catch(function(err) {
+        console.log('Evolv: Failed to retrieve client context');
+      });
 
-      contextBeacon.emit(type, { key: key, value: value });
-    });
-    waitFor(context, CONTEXT_VALUE_REMOVED, function(type, key, local) {
-      if (local) {
-        return;
-      }
+    if (options.analytics) {
+      waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
+        contextBeacon.emit(type, context.remoteContext);
+      });
+      waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
+        if (local) {
+          return;
+        }
 
-      contextBeacon.emit(type, { key: key });
-    });
+        contextBeacon.emit(type, {key: key, value: value});
+      });
+      waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
+        if (local) {
+          return;
+        }
+
+        contextBeacon.emit(type, {key: key, value: value});
+      });
+      waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
+        if (local) {
+          return;
+        }
+
+        contextBeacon.emit(type, {key: key});
+      });
+    }
 
     if (options.autoConfirm) {
-      waitFor(EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
-      waitFor(REQUEST_FAILED, this.contaminate.bind(this));
+      waitFor(context, EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
+      waitFor(context, REQUEST_FAILED, this.contaminate.bind(this));
     }
 
     initialized = true;
-    emit(context, INITIALIZED, options);
+    emit(context, EvolvClient.INITIALIZED, options);
   };
 
   /**
@@ -325,7 +401,9 @@ function EvolvClient(options) {
    */
   this.flush = function() {
     eventBeacon.flush();
-    contextBeacon.flush();
+    if (options.analytics) {
+      contextBeacon.flush();
+    }
   };
 
   /**
@@ -339,7 +417,13 @@ function EvolvClient(options) {
   };
 }
 
+EvolvClient.INITIALIZED = 'initialized';
+EvolvClient.CONFIRMED = 'confirmed';
+EvolvClient.CONTAMINATED = 'contaminated';
+EvolvClient.EVENT_EMITTED = 'event.emitted';
+
 export default EvolvClient;
+export { default as MiniPromise } from './ponyfills/minipromise.js'
 </code></pre>
   </article>
 </section>
