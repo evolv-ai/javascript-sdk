@@ -26,15 +26,8 @@ jobs:
           export EMPTY_STRING=""
           echo ::set-output name=MAJOR::$(node -p "re = new RegExp('^(\\\d+).(\\\d+).(\\\d+)'); v = require('./package.json').version; re.exec(v)[1]")
           echo ::set-output name=MINOR::$(node -p "re = new RegExp('^(\\\d+).(\\\d+).(\\\d+)'); v = require('./package.json').version; re.exec(v)[2]")
-          if [[ "${{ github.event.ref }}" == "refs/heads/master" ]]
-          then
-            echo ::set-output name=SUFFIX::${EMPTY_STRING}
-          else
-            echo ::set-output name=SUFFIX::-${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:7}
-          fi
-        env: 
-          NPM_TOKEN: ""
       - name: Bump n Tag
+        if: github.event.ref == 'refs/heads/master'
         uses: evolv-ai/github-actions/semver-bump-tag@v4
         id: semver_bump
         with:
@@ -42,7 +35,7 @@ jobs:
           major: ${{steps.variables.outputs.MAJOR}}
           minor: ${{steps.variables.outputs.MINOR}}
           bump: patch
-          suffix: ${{steps.variables.outputs.SUFFIX}}
+          suffix: ""
       - name: Run Tests and Lint
         run: bash -e ./scripts/test.sh
         env: 
