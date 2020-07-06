@@ -26,6 +26,8 @@ jobs:
           export EMPTY_STRING=""
           echo ::set-output name=MAJOR::$(node -p "re = new RegExp('^(\\\d+).(\\\d+).(\\\d+)'); v = require('./package.json').version; re.exec(v)[1]")
           echo ::set-output name=MINOR::$(node -p "re = new RegExp('^(\\\d+).(\\\d+).(\\\d+)'); v = require('./package.json').version; re.exec(v)[2]")
+        env:
+         NPM_TOKEN: ""
       - name: Bump n Tag
         if: github.event.ref == 'refs/heads/master'
         uses: evolv-ai/github-actions/semver-bump-tag@v4
