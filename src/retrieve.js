@@ -5,6 +5,7 @@ import { assign } from './ponyfills/objects.js';
 const URL_PATTERN = /^([a-z]+):\/\/([^/]+)(.*)/i;
 
 function cryptography() {
+  // eslint-disable-next-line no-undef
   return typeof crypto !== 'undefined' ? crypto : msCrypto;
 }
 
@@ -131,6 +132,7 @@ function nodeRequest(options) {
       const headers = {
         'Content-Type': options.encoding,
         'Accept': 'application/json',
+        // eslint-disable-next-line no-undef
         'Content-Length': Buffer.byteLength(options.payload)
       };
 
