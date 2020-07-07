@@ -73,6 +73,7 @@ export default function Emitter(endpoint, context) {
         }
       });
     } else {
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const smallBatch = batch.slice(0, BATCH_SIZE);
         if (smallBatch.length === 0) {

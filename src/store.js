@@ -121,7 +121,6 @@ function EvolvStore(options) {
   let initialized = false;
   let waitingToPull = false;
   let waitingToPullImmediate = true;
-  let contaminated = false;
   let genomes = {};
   let effectiveGenome = {};
   let allocations = null;
@@ -309,7 +308,6 @@ function EvolvStore(options) {
   }
 
   function failed(configRequest, requestedKeys, err) {
-    contaminated = true;
     console.log(err);
     let keyStates;
     emit(context, REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);

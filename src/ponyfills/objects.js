@@ -150,6 +150,7 @@ export function filter(map, active) {
   return expand(filtered);
 }
 
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "sources" }]*/
 export function assign(target, sources) {
   if (Object.assign) {
     return Object.assign.apply(undefined, arguments);
@@ -167,6 +168,7 @@ export function assign(target, sources) {
     if (nextSource !== null && nextSource !== undefined) {
       for (let nextKey in nextSource) {
         // Avoid bugs when hasOwnProperty is shadowed
+        // eslint-disable-next-line no-prototype-builtins
         if (nextSource.hasOwnProperty(nextKey)) {
           to[nextKey] = nextSource[nextKey];
         }
