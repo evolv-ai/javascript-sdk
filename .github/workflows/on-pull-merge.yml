@@ -9,7 +9,7 @@ on:
 jobs:
   cherry-pick:
     name: Cherry Pick Commits
-    if: ${{github.event.pull_request.merged}} == 'true'
+    if: github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
       - name: Cherry Picker
