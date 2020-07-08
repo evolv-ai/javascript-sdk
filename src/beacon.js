@@ -102,8 +102,8 @@ export default function Emitter(endpoint, context) {
 
   this.emit = function(type, payload, flush) {
     messages.push({
-      type,
-      payload,
+      type: type,
+      payload: payload,
       sid: context.sid,
       timestamp: new Date().getTime(),
     });

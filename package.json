@@ -51,6 +51,7 @@
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "eslint": "^7.4.0",
+    "eslint-plugin-es": "^3.0.1",
     "jsdoc": "^3.6.3",
     "mocha": "^7.1.0",
     "webcrypto": "git+https://github.com/nodejs/webcrypto.git",
