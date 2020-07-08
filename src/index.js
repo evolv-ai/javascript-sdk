@@ -195,7 +195,7 @@ function EvolvClient(options) {
         eventBeacon.flush();
         emit(context, EvolvClient.CONFIRMED);
       })
-      .catch(function(err) {
+      .catch(function() {
         console.error('Evolv: Failed to confirm rendering');
       });
   };
@@ -264,11 +264,12 @@ function EvolvClient(options) {
         delete updated.browser;
         context.update(updated, false);
       })
-      .catch(function(err) {
+      .catch(function() {
         console.log('Evolv: Failed to retrieve client context');
       });
 
     if (options.analytics) {
+      /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
       waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
         contextBeacon.emit(type, context.remoteContext);
       });

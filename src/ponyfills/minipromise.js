@@ -64,5 +64,6 @@ export default function MiniPromise(executor) {
 }
 
 MiniPromise.createPromise = function (executor) {
+  // eslint-disable-next-line es/no-promise
   return new (typeof Promise !== 'undefined' ? Promise : MiniPromise)(executor);
 };

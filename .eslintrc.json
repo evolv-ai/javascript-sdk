@@ -1,0 +1,24 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "plugins": ["es"],
+  "extends": [
+    "eslint:recommended"
+  ],
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    "object-shorthand": [ "error", "never" ],
+    "es/no-promise": [ "error" ],
+    "es/no-arrow-functions": [ "error" ],
+    "es/no-template-literals": [ "error" ],
+    "es/no-spread-elements": [ "error" ],
+    "es/no-rest-parameters": [ "error" ],
+    "es/no-for-of-loops": [ "error" ],
+    "es/no-destructuring": [ "error" ]
+  },
+  "ignorePatterns": ["tests/", "docs/"]
+}

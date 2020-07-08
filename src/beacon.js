@@ -73,6 +73,7 @@ export default function Emitter(endpoint, context) {
         }
       });
     } else {
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const smallBatch = batch.slice(0, BATCH_SIZE);
         if (smallBatch.length === 0) {
@@ -101,8 +102,8 @@ export default function Emitter(endpoint, context) {
 
   this.emit = function(type, payload, flush) {
     messages.push({
-      type,
-      payload,
+      type: type,
+      payload: payload,
       sid: context.sid,
       timestamp: new Date().getTime(),
     });
