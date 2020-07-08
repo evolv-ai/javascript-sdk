@@ -3,22 +3,27 @@
     "browser": true,
     "es6": true
   },
-//  "plugins": ["compat"],
-//  "extends": "plugin:compat/recommended",
-  "extends": "eslint:recommended",
+  "plugins": ["es"],
+  "extends": [
+    "eslint:recommended"
+  ],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
   },
   "parserOptions": {
     "ecmaVersion": 2018,
-    "sourceType": "module"
+     "sourceType": "module"
   },
-  /*"rules": {
-    "ie11/no-collection-args": [ "error" ],
-    "ie11/no-for-in-const": [ "error" ],
-    "ie11/no-loop-func": [ "warn" ],
-    "ie11/no-weak-collections": [ "error" ]
-  },*/
+  "rules": {
+    "object-shorthand": [ "error", "never" ],
+    "es/no-promise": [ "error" ],
+    "es/no-arrow-functions": [ "error" ],
+    "es/no-template-literals": [ "error" ],
+    "es/no-spread-elements": [ "error" ],
+    "es/no-rest-parameters": [ "error" ],
+    "es/no-for-of-loops": [ "error" ],
+    "es/no-destructuring": [ "error" ]
+  },
   "ignorePatterns": ["tests/", "docs/"]
 }
