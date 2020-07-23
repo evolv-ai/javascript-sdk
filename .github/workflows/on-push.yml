@@ -1,15 +1,13 @@
-name: Run Tests and Linting
+name: Tag Build
 
 on:
   push:
-    branches-ignore:
-     - 'cherry-pick**'
-    tags-ignore:
-     - '**'
+    branches:
+     - master
 
 jobs:
   deploy:
-    name: Run Tests and Linting
+    name: Tag Build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node
@@ -38,8 +36,4 @@ jobs:
           minor: ${{steps.variables.outputs.MINOR}}
           bump: patch
           suffix: ""
-      - name: Run Tests and Lint
-        run: bash -e ./scripts/test.sh
-        env: 
-          NPM_TOKEN: ""
 
