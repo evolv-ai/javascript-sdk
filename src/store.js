@@ -71,6 +71,10 @@ export function evaluatePredicates(version, context, config) {
   }
 
   function evaluateBranch(context, config, prefix, disabled, entry) {
+    if (!config || typeof config !== 'object') {
+      return;
+    }
+
     if (config._predicate) {
       const result = evaluate(context, config._predicate);
       if (result.rejected) {

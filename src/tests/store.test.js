@@ -7,6 +7,30 @@ import Store, { evaluatePredicates } from '../store.js';
 
 describe('store.js', () => {
   describe('evaluatePredicates', () => {
+  	it('should not throw error when properties are not objects', () => {
+  	  // Arrange
+      const config = {
+        _published: 1584475383.3865728,
+        _experiments: [{
+          id: '0f39849197',
+          web: {
+            dependencies: 'function() {}',
+            count: 1,
+            choice: true,
+            none: null
+          }
+        }]
+      };
+
+      // Act
+      const context = new Context();
+      context.initialize(123, 321, {});
+
+      assert.doesNotThrow(() => {
+        evaluatePredicates(2, context, config);
+      });
+    });
+
     it('should reject all keys if the context doesn\'t satisfy the experiment level predicate', () => {
       const config = {
         "_published": 1584475383.3865728,
