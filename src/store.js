@@ -186,25 +186,35 @@ function EvolvStore(options) {
     configKeyStates.active.clear();
     configKeyStates.entry.clear();
     effectiveGenome = {};
-    Object.keys(results).forEach(function(eid) {
-      const result = results[eid];
-      genomeKeyStates.loaded.forEach(function(key) {
-        const active = !result.disabled.some(function(disabledKey) {
-          return strings.startsWith(key, disabledKey);
-        });
 
-        if (active) {
-          configKeyStates.active.add(key);
-          const entry = result.entry.some(function(entryKey) {
-            return strings.startsWith(key, entryKey);
-          });
+    const resultsMerged = Object.values(results).reduce((acc, result) => {
+      return {
+        disabled: [
+          ...acc.disabled,
+          ...result.disabled
+        ],
+        entry: [...acc.entry, ...result.entry]
+      }
+    }, { disabled: [], entry: []});
 
-          if (entry) {
-            configKeyStates.entry.add(key);
-          }
-        }
+    genomeKeyStates.loaded.forEach(function (key) {
+      const active = !resultsMerged.disabled.some(function (disabledKey) {
+        return strings.startsWith(key, disabledKey);
       });
 
+      if (active) {
+        configKeyStates.active.add(key);
+        const entry = resultsMerged.entry.some(function (entryKey) {
+          return strings.startsWith(key, entryKey);
+        });
+
+        if (entry) {
+          configKeyStates.entry.add(key);
+        }
+      }
+    });
+
+    Object.keys(results).forEach(function (eid) {
       if (eid in genomes) {
         effectiveGenome = objects.deepMerge(effectiveGenome, objects.filter(genomes[eid], configKeyStates.active));
       }
