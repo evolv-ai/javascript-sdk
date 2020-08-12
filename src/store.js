@@ -1,11 +1,15 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
+import * as arrays from './ponyfills/arrays.js';
 
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
 import { CONTEXT_CHANGED } from './context.js';
 import retrieve from './retrieve.js';
+
+// Lock for updates, is updated by reevaluateContext()
+let LOCKED = false;
 
 const CONFIG_SOURCE = 'config';
 const GENOME_SOURCE = 'genome';
@@ -216,6 +220,12 @@ function EvolvStore(options) {
       return;
     }
 
+    if (LOCKED) {
+      return;
+    }
+
+    LOCKED = true;
+
     const results = evaluatePredicates(version, context, config);
     configKeyStates.active.clear();
     configKeyStates.entry.clear();
@@ -236,6 +246,8 @@ function EvolvStore(options) {
       }
     });
 
+    context.set('keys.active', arrays.from(configKeyStates.active))
+
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
       try {
@@ -244,6 +256,8 @@ function EvolvStore(options) {
         console.error(ex);
       }
     });
+
+    LOCKED = false;
   }
 
   function updateGenome(value) {
