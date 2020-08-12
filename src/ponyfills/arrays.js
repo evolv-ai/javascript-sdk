@@ -2,21 +2,21 @@
 
 function isCallable(fn) {
   return typeof fn === 'function';
-};
+}
 
 function toInteger(value) {
   var number = Number(value);
   if (isNaN(number)) { return 0; }
   if (number === 0 || !isFinite(number)) { return number; }
   return (number > 0 ? 1 : -1) * Math.floor(Math.abs(number));
-};
+}
 
 const maxSafeInteger = Math.pow(2, 53) - 1;
 
 function toLength(value) {
   var len = toInteger(value);
   return Math.min(Math.max(len, 0), maxSafeInteger);
-};
+}
 
 function iteratorProp(value) {
   if(value != null) {
@@ -34,7 +34,7 @@ function iteratorProp(value) {
       return '@@iterator';
     }
   }
-};
+}
 
 function getMethod(O, P) {
   // Assert: IsPropertyKey(P) is true.
@@ -52,7 +52,7 @@ function getMethod(O, P) {
     }
     return func;
   }
-};
+}
 
 function iteratorStep(iterator) {
   // Let result be IteratorNext(iterator).
@@ -67,7 +67,7 @@ function iteratorStep(iterator) {
   }
   // Return result.
   return result;
-};
+}
 
 // The length property of the from method is 1.
 export function from(items /*, mapFn, thisArg */ ) {
@@ -129,7 +129,7 @@ export function from(items /*, mapFn, thisArg */ ) {
 
     // g. Repeat
     var next, nextValue;
-    while (true) {
+    while (true) { // eslint-disable-line
       // i. Let Pk be ToString(k).
       // ii. Let next be IteratorStep(iterator).
       // iii. ReturnIfAbrupt(next).
@@ -213,4 +213,4 @@ export function from(items /*, mapFn, thisArg */ ) {
     // 19. Return A.
   }
   return A;
-};
+}
