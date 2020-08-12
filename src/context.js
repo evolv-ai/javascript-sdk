@@ -202,8 +202,11 @@ function EvolvContext() {
    * @param limit {Number} Max length of array to maintain.
    * @returns {boolean} True if value was successfully added.
    */
-  this.pushToArray = function(key, value, local, limit=DEFAULT_QUEUE_LIMIT) {
+  this.pushToArray = function(key, value, local, limit) {
+    limit = limit || DEFAULT_QUEUE_LIMIT;
+
     ensureInitialized();
+
     const context = local ? localContext : remoteContext;
     const originalArray = objects.getValueForKey(key, context);
 
