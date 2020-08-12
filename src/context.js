@@ -8,6 +8,8 @@ export const CONTEXT_VALUE_ADDED = 'context.value.added';
 export const CONTEXT_VALUE_CHANGED = 'context.value.changed';
 export const CONTEXT_DESTROYED = 'context.destroyed';
 
+export const DEFAULT_QUEUE_LIMIT = 50;
+
 /**
  * The EvolvContext provides functionality to manage data relating to the client state, or context in which the
  * variants will be applied.
@@ -190,6 +192,34 @@ function EvolvContext() {
     ensureInitialized();
     return key in remoteContext || key in localContext;
   };
+
+  /**
+   * Adds value to specified array in context. If array doesnt exist its created and added to.
+   *
+   * @param key The array to add to.
+   * @param value Value to add to the array.
+   * @param local {Boolean} If true, the value will only be added to the localContext.
+   * @param limit {Number} Max length of array to maintain.
+   * @returns {boolean} True if value was successfully added.
+   */
+  this.pushToArray = function(key, value, local, limit=DEFAULT_QUEUE_LIMIT) {
+    ensureInitialized();
+    const context = local ? localContext : remoteContext;
+    const originalArray = objects.getValueForKey(key, context);
+
+    let newArray;
+    if (originalArray) {
+      newArray = originalArray.slice();
+      while (newArray.length > limit) {
+        newArray.shift();
+      }
+      newArray.push(value);
+    } else {
+      newArray = [value];
+    }
+
+    return this.set(key, newArray, local);
+  }
 }
 
 export default EvolvContext;
