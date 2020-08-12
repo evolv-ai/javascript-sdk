@@ -210,10 +210,10 @@ function EvolvContext() {
     let newArray;
     if (originalArray) {
       newArray = originalArray.slice();
+      newArray.push(value);
       while (newArray.length > limit) {
         newArray.shift();
       }
-      newArray.push(value);
     } else {
       newArray = [value];
     }
