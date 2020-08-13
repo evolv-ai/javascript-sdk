@@ -1,7 +1,6 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
-import * as arrays from './ponyfills/arrays.js';
 
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
@@ -246,7 +245,11 @@ function EvolvStore(options) {
       }
     });
 
-    context.set('keys.active', arrays.from(configKeyStates.active))
+    const activeKeys = [];
+    configKeyStates.active.forEach(function(v) {
+      activeKeys.push(v)
+    });
+    context.set('keys.active', activeKeys);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
