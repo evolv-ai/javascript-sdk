@@ -187,13 +187,11 @@ function EvolvStore(options) {
     configKeyStates.entry.clear();
     effectiveGenome = {};
 
-    const resultsMerged = Object.values(results).reduce((acc, result) => {
+    const resultsMerged = Object.keys(results).reduce(function(acc, key){
+      const result = results[key];
       return {
-        disabled: [
-          ...acc.disabled,
-          ...result.disabled
-        ],
-        entry: [...acc.entry, ...result.entry]
+        disabled: acc.disabled.concat(result.disabled),
+        entry: acc.entry.concat(result.entry)
       }
     }, { disabled: [], entry: []});
 
