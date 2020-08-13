@@ -1,4 +1,5 @@
 import * as objects from './ponyfills/objects.js';
+import * as arrays from './helpers/arrays.js';
 import { emit } from './waitforit.js';
 
 export const CONTEXT_CHANGED = 'context.changed';
@@ -97,7 +98,7 @@ function EvolvContext() {
     const context = local ? localContext : remoteContext;
     const before = objects.getValueForKey(key, context);
 
-    if (before === value) {
+    if (before === value || arrays.arraysEqual(before, value)) {
       return false;
     }
 
