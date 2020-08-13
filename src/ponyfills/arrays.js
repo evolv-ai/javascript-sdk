@@ -6,7 +6,7 @@ export function from(items) {
 	if (items instanceof Map) {
 		const arr = [];
 
-		items.forEach((value, key) => {
+		items.forEach(function(value, key) {
 			arr.push([key, value]);
 		});
 
@@ -17,7 +17,7 @@ export function from(items) {
 		const arr = [];
 
 		// IE11 does not support NodeList.forEach()
-		(items.forEach || forEach).call(items, (item) => {
+		(items.forEach || forEach).call(items, function(item) {
 			arr.push(item);
 		});
 
