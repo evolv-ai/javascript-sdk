@@ -147,7 +147,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.getActiveKeys('nope').listen(noKeysSpy);
 
   evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
-  expect(contextChangedSpy).to.have.been.called(9);
+  expect(contextChangedSpy).to.have.been.called(16);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
@@ -163,7 +163,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.remove('web.url');
-  expect(contextChangedSpy).to.have.been.called(11);
+  expect(contextChangedSpy).to.have.been.called(22);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
@@ -612,11 +612,12 @@ describe('Evolv client', () => {
 
       const results = await validateClient(evolv, options, uid, sid);
 
-      console.log(JSON.stringify(results.analyticsPayloads))
+      // console.log(JSON.stringify(results.analyticsPayloads))
+      // console.log(JSON.stringify(results.analyticsPayloads[0].messages))
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
-      expect(results.analyticsPayloads[0].messages.length).to.equal(11)
+      expect(results.analyticsPayloads[0].messages.length).to.equal(22)
       expect(results.analyticsPayloads[0].messages[0].type).to.equal("context.initialized")
       expect(results.analyticsPayloads[0].messages[0].payload).to.eql( {
         "remote": true,
@@ -651,25 +652,25 @@ describe('Evolv client', () => {
       expect(results.analyticsPayloads[0].messages[5].payload.key).to.equal("keys.active")
       expect(results.analyticsPayloads[0].messages[5].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
       expect(results.analyticsPayloads[0].messages[5].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[6].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[6].payload.key).to.equal("events")
-      expect(results.analyticsPayloads[0].messages[6].payload.value[0].type).to.equal("lunch-time")
-      expect(results.analyticsPayloads[0].messages[6].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[7].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[7].payload.key).to.equal("web.url")
-      expect(results.analyticsPayloads[0].messages[7].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(results.analyticsPayloads[0].messages[7].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[8].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[8].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[8].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
-      expect(results.analyticsPayloads[0].messages[8].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[9].type).to.equal("context.value.removed")
-      expect(results.analyticsPayloads[0].messages[9].payload.key).to.equal("web.url")
-      expect(results.analyticsPayloads[0].messages[9].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[10].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[10].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[10].payload.value).to.eql(['web'])
-      expect(results.analyticsPayloads[0].messages[10].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[12].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[12].payload.key).to.equal("events")
+      expect(results.analyticsPayloads[0].messages[12].payload.value[0].type).to.equal("lunch-time")
+      expect(results.analyticsPayloads[0].messages[12].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[14].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[14].payload.key).to.equal("web.url")
+      expect(results.analyticsPayloads[0].messages[14].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
+      expect(results.analyticsPayloads[0].messages[14].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[15].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[15].payload.key).to.equal("keys.active")
+      expect(results.analyticsPayloads[0].messages[15].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
+      expect(results.analyticsPayloads[0].messages[15].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[20].type).to.equal("context.value.removed")
+      expect(results.analyticsPayloads[0].messages[20].payload.key).to.equal("web.url")
+      expect(results.analyticsPayloads[0].messages[20].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[21].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[21].payload.key).to.equal("keys.active")
+      expect(results.analyticsPayloads[0].messages[21].payload.value).to.eql(['web'])
+      expect(results.analyticsPayloads[0].messages[21].sid).to.equal(sid)
     });
   });
 });

@@ -186,6 +186,7 @@ function EvolvClient(options) {
         }
 
         remoteContext.experiments.allocations.forEach(function(alloc) {
+          context.pushToArray('confirmations', {cid: alloc.cid, timestamp: Date.now()})
           eventBeacon.emit('confirmation', assign({
             uid: alloc.uid,
             sid: alloc.sid,
@@ -215,6 +216,7 @@ function EvolvClient(options) {
     }
 
     remoteContext.experiments.allocations.forEach(function(alloc) {
+      context.pushToArray('contaminations', {cid: alloc.cid, timestamp: Date.now()})
       eventBeacon.emit('contamination', assign({
         uid: alloc.uid,
         sid: alloc.sid,
