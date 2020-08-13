@@ -9,7 +9,7 @@ import { CONTEXT_CHANGED } from './context.js';
 import retrieve from './retrieve.js';
 
 // Lock for updates, is updated by reevaluateContext()
-let locked = false;
+let reevaluatingContext = false;
 
 const CONFIG_SOURCE = 'config';
 const GENOME_SOURCE = 'genome';
@@ -150,7 +150,7 @@ export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded){
   });
 
   return configKeyStates;
-} 
+}
 
 function EvolvStore(options) {
   const version = options.version || 1;
@@ -220,11 +220,11 @@ function EvolvStore(options) {
       return;
     }
 
-    if (locked) {
+    if (reevaluatingContext) {
       return;
     }
 
-    locked = true;
+    reevaluatingContext = true;
 
     const results = evaluatePredicates(version, context, config);
     configKeyStates.active.clear();
@@ -232,7 +232,7 @@ function EvolvStore(options) {
     effectiveGenome = {};
 
     const activeAndEntryKeyStates = getActiveAndEntryConfigKeyStates(results, genomeKeyStates.loaded);
-    
+
     activeAndEntryKeyStates.active.forEach(function(activeKey){
       configKeyStates.active.add(activeKey);
     });
@@ -257,7 +257,7 @@ function EvolvStore(options) {
       }
     });
 
-    locked = false;
+    reevaluatingContext = false;
   }
 
   function updateGenome(value) {
