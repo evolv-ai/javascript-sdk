@@ -7,6 +7,9 @@ import { waitFor, emit } from './waitforit.js';
 import { CONTEXT_CHANGED } from './context.js';
 import retrieve from './retrieve.js';
 
+// Lock for updates, is updated by reevaluateContext()
+let reevaluatingContext = false;
+
 const CONFIG_SOURCE = 'config';
 const GENOME_SOURCE = 'genome';
 
@@ -146,7 +149,7 @@ export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded){
   });
 
   return configKeyStates;
-} 
+}
 
 function EvolvStore(options) {
   const version = options.version || 1;
@@ -216,13 +219,19 @@ function EvolvStore(options) {
       return;
     }
 
+    if (reevaluatingContext) {
+      return;
+    }
+
+    reevaluatingContext = true;
+
     const results = evaluatePredicates(version, context, config);
     configKeyStates.active.clear();
     configKeyStates.entry.clear();
     effectiveGenome = {};
 
     const activeAndEntryKeyStates = getActiveAndEntryConfigKeyStates(results, genomeKeyStates.loaded);
-    
+
     activeAndEntryKeyStates.active.forEach(function(activeKey){
       configKeyStates.active.add(activeKey);
     });
@@ -236,6 +245,12 @@ function EvolvStore(options) {
       }
     });
 
+    const activeKeys = [];
+    configKeyStates.active.forEach(function(v) {
+      activeKeys.push(v)
+    });
+    context.set('keys.active', activeKeys);
+
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
       try {
@@ -244,6 +259,8 @@ function EvolvStore(options) {
         console.error(ex);
       }
     });
+
+    reevaluatingContext = false;
   }
 
   function updateGenome(value) {

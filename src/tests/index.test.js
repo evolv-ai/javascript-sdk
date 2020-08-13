@@ -93,7 +93,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.getConfig('web')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
-  expect(contextChangedSpy).to.have.been.called(3);
+  expect(contextChangedSpy).to.have.been.called(8);
 
   const valueWebKeySpy = chai.spy();
   const valueWebAb8numq2jKeySpy = chai.spy();
@@ -111,7 +111,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.set('user_attributes.country', 'usa');
-  expect(contextChangedSpy).to.have.been.called(4);
+  expect(contextChangedSpy).to.have.been.called(10);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2.id')).to.equal('2fxe5dy5j');
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
@@ -147,7 +147,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.getActiveKeys('nope').listen(noKeysSpy);
 
   evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
-  expect(contextChangedSpy).to.have.been.called(5);
+  expect(contextChangedSpy).to.have.been.called(14);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
@@ -163,7 +163,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.remove('web.url');
-  expect(contextChangedSpy).to.have.been.called(6);
+  expect(contextChangedSpy).to.have.been.called(16);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
@@ -616,19 +616,32 @@ describe('Evolv client', () => {
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
-      expect(results.analyticsPayloads[0].messages.length).to.equal(6)
+      expect(results.analyticsPayloads[0].messages.length).to.equal(16)
       expect(results.analyticsPayloads[0].messages[0].type).to.equal("context.initialized")
       expect(results.analyticsPayloads[0].messages[0].sid).to.equal(sid)
       expect(results.analyticsPayloads[0].messages[1].type).to.equal("context.value.added")
       expect(results.analyticsPayloads[0].messages[1].sid).to.equal(sid)
       expect(results.analyticsPayloads[0].messages[2].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[2].payload.key).to.equal("experiments.allocations")
+      expect(results.analyticsPayloads[0].messages[2].payload.value).to.eql([{
+				"uid": 123,
+				"sid": 321,
+				"eid": "0f39849197",
+				"cid": "0cf8ffcedea2:0f39849197",
+				"excluded": false
+			}])
       expect(results.analyticsPayloads[0].messages[2].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[3].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[3].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[4].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[4].type).to.equal("context.value.added")
+      expect(results.analyticsPayloads[0].messages[4].payload.key).to.equal("experiments.exclusions")
+      expect(results.analyticsPayloads[0].messages[4].payload.value).to.eql([])
       expect(results.analyticsPayloads[0].messages[4].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[5].type).to.equal("context.value.removed")
-      expect(results.analyticsPayloads[0].messages[5].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[12].type).to.equal("context.value.changed")
+      expect(results.analyticsPayloads[0].messages[12].payload.key).to.equal("web.url")
+      expect(results.analyticsPayloads[0].messages[12].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
+      expect(results.analyticsPayloads[0].messages[12].sid).to.equal(sid)
+      expect(results.analyticsPayloads[0].messages[14].type).to.equal("context.value.removed")
+      expect(results.analyticsPayloads[0].messages[14].payload.key).to.equal("web.url")
+      expect(results.analyticsPayloads[0].messages[14].sid).to.equal(sid)
     });
   });
 });
