@@ -9,7 +9,7 @@ import { CONTEXT_CHANGED } from './context.js';
 import retrieve from './retrieve.js';
 
 // Lock for updates, is updated by reevaluateContext()
-let LOCKED = false;
+let locked = false;
 
 const CONFIG_SOURCE = 'config';
 const GENOME_SOURCE = 'genome';
@@ -220,11 +220,11 @@ function EvolvStore(options) {
       return;
     }
 
-    if (LOCKED) {
+    if (locked) {
       return;
     }
 
-    LOCKED = true;
+    locked = true;
 
     const results = evaluatePredicates(version, context, config);
     configKeyStates.active.clear();
@@ -257,7 +257,7 @@ function EvolvStore(options) {
       }
     });
 
-    LOCKED = false;
+    locked = false;
   }
 
   function updateGenome(value) {
