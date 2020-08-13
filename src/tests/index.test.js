@@ -617,60 +617,61 @@ describe('Evolv client', () => {
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
-      expect(results.analyticsPayloads[0].messages.length).to.equal(22)
-      expect(results.analyticsPayloads[0].messages[0].type).to.equal("context.initialized")
-      expect(results.analyticsPayloads[0].messages[0].payload).to.eql( {
+      const messages = results.analyticsPayloads[0].messages
+      expect(messages.length).to.equal(22)
+      expect(messages[0].type).to.equal("context.initialized")
+      expect(messages[0].payload).to.eql( {
         "remote": true,
         "web": {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       })
-      expect(results.analyticsPayloads[0].messages[0].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[1].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[1].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[1].payload.value).to.eql([])
-      expect(results.analyticsPayloads[0].messages[1].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[2].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[2].payload.key).to.equal("experiments.allocations")
-      expect(results.analyticsPayloads[0].messages[2].payload.value).to.eql([{
+      expect(messages[0].sid).to.equal(sid)
+      expect(messages[1].type).to.equal("context.value.added")
+      expect(messages[1].payload.key).to.equal("keys.active")
+      expect(messages[1].payload.value).to.eql([])
+      expect(messages[1].sid).to.equal(sid)
+      expect(messages[2].type).to.equal("context.value.added")
+      expect(messages[2].payload.key).to.equal("experiments.allocations")
+      expect(messages[2].payload.value).to.eql([{
 				"uid": 123,
 				"sid": 321,
 				"eid": "0f39849197",
 				"cid": "0cf8ffcedea2:0f39849197",
 				"excluded": false
 			}])
-      expect(results.analyticsPayloads[0].messages[2].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[3].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[3].payload.key).to.equal("experiments.exclusions")
-      expect(results.analyticsPayloads[0].messages[3].payload.value).to.eql([])
-      expect(results.analyticsPayloads[0].messages[3].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[4].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[4].payload.key).to.equal("user_attributes.country")
-      expect(results.analyticsPayloads[0].messages[4].payload.value).to.equal("usa")
-      expect(results.analyticsPayloads[0].messages[4].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[5].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[5].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[5].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
-      expect(results.analyticsPayloads[0].messages[5].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[12].type).to.equal("context.value.added")
-      expect(results.analyticsPayloads[0].messages[12].payload.key).to.equal("events")
-      expect(results.analyticsPayloads[0].messages[12].payload.value[0].type).to.equal("lunch-time")
-      expect(results.analyticsPayloads[0].messages[12].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[14].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[14].payload.key).to.equal("web.url")
-      expect(results.analyticsPayloads[0].messages[14].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(results.analyticsPayloads[0].messages[14].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[15].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[15].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[15].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
-      expect(results.analyticsPayloads[0].messages[15].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[20].type).to.equal("context.value.removed")
-      expect(results.analyticsPayloads[0].messages[20].payload.key).to.equal("web.url")
-      expect(results.analyticsPayloads[0].messages[20].sid).to.equal(sid)
-      expect(results.analyticsPayloads[0].messages[21].type).to.equal("context.value.changed")
-      expect(results.analyticsPayloads[0].messages[21].payload.key).to.equal("keys.active")
-      expect(results.analyticsPayloads[0].messages[21].payload.value).to.eql(['web'])
-      expect(results.analyticsPayloads[0].messages[21].sid).to.equal(sid)
+      expect(messages[2].sid).to.equal(sid)
+      expect(messages[3].type).to.equal("context.value.added")
+      expect(messages[3].payload.key).to.equal("experiments.exclusions")
+      expect(messages[3].payload.value).to.eql([])
+      expect(messages[3].sid).to.equal(sid)
+      expect(messages[4].type).to.equal("context.value.added")
+      expect(messages[4].payload.key).to.equal("user_attributes.country")
+      expect(messages[4].payload.value).to.equal("usa")
+      expect(messages[4].sid).to.equal(sid)
+      expect(messages[5].type).to.equal("context.value.changed")
+      expect(messages[5].payload.key).to.equal("keys.active")
+      expect(messages[5].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
+      expect(messages[5].sid).to.equal(sid)
+      expect(messages[12].type).to.equal("context.value.added")
+      expect(messages[12].payload.key).to.equal("events")
+      expect(messages[12].payload.value[0].type).to.equal("lunch-time")
+      expect(messages[12].sid).to.equal(sid)
+      expect(messages[14].type).to.equal("context.value.changed")
+      expect(messages[14].payload.key).to.equal("web.url")
+      expect(messages[14].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
+      expect(messages[14].sid).to.equal(sid)
+      expect(messages[15].type).to.equal("context.value.changed")
+      expect(messages[15].payload.key).to.equal("keys.active")
+      expect(messages[15].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
+      expect(messages[15].sid).to.equal(sid)
+      expect(messages[20].type).to.equal("context.value.removed")
+      expect(messages[20].payload.key).to.equal("web.url")
+      expect(messages[20].sid).to.equal(sid)
+      expect(messages[21].type).to.equal("context.value.changed")
+      expect(messages[21].payload.key).to.equal("keys.active")
+      expect(messages[21].payload.value).to.eql(['web'])
+      expect(messages[21].sid).to.equal(sid)
     });
   });
 });
