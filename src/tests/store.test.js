@@ -1,9 +1,12 @@
 import assert from 'assert';
+import chai from 'chai';
+
+const { expect } = chai;
 
 import base64 from '../ponyfills/base64.js';
 
 import Context from '../context.js';
-import Store, { evaluatePredicates } from '../store.js';
+import Store, { evaluatePredicates, getActiveAndEntryConfigKeyStates } from '../store.js';
 
 describe('store.js', () => {
   describe('evaluatePredicates', () => {
@@ -197,4 +200,48 @@ describe('store.js', () => {
       assert.ok(!rejected['0f39849197'].entry.length, 'No entry keys should have been found');
     });
   });
+
+  describe('getActiveAndEntryConfigKeyStates', () => {
+    it('should not add key if the key starts with strings in disabled array', () => {
+
+      const loadedKeyStates = new Set([
+        "web", 
+        "web.cwj1t5d3r", 
+        "web.cwj1t5d3r.3niwqixti", 
+        "web.cwj1t5d3r.3niwqixti.id", 
+        "web.cwj1t5d3r.3niwqixti.type",
+        "web.cwj1t5d3r.3niwqixti.script",
+        "web.cwj1t5d3r.3niwqixti.styles",
+        "web.20o82m2i2",
+        "web.20o82m2i2.i5vha3r5s",
+        "web.20o82m2i2.i5vha3r5s.id",
+        "web.20o82m2i2.i5vha3r5s.type",
+        "web.20o82m2i2.i5vha3r5s.script",
+        "web.20o82m2i2.i5vha3r5s.styles",
+        "web.234234gdfg.sdfsdf"
+      ])
+
+      const results = {
+        '10179f895b': {
+          disabled: ['web.cwj1t5d3r'],
+          entry: []
+        }, 
+        'e33daae52a': {
+          disabled: [
+            'web.20o82m2i2'
+          ],
+          entry: []
+        },
+        'whdjksjd': {
+          disabled: [
+            'web.234234gdfg'
+          ],
+          entry: []
+        }
+      };
+
+      const keys = getActiveAndEntryConfigKeyStates(results, loadedKeyStates);
+      expect(keys).to.deep.equal({ active: ['web'], entry: [] });
+    })
+  })
 });
