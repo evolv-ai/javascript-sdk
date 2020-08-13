@@ -210,16 +210,8 @@ function EvolvContext() {
     const context = local ? localContext : remoteContext;
     const originalArray = objects.getValueForKey(key, context);
 
-    let newArray;
-    if (originalArray) {
-      newArray = originalArray.slice();
-      newArray.push(value);
-      while (newArray.length > limit) {
-        newArray.shift();
-      }
-    } else {
-      newArray = [value];
-    }
+    const combined = (originalArray || []).concat([value]);
+    const newArray = combined.slice(combined.length - limit);
 
     return this.set(key, newArray, local);
   }
