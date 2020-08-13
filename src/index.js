@@ -157,7 +157,7 @@ function EvolvClient(options) {
    * @param flush {Boolean} If true, the event will be sent immediately.
    */
   this.emit = function(type, metadata, flush) {
-    context.pushToArray('events', {type: type,  timestamp: new Date().getTime()})
+    context.pushToArray('events', {type: type,  timestamp: Date.now()})
     eventBeacon.emit(type, assign({
       uid: context.uid,
       sid: context.sid,
