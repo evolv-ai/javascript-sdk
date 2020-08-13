@@ -114,6 +114,40 @@ export function evaluatePredicates(version, context, config) {
   return result;
 }
 
+// Exposed for testing
+export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded){
+  const configKeyStates = {
+    active: [],
+    entry: []
+  }
+  const resultsMerged = Object.keys(results).reduce(function(acc, key){
+    const result = results[key];
+    return {
+      disabled: acc.disabled.concat(result.disabled),
+      entry: acc.entry.concat(result.entry)
+    }
+  }, { disabled: [], entry: []});
+
+  keyStatesLoaded.forEach(function (key) {
+    const active = !resultsMerged.disabled.some(function (disabledKey) {
+      return strings.startsWith(key, disabledKey);
+    });
+
+    if (active) {
+      configKeyStates.active.push(key);
+      const entry = resultsMerged.entry.some(function (entryKey) {
+        return strings.startsWith(key, entryKey);
+      });
+
+      if (entry) {
+        configKeyStates.entry.push(key);
+      }
+    }
+  });
+
+  return configKeyStates;
+} 
+
 function EvolvStore(options) {
   const version = options.version || 1;
   const prefix = options.endpoint + '/' + options.environment;
@@ -187,29 +221,13 @@ function EvolvStore(options) {
     configKeyStates.entry.clear();
     effectiveGenome = {};
 
-    const resultsMerged = Object.keys(results).reduce(function(acc, key){
-      const result = results[key];
-      return {
-        disabled: acc.disabled.concat(result.disabled),
-        entry: acc.entry.concat(result.entry)
-      }
-    }, { disabled: [], entry: []});
-
-    genomeKeyStates.loaded.forEach(function (key) {
-      const active = !resultsMerged.disabled.some(function (disabledKey) {
-        return strings.startsWith(key, disabledKey);
-      });
-
-      if (active) {
-        configKeyStates.active.add(key);
-        const entry = resultsMerged.entry.some(function (entryKey) {
-          return strings.startsWith(key, entryKey);
-        });
-
-        if (entry) {
-          configKeyStates.entry.add(key);
-        }
-      }
+    const activeAndEntryKeyStates = getActiveAndEntryConfigKeyStates(results, genomeKeyStates.loaded);
+    
+    activeAndEntryKeyStates.active.forEach(function(activeKey){
+      configKeyStates.active.add(activeKey);
+    });
+    activeAndEntryKeyStates.entry.forEach(function(entryKey){
+      configKeyStates.entry.add(entryKey);
     });
 
     Object.keys(results).forEach(function (eid) {
