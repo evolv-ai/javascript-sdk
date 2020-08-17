@@ -118,7 +118,7 @@ export function evaluatePredicates(version, context, config) {
 }
 
 // Exposed for testing
-export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded){
+export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded) {
   const configKeyStates = {
     active: [],
     entry: []
@@ -129,7 +129,7 @@ export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded){
       disabled: acc.disabled.concat(result.disabled),
       entry: acc.entry.concat(result.entry)
     }
-  }, { disabled: [], entry: []});
+  }, { disabled: [], entry: [] });
 
   keyStatesLoaded.forEach(function (key) {
     const active = !resultsMerged.disabled.some(function (disabledKey) {
@@ -182,6 +182,8 @@ function EvolvStore(options) {
     loaded: new Set()
   };
 
+  let activeEids = new Set();
+
   let outstandingValuePromises = [];
   let outstandingConfigPromises = [];
   let subscriptions = new Set();
@@ -201,6 +203,9 @@ function EvolvStore(options) {
     delete configKeyStates.needed;
     delete configKeyStates.requested;
     delete configKeyStates.loaded;
+
+    activeEids = undefined;
+
     outstandingValuePromises.forEach(function(p) {
       p.reject();
     });
@@ -239,9 +244,17 @@ function EvolvStore(options) {
       configKeyStates.entry.add(entryKey);
     });
 
+    activeEids.clear();
+
     Object.keys(results).forEach(function (eid) {
       if (eid in genomes) {
-        effectiveGenome = objects.deepMerge(effectiveGenome, objects.filter(genomes[eid], configKeyStates.active));
+        const activeGenome = objects.filter(genomes[eid], configKeyStates.active);
+
+        if (Object.keys(activeGenome).length) {
+          activeEids.add(eid);
+
+          effectiveGenome = objects.deepMerge(effectiveGenome, activeGenome);
+        }
       }
     });
 
@@ -250,6 +263,15 @@ function EvolvStore(options) {
       activeKeys.push(v)
     });
     context.set('keys.active', activeKeys);
+
+    let activeAllocs = [];
+    const allocs = context.get('experiments.allocations');
+    if (allocs) {
+      activeAllocs = allocs.filter(function(alloc) {
+        return activeEids.has(alloc.eid);
+      })
+    }
+    context.set('experiments.allocations', activeAllocs);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
