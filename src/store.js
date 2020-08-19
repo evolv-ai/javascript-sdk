@@ -254,7 +254,8 @@ function EvolvStore(options) {
           activeEids.add(eid);
 
           effectiveGenome = objects.deepMerge(effectiveGenome, activeGenome);
-        }      }
+        }
+      }
     });
 
     const activeKeys = [];
