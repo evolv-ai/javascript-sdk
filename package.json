@@ -28,6 +28,7 @@
     "prepublishOnly": "webpack --experimental-modules --config=webpack.prod.cjs",
     "lint": "eslint src",
     "test": "mocha --experimental-modules",
+    "test:debug": "mocha debug --experimental-modules",
     "prebuild": "npm run docs",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/context.js src/docs/README.md",

@@ -5,7 +5,7 @@ import Context, {
   CONTEXT_VALUE_REMOVED
 } from './context.js';
 
-import Store, {EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED} from './store.js';
+import Store, { EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED } from './store.js';
 import { waitFor, waitOnceFor, emit, destroyScope } from './waitforit.js';
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
@@ -41,8 +41,8 @@ function EvolvClient(options) {
   options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
   options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
 
-  const context = new Context();
-  const store = new Store(options);
+  const context = options.context || new Context();
+  const store = options.store || new Store(options);
   const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context) : null;
   const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events', context);
 
@@ -171,35 +171,44 @@ function EvolvClient(options) {
    * optimization statistics.
    */
   this.confirm = function() {
-    store.isEntryPoint()
-      .then(function(entryPoint) {
-        if (!entryPoint) {
-          return;
-        }
+    waitFor(context, EFFECTIVE_GENOME_UPDATED, function(type, genome) {
+      const remoteContext = context.remoteContext;
+      const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
+      if (!store.configuration || !allocations || !allocations.length) {
+        return;
+      }
 
-        const remoteContext = context.remoteContext;
-        if (
-          !remoteContext.experiments ||
-          !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
-        ) {
-          return [];
-        }
+      store.isEntryPoint()
+        .then(function(entryPoint) {
+          if (!entryPoint) {
+            return;
+          }
 
-        remoteContext.experiments.allocations.forEach(function(alloc) {
-          context.pushToArray('confirmations', {cid: alloc.cid, timestamp: Date.now()})
-          eventBeacon.emit('confirmation', assign({
-            uid: alloc.uid,
-            sid: alloc.sid,
-            eid: alloc.eid,
-            cid: alloc.cid
-          }, context.remoteContext));
+          const confirmedCids = (context.get('confirmations') || []).map(function(conf) {
+            return conf.cid;
+          });
+          const confirmableAllocations = allocations.filter(function(alloc) {
+            return confirmedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
+          });
+
+          if (!confirmableAllocations.length) {
+            return;
+          }
+
+          confirmableAllocations.forEach(function(alloc) {
+            context.pushToArray('confirmations', {cid: alloc.cid, timestamp: Date.now()})
+            eventBeacon.emit('confirmation', assign({
+              uid: alloc.uid,
+              sid: alloc.sid,
+              eid: alloc.eid,
+              cid: alloc.cid
+            }, context.remoteContext));
+          });
+
+          eventBeacon.flush();
+          emit(context, EvolvClient.CONFIRMED);
         });
-        eventBeacon.flush();
-        emit(context, EvolvClient.CONFIRMED);
-      })
-      .catch(function() {
-        console.error('Evolv: Failed to confirm rendering');
-      });
+    });
   };
 
   /**
@@ -300,7 +309,7 @@ function EvolvClient(options) {
     }
 
     if (options.autoConfirm) {
-      waitFor(context, EFFECTIVE_GENOME_UPDATED, this.confirm.bind(this));
+      this.confirm();
       waitFor(context, REQUEST_FAILED, this.contaminate.bind(this));
     }
 

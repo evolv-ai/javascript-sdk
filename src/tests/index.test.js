@@ -1,11 +1,12 @@
 import chai from 'chai';
 import spies from 'chai-spies';
-import Evolv from '../index.js';
-
-import xmlhttprequest from 'xmlhttprequest';
 import _xhrMock from 'xhr-mock';
 import webcrypto from 'webcrypto';
-import {CONTEXT_INITIALIZED, CONTEXT_CHANGED} from "../context.js";
+
+import Evolv from '../index.js';
+import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
+import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from "../context.js";
+import { waitFor, emit } from '../waitforit.js';
 import base64 from "../ponyfills/base64.js";
 
 chai.use(spies);
@@ -199,7 +200,7 @@ async function validateClient(evolv, options, uid, sid) {
   });
 }
 
-describe('Evolv client', () => {
+describe('Evolv client integration tests', () => {
   beforeEach(() => {
     xhrMock.setup();
     // Uncomment to hit Frazer's endpoint
@@ -682,4 +683,49 @@ describe('Evolv client', () => {
       expect(messages[12].sid).to.equal(sid)
     });
   });
+});
+
+describe('Evolv client unit tests', () => {
+  var options;
+  var context;
+  var store;
+
+  beforeEach(() => {
+    options = {
+      environment: '579b106c73',
+      endpoint: 'https://participants-test.evolv.ai/',
+      version: 1,
+      autoConfirm: false
+    };
+    context = new Context();
+    store = new Store(options);
+  });
+
+  describe('confirm', () => {
+    it('should properly confirm into allocated experiment once genome is updated', (done) => {
+      store.isEntryPoint = () => new Promise((resolve, reject) => { resolve(true) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      context.initialize()
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}])
+      options.context = context;
+
+      waitFor(context, Evolv.CONFIRMED, () => {
+        try {
+          const confirmations = context.get('confirmations');
+          expect(confirmations.length).to.be.equal(1)
+          expect(confirmations[0].cid).to.be.equal('5678');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      const client = new Evolv(options);
+      client.confirm();
+      emit(context, EFFECTIVE_GENOME_UPDATED, {});
+    });
+  })
 });
