@@ -171,7 +171,7 @@ function EvolvClient(options) {
    * optimization statistics.
    */
   this.confirm = function() {
-    waitFor(context, EFFECTIVE_GENOME_UPDATED, function(type, genome) {
+    waitFor(context, EFFECTIVE_GENOME_UPDATED, function() {
       const remoteContext = context.remoteContext;
       const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
       if (!store.configuration || !allocations || !allocations.length) {
