@@ -103,12 +103,20 @@ function EvolvClient(options) {
   /**
    * Preload all keys under under the specified prefixes.
    *
-   * @param {Array.<String>} prefixes A list of prefixes to keys to load.
-   * @param {Boolean} configOnly If true, only the config would be loaded. (default: false)
+   * @param {Map.<String, Array.<String>>} prefixes A map of experiment ids to prefixes to load.
    * @param {Boolean} immediate Forces the requests to the server. (default: false)
    * @method
    */
-  this.preload = store.preload.bind(store);
+  this.preloadConfig = store.preloadConfig.bind(store);
+
+  /**
+   * Preload all keys under under the specified prefixes.
+   *
+   * @param {Array.<String>} prefixes A list of prefixes to keys to load.
+   * @param {Boolean} immediate Forces the requests to the server. (default: false)
+   * @method
+   */
+  this.preloadGenome = store.preloadGenome.bind(store);
 
   /**
    * Get the value of a specified key.

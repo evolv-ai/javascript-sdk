@@ -63,8 +63,14 @@ function getActiveKeys(activeKeys, prefix) {
   return result;
 }
 
-function isEntryPoint(entryKeys) {
-  return entryKeys.size > 0;
+function isEntryPoint(configKeyStates) {
+  let entryPoint = false;
+  configKeyStates.forEach(function(expKeyStates) {
+    if ((expKeyStates.get('entry') || new Set()).size > 0) {
+      entryPoint = true;
+    }
+  })
+  return entryPoint;
 }
 
 // Exposed for testing
@@ -101,54 +107,93 @@ export function evaluatePredicates(version, context, config) {
 
   const evaluableContext = context.resolve();
 
-  const result = {};
+  const results = new Map();
   config._experiments.forEach(function(exp) {
     const evaluableConfig = objects.assign({}, exp);
     delete evaluableConfig.id;
-    const results = {
+    const result = {
       disabled: [],
       entry: []
     };
 
-    evaluateBranch(evaluableContext, evaluableConfig, '', results.disabled, results.entry);
-    result[exp.id] = results;
+    evaluateBranch(evaluableContext, evaluableConfig, '', result.disabled, result.entry);
+    results.set(exp.id, result);
   });
 
-  return result;
+  return results;
 }
 
 // Exposed for testing
-export function getActiveAndEntryConfigKeyStates(results, keyStatesLoaded) {
-  const configKeyStates = {
+export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
+  const expKeyStates = {
     active: [],
     entry: []
   }
-  const resultsMerged = Object.keys(results).reduce(function(acc, key){
-    const result = results[key];
-    return {
-      disabled: acc.disabled.concat(result.disabled),
-      entry: acc.entry.concat(result.entry)
-    }
-  }, { disabled: [], entry: [] });
 
   keyStatesLoaded.forEach(function (key) {
-    const active = !resultsMerged.disabled.some(function (disabledKey) {
+    const active = !results.disabled.some(function (disabledKey) {
       return strings.startsWith(key, disabledKey);
     });
 
     if (active) {
-      configKeyStates.active.push(key);
-      const entry = resultsMerged.entry.some(function (entryKey) {
+      expKeyStates.active.push(key);
+      const entry = results.entry.some(function (entryKey) {
         return strings.startsWith(key, entryKey);
       });
 
       if (entry) {
-        configKeyStates.entry.push(key);
+        expKeyStates.entry.push(key);
       }
     }
   });
 
-  return configKeyStates;
+  return expKeyStates;
+}
+
+export function setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates) {
+  const results = evaluatePredicates(version, context, config);
+
+  const newConfigKeyStates = new Map();
+  results.forEach(function(expResults, eid) {
+    const expKeyStates = (configKeyStates.get(eid) || new Map());
+    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults, genomeKeyStates.loaded);
+
+    const activeKeyStates = new Set();
+    newExpKeyStates.active.forEach(function(key) {
+      activeKeyStates.add(key);
+    })
+
+    const entryKeyStates = new Set();
+    newExpKeyStates.entry.forEach(function(key) {
+      entryKeyStates.add(key);
+    })
+
+    expKeyStates.set('active', activeKeyStates);
+    expKeyStates.set('entry', entryKeyStates);
+    newConfigKeyStates.set(eid, expKeyStates);
+  });
+
+  return newConfigKeyStates;
+}
+
+export function generateEffectiveGenome(configKeyStates, genomes) {
+  let effectiveGenome = {};
+  const activeEids = new Set();
+  configKeyStates.forEach(function (expKeyStates, eid) {
+    if (eid in genomes) {
+      const active = expKeyStates.get('active') || new Set();
+      const activeGenome = objects.filter(genomes[eid], active);
+
+      if (Object.keys(activeGenome).length) {
+        activeEids.add(eid);
+        effectiveGenome = objects.deepMerge(effectiveGenome, activeGenome);
+      }
+    }
+  });
+  return {
+    effectiveGenome: effectiveGenome,
+    activeEids: activeEids
+  }
 }
 
 function EvolvStore(options) {
@@ -169,19 +214,14 @@ function EvolvStore(options) {
   let activeEids = new Set();
   let genomeFailed = false;
   let configFailed = false;
+  let activeKeys = new Set();
   const genomeKeyStates = {
     needed: new Set(),
     requested: new Set(),
     loaded: new Set()
   };
 
-  const configKeyStates = {
-    entry: new Set(),
-    active: new Set(),
-    needed: new Set(),
-    requested: new Set(),
-    loaded: new Set()
-  };
+  let configKeyStatesV2 = new Map();
 
   let outstandingValuePromises = [];
   let outstandingConfigPromises = [];
@@ -196,17 +236,14 @@ function EvolvStore(options) {
     allocations = undefined;
     config = undefined;
 
-    activeEids = new Set();
+    activeEids.clear();
+    activeKeys.clear();
 
     delete genomeKeyStates.needed;
     delete genomeKeyStates.requested;
     delete genomeKeyStates.loaded;
 
-    delete configKeyStates.entry;
-    delete configKeyStates.active;
-    delete configKeyStates.needed;
-    delete configKeyStates.requested;
-    delete configKeyStates.loaded;
+    configKeyStatesV2.clear();
 
     outstandingValuePromises.forEach(function(p) {
       p.reject();
@@ -229,40 +266,19 @@ function EvolvStore(options) {
     if (reevaluatingContext) {
       return;
     }
-
     reevaluatingContext = true;
 
-    const results = evaluatePredicates(version, context, config);
-    configKeyStates.active.clear();
-    configKeyStates.entry.clear();
-    effectiveGenome = {};
+    configKeyStatesV2 = setActiveAndEntryKeyStates(version, context, config, configKeyStatesV2, genomeKeyStates);
+    const result = generateEffectiveGenome(configKeyStatesV2, genomes);
 
-    const activeAndEntryKeyStates = getActiveAndEntryConfigKeyStates(results, genomeKeyStates.loaded);
+    effectiveGenome = result.effectiveGenome;
+    activeEids = result.activeEids;
 
-    activeAndEntryKeyStates.active.forEach(function(activeKey){
-      configKeyStates.active.add(activeKey);
-    });
-    activeAndEntryKeyStates.entry.forEach(function(entryKey){
-      configKeyStates.entry.add(entryKey);
-    });
-
-    Object.keys(results).forEach(function (eid) {
-      if (eid in genomes) {
-        const activeGenome = objects.filter(genomes[eid], configKeyStates.active);
-
-        if (Object.keys(activeGenome).length) {
-          activeEids.add(eid);
-
-          effectiveGenome = objects.deepMerge(effectiveGenome, activeGenome);
-        }
-      }
-    });
-
-    const activeKeys = [];
-    configKeyStates.active.forEach(function(v) {
-      activeKeys.push(v)
-    });
-    context.set('keys.active', activeKeys);
+    const newActiveKeys = objects.flattenKeys(effectiveGenome);
+    newActiveKeys.forEach(function(key) {
+      activeKeys.add(key);
+    })
+    context.set('keys.active', newActiveKeys);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
@@ -310,21 +326,30 @@ function EvolvStore(options) {
     value._experiments.forEach(function(exp) {
       const clean = objects.assign({}, exp);
       delete clean.id;
+      const expKeyStates = configKeyStatesV2.get(exp.id) || new Map();
+      const loaded = expKeyStates.get('loaded') || new Set();
       objects.flattenKeys(clean, function(key) {
         return !strings.startsWith(key, '_');
-      }).forEach(configKeyStates.loaded.add.bind(configKeyStates.loaded));
+      }).forEach(loaded.add.bind(loaded));
+      expKeyStates.set('loaded', loaded);
+      configKeyStatesV2.set(exp.id, expKeyStates);
     });
   }
 
 
   function update(configRequest, requestedKeys, value) {
-    let keyStates = configRequest ? configKeyStates : genomeKeyStates;
-
-    requestedKeys.forEach(keyStates.requested.delete.bind(keyStates.requested));
     if (configRequest) {
+      requestedKeys.forEach(function(key) {
+        configKeyStatesV2.forEach(function(expKeyStates) {
+          const requested = expKeyStates.get('requested') | new Set();
+          requested.delete(key);
+          expKeyStates.set('requested', requested);
+        });
+      });
       emit(context, CONFIG_REQUEST_RECEIVED, requestedKeys);
       updateConfig(value);
     } else {
+      requestedKeys.forEach(genomeKeyStates.requested.delete.bind(genomeKeyStates.requested));
       emit(context, GENOME_REQUEST_RECEIVED, requestedKeys);
       updateGenome(value);
     }
@@ -341,11 +366,13 @@ function EvolvStore(options) {
       let configLoaded = true;
       if (promise.key) {
         configLoaded = false;
-        configKeyStates.loaded.forEach(function(prefix) {
-          if (strings.startsWith(promise.key, prefix)) {
-            configLoaded = true;
-          }
-        });
+        configKeyStatesV2.forEach(function(expKeyStates) {
+          (expKeyStates.get('loaded') || new Set()).forEach(function(prefix) {
+            if (strings.startsWith(promise.key, prefix)) {
+              configLoaded = true
+            }
+          })
+        })
       }
 
       if (!configLoaded && !(configRequest && (version === 1 || requestedKeys.indexOf(promise.key) >= 0))) {
@@ -372,9 +399,9 @@ function EvolvStore(options) {
     let keyStates;
     emit(context, REQUEST_FAILED, configRequest ? CONFIG_SOURCE : GENOME_SOURCE, requestedKeys, err);
     if (configRequest) {
-      keyStates = configKeyStates;
+      keyStates = configKeyStatesV2;
     } else {
-      keyStates = genomeKeyStates;
+      keyStates = configKeyStatesV2;
     }
     moveKeys(requestedKeys, keyStates.requested, keyStates.needed);
 
@@ -432,10 +459,15 @@ function EvolvStore(options) {
 
     waitingToPullImmediate = false;
 
-    if (configKeyStates.needed.size || version === 1) {
+    if (configKeyStatesV2.size || version === 1) {
       const requestedKeys = [];
-      configKeyStates.needed.forEach(requestedKeys.push.bind(requestedKeys));
-      configKeyStates.needed.clear();
+      configKeyStatesV2.forEach(function(expKeyStates) {
+        const needed = expKeyStates.get('needed') || new Set();
+        needed.forEach(requestedKeys.push.bind(requestedKeys));
+        needed.clear();
+        expKeyStates.set('needed', needed);
+      });
+
       retrieve({
         method: 'get',
         url: prefix + '/' + context.uid + '/configuration.json',
@@ -444,7 +476,14 @@ function EvolvStore(options) {
       })
         .then(update.bind(this, true, requestedKeys))
         .catch(failed.bind(this, true, requestedKeys));
-      moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
+
+      configKeyStatesV2.forEach(function(expKeyStates) {
+        const needed = expKeyStates.get('needed') || new Set();
+        const requested = expKeyStates.get('requested') || new Set();
+        moveKeys(requestedKeys, needed, requested);
+        expKeyStates.set('needed', needed);
+        expKeyStates.set('requested', requested);
+      });
       emit(context, CONFIG_REQUEST_SENT, requestedKeys);
     }
 
@@ -493,22 +532,19 @@ function EvolvStore(options) {
       outstandingPromises = outstandingValuePromises;
       loaded = keyStates.loaded.has(key);
     } else {
-      keyStates = configKeyStates;
+      keyStates = configKeyStatesV2;
       failed = configFailed;
       outstandingPromises = outstandingConfigPromises;
-      keyStates.loaded.forEach(function(prefix) {
-        if (!key || strings.startsWith(key, prefix)) {
-          loaded = true;
-        }
+      keyStates.forEach(function(expKeyState) {
+        (expKeyState.get('loaded') || new Set()).forEach(function(prefix) {
+          if (!key || strings.startsWith(key, prefix)) {
+            loaded = true;
+          }
+        });
       });
     }
 
     if (loaded) {
-      resolve(transform(key, effectiveGenome, config));
-      return promise;
-    }
-
-    if (keyStates.loaded.has(key)) {
       resolve(transform(key, effectiveGenome, config));
       return promise;
     }
@@ -557,14 +593,20 @@ function EvolvStore(options) {
 
   this.fetch = pull.bind(this, true);
 
-  this.preload = function(prefixes, configOnly, immediate) {
-    prefixes.forEach(configKeyStates.needed.add.bind(configKeyStates.needed));
-
-    if (!configOnly) {
-      prefixes.forEach(genomeKeyStates.needed.add.bind(genomeKeyStates.needed));
-    }
+  this.preloadConfig = function(prefixes, immediate) {
+    prefixes.forEach(function(expPrefixes, eid) {
+      const expKeyStates = configKeyStatesV2.get(eid) || new Map();
+      const needed = expKeyStates.get('needed') || new Set();
+      expPrefixes.forEach(needed.add.bind(needed));
+      expKeyStates.set('needed', needed);
+    })
     pull(immediate);
-  };
+  }
+
+  this.preloadGenome = function(prefixes, immediate) {
+    prefixes.forEach(genomeKeyStates.needed.add.bind(genomeKeyStates.needed));
+    pull(immediate);
+  }
 
   this.initialize = function(_context) {
     if (initialized) {
@@ -588,11 +630,11 @@ function EvolvStore(options) {
   this.get = createRequestSubscribablePromise.bind(this, GENOME_SOURCE, getValue.bind(this));
   this.getConfig = createRequestSubscribablePromise.bind(this, CONFIG_SOURCE, getConfigValue.bind(this));
   this.isEntryPoint = createRequestSubscribablePromise.bind(
-    this, CONFIG_SOURCE, isEntryPoint.bind(this, configKeyStates.entry));
+    this, CONFIG_SOURCE, isEntryPoint.bind(this, configKeyStatesV2));
   this.isActive = createRequestSubscribablePromise.bind(
-    this, CONFIG_SOURCE, getValueActive.bind(this, configKeyStates.active));
+    this, CONFIG_SOURCE, getValueActive.bind(this, activeKeys));
   this.getActiveKeys = createRequestSubscribablePromise.bind(
-    this, CONFIG_SOURCE, getActiveKeys.bind(this, configKeyStates.active));
+    this, CONFIG_SOURCE, getActiveKeys.bind(this, activeKeys));
 }
 
 export default EvolvStore;
