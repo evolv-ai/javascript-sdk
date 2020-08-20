@@ -166,6 +166,7 @@ function EvolvStore(options) {
   let effectiveGenome = {};
   let allocations = null;
   let config = null;
+  let activeEids = new Set();
   let genomeFailed = false;
   let configFailed = false;
   const genomeKeyStates = {
@@ -182,17 +183,20 @@ function EvolvStore(options) {
     loaded: new Set()
   };
 
-  let activeEids = new Set();
-
   let outstandingValuePromises = [];
   let outstandingConfigPromises = [];
   let subscriptions = new Set();
+
+  Object.defineProperty(this, 'configuration', { get: function() { return config; }, configurable: true });
+  Object.defineProperty(this, 'activeEids', { get: function() { return activeEids; }, configurable: true });
 
   this.destroy = function() {
     genomes = undefined;
     effectiveGenome = undefined;
     allocations = undefined;
     config = undefined;
+
+    activeEids = new Set();
 
     delete genomeKeyStates.needed;
     delete genomeKeyStates.requested;
@@ -203,8 +207,6 @@ function EvolvStore(options) {
     delete configKeyStates.needed;
     delete configKeyStates.requested;
     delete configKeyStates.loaded;
-
-    activeEids = undefined;
 
     outstandingValuePromises.forEach(function(p) {
       p.reject();
@@ -244,8 +246,6 @@ function EvolvStore(options) {
       configKeyStates.entry.add(entryKey);
     });
 
-    activeEids.clear();
-
     Object.keys(results).forEach(function (eid) {
       if (eid in genomes) {
         const activeGenome = objects.filter(genomes[eid], configKeyStates.active);
@@ -263,15 +263,6 @@ function EvolvStore(options) {
       activeKeys.push(v)
     });
     context.set('keys.active', activeKeys);
-
-    let activeAllocs = [];
-    const allocs = context.get('experiments.allocations');
-    if (allocs) {
-      activeAllocs = allocs.filter(function(alloc) {
-        return activeEids.has(alloc.eid);
-      })
-    }
-    context.set('experiments.allocations', activeAllocs);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {

@@ -1,11 +1,12 @@
 import chai from 'chai';
 import spies from 'chai-spies';
-import Evolv from '../index.js';
-
-import xmlhttprequest from 'xmlhttprequest';
 import _xhrMock from 'xhr-mock';
 import webcrypto from 'webcrypto';
-import {CONTEXT_INITIALIZED, CONTEXT_CHANGED} from "../context.js";
+
+import Evolv from '../index.js';
+import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
+import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from "../context.js";
+import { waitFor, emit } from '../waitforit.js';
 import base64 from "../ponyfills/base64.js";
 
 chai.use(spies);
@@ -93,7 +94,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.getConfig('web')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
-  expect(contextChangedSpy).to.have.been.called(6);
+  expect(contextChangedSpy).to.have.been.called(4);
 
   const valueWebKeySpy = chai.spy();
   const valueWebAb8numq2jKeySpy = chai.spy();
@@ -111,7 +112,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.set('user_attributes.country', 'usa');
-  expect(contextChangedSpy).to.have.been.called(8);
+  expect(contextChangedSpy).to.have.been.called(6);
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2.id')).to.equal('2fxe5dy5j');
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
@@ -199,7 +200,7 @@ async function validateClient(evolv, options, uid, sid) {
   });
 }
 
-describe('Evolv client', () => {
+describe('Evolv client integration tests', () => {
   beforeEach(() => {
     xhrMock.setup();
     // Uncomment to hit Frazer's endpoint
@@ -633,37 +634,40 @@ describe('Evolv client', () => {
       expect(messages[1].sid).to.equal(sid)
       expect(messages[2].type).to.equal("context.value.added")
       expect(messages[2].payload.key).to.equal("experiments.allocations")
-      expect(messages[2].payload.value).to.eql([]);
+      expect(messages[2].payload.value).to.eql([{
+        "cid": "0cf8ffcedea2:0f39849197",
+        "eid": "0f39849197",
+        "excluded": false,
+        "sid": 321,
+        "uid": 123
+      }]);
       expect(messages[2].sid).to.equal(sid)
-      expect(messages[3].type).to.equal("context.value.changed")
-      expect(messages[3].payload.key).to.equal("experiments.allocations")
-      expect(messages[3].payload.value).to.eql([{
-				"uid": 123,
-				"sid": 321,
-				"eid": "0f39849197",
-				"cid": "0cf8ffcedea2:0f39849197",
-				"excluded": false
-      }])
+      expect(messages[3].type).to.equal("context.value.added")
+      expect(messages[3].payload.key).to.equal("experiments.exclusions")
+      expect(messages[3].payload.value).to.eql([])
       expect(messages[3].sid).to.equal(sid)
-      expect(messages[4].type).to.equal("context.value.changed")
-      expect(messages[4].payload.key).to.equal("experiments.allocations")
-      expect(messages[4].payload.value).to.eql([]);
+      expect(messages[4].type).to.equal("context.value.added")
+      expect(messages[4].payload.key).to.equal("user_attributes.country")
+      expect(messages[4].payload.value).to.equal("usa")
       expect(messages[4].sid).to.equal(sid)
-      expect(messages[5].type).to.equal("context.value.added")
-      expect(messages[5].payload.key).to.equal("experiments.exclusions")
-      expect(messages[5].payload.value).to.eql([])
+      expect(messages[5].type).to.equal("context.value.changed")
+      expect(messages[5].payload.key).to.equal("keys.active")
+      expect(messages[5].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
       expect(messages[5].sid).to.equal(sid)
       expect(messages[6].type).to.equal("context.value.added")
-      expect(messages[6].payload.key).to.equal("user_attributes.country")
-      expect(messages[6].payload.value).to.equal("usa")
+      expect(messages[6].payload.key).to.equal("confirmations")
+      expect(messages[6].payload.value.length).to.equal(1)
+      expect(messages[6].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[6].sid).to.equal(sid)
-      expect(messages[7].type).to.equal("context.value.changed")
-      expect(messages[7].payload.key).to.equal("keys.active")
-      expect(messages[7].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
+      expect(messages[7].type).to.equal("context.value.added")
+      expect(messages[7].payload.key).to.equal("events")
+      expect(messages[7].payload.value.length).to.equal(1)
+      expect(messages[7].payload.value[0].type).to.equal("lunch-time")
       expect(messages[7].sid).to.equal(sid)
       expect(messages[8].type).to.equal("context.value.added")
-      expect(messages[8].payload.key).to.equal("events")
-      expect(messages[8].payload.value[0].type).to.equal("lunch-time")
+      expect(messages[8].payload.key).to.equal("contaminations")
+      expect(messages[8].payload.value.length).to.equal(1)
+      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[8].sid).to.equal(sid)
       expect(messages[9].type).to.equal("context.value.changed")
       expect(messages[9].payload.key).to.equal("web.url")
@@ -682,4 +686,49 @@ describe('Evolv client', () => {
       expect(messages[12].sid).to.equal(sid)
     });
   });
+});
+
+describe('Evolv client unit tests', () => {
+  var options;
+  var context;
+  var store;
+
+  beforeEach(() => {
+    options = {
+      environment: '579b106c73',
+      endpoint: 'https://participants-test.evolv.ai/',
+      version: 1,
+      autoConfirm: false
+    };
+    context = new Context();
+    store = new Store(options);
+  });
+
+  describe('confirm', () => {
+    it('should properly confirm into allocated experiment once genome is updated', (done) => {
+      store.isEntryPoint = () => new Promise((resolve, reject) => { resolve(true) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      context.initialize()
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}])
+      options.context = context;
+
+      waitFor(context, Evolv.CONFIRMED, () => {
+        try {
+          const confirmations = context.get('confirmations');
+          expect(confirmations.length).to.be.equal(1)
+          expect(confirmations[0].cid).to.be.equal('5678');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      const client = new Evolv(options);
+      client.confirm();
+      emit(context, EFFECTIVE_GENOME_UPDATED, {});
+    });
+  })
 });
