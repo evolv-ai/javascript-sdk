@@ -369,7 +369,7 @@ function EvolvStore(options) {
         configKeyStates.forEach(function(expKeyStates) {
           (expKeyStates.get('loaded') || new Set()).forEach(function(prefix) {
             if (strings.startsWith(promise.key, prefix)) {
-              configLoaded = true
+              configLoaded = true;
             }
           })
         })
