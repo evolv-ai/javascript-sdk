@@ -153,12 +153,14 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
   return expKeyStates;
 }
 
-export function setActiveAndEntryKeyStates(version, context, config, expsKeyStates, loadedGenomeKeys) {
+export function setActiveAndEntryKeyStates(version, context, config, experimentsKeyStates, loadedGenomeKeys) {
   const results = evaluatePredicates(version, context, config);
+  experimentsKeyStates.clear();
 
-  const newConfigKeyStates = new Map();
   results.forEach(function(expResults, eid) {
-    const expKeyStates = (expsKeyStates.get(eid) || new Map());
+    const expKeyStates = new Map();
+    experimentsKeyStates.set(eid, expKeyStates)
+
     const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedGenomeKeys);
 
     const activeKeyStates = new Set();
@@ -173,10 +175,7 @@ export function setActiveAndEntryKeyStates(version, context, config, expsKeyStat
 
     expKeyStates.set('active', activeKeyStates);
     expKeyStates.set('entry', entryKeyStates);
-    newConfigKeyStates.set(eid, expKeyStates);
   });
-
-  return newConfigKeyStates;
 }
 
 export function generateEffectiveGenome(expsKeyStates, genomes) {
@@ -281,7 +280,7 @@ function EvolvStore(options) {
     }
     reevaluatingContext = true;
 
-    configKeyStates.experiments = setActiveAndEntryKeyStates(version, context, config, configKeyStates.experiments, genomeKeyStates.loaded);
+    setActiveAndEntryKeyStates(version, context, config, configKeyStates.experiments, genomeKeyStates.loaded);
     const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
     effectiveGenome = result.effectiveGenome;
