@@ -332,7 +332,8 @@ describe('store.js', () => {
       const configKeyStates = { experiments: new Map() };
       const genomeConfigKeyStates = { loaded: new Set(["web","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type","web.fiddrbo15","web.fiddrbo15.ma3mr8iy6","web.fiddrbo15.ma3mr8iy6.type","web.ooycjnptz","web.ooycjnptz.lo7yrjkkg","web.ooycjnptz.lo7yrjkkg.type","web.nt1g7tbs2","web.nt1g7tbs2.vzyq1yz56","web.nt1g7tbs2.vzyq1yz56.type","web.2nshubits","web.2nshubits.p89utjadn","web.2nshubits.p89utjadn.id","web.2nshubits.p89utjadn.type","web.2nshubits.p89utjadn.script","web.2nshubits.p89utjadn.styles","web.2nshubits.u4nehfi0j","web.2nshubits.u4nehfi0j.type","web.fidcrbo15","web.fidcrbo15.ma9mr8iy6","web.fidcrbo15.ma9mr8iy6.type","web.ooycjpptz","web.ooycjpptz.lo7yrjkkg","web.ooycjpptz.lo7yrjkkg.type","web.nt1g7tfs2","web.nt1g7tfs2.vzyq1yz56","web.nt1g7tfs2.vzyq1yz56.type"]) };
 
-      const result = setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(2);
       expect(result.has('60f67d8648')).to.be.true;
@@ -550,7 +551,7 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
-      configKeyStates.experiments = setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
@@ -579,7 +580,7 @@ describe('store.js', () => {
         },
         device: 'mobile'
       });
-      configKeyStates.experiments = setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
