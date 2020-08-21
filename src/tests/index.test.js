@@ -169,7 +169,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
-  expect((await evolv.getActiveKeys()).length).to.equal(1);
+  expect((await evolv.getActiveKeys()).length).to.equal(0);
 
   expect(initializedSpy).to.have.been.called.once;
   expect(contextInitializedSpy).to.have.been.called.once;
@@ -682,7 +682,7 @@ describe('Evolv client integration tests', () => {
       expect(messages[11].sid).to.equal(sid)
       expect(messages[12].type).to.equal("context.value.changed")
       expect(messages[12].payload.key).to.equal("keys.active")
-      expect(messages[12].payload.value).to.eql(['web'])
+      expect(messages[12].payload.value).to.eql([])
       expect(messages[12].sid).to.equal(sid)
     });
   });
@@ -706,7 +706,7 @@ describe('Evolv client unit tests', () => {
 
   describe('confirm', () => {
     it('should properly confirm into allocated experiment once genome is updated', (done) => {
-      store.isEntryPoint = () => new Promise((resolve, reject) => { resolve(true) });
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
