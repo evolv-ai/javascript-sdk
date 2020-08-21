@@ -178,9 +178,9 @@ function EvolvClient(options) {
         return;
       }
 
-      store.isEntryPoint()
-        .then(function(entryPoint) {
-          if (!entryPoint) {
+      store.activeEntryPoints()
+        .then(function(entryPointEids) {
+          if (!entryPointEids.length) {
             return;
           }
 
