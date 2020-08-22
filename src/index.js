@@ -184,7 +184,8 @@ function EvolvClient(options) {
             return;
           }
 
-          const confirmedCids = (context.get('confirmations') || []).map(function(conf) {
+          const confirmations = context.get('confirmations') || [];
+          const confirmedCids = confirmations.map(function(conf) {
             return conf.cid;
           });
           const confirmableAllocations = allocations.filter(function(alloc) {
@@ -202,7 +203,7 @@ function EvolvClient(options) {
               timestamp: timestamp
             }
           });
-          context.set('confirmations', contextConfirmations);
+          context.set('confirmations', contextConfirmations.concat(confirmations));
 
           confirmableAllocations.forEach(function(alloc) {
             eventBeacon.emit('confirmation', assign({
@@ -230,7 +231,8 @@ function EvolvClient(options) {
       return;
     }
 
-    const contaminatedCids = (context.get('contaminations') || []).map(function(conf) {
+    const contaminations = context.get('contaminations') || [];
+    const contaminatedCids = contaminations.map(function(conf) {
       return conf.cid;
     });
     const contaminatableAllocations = allocations.filter(function(alloc) {
@@ -248,7 +250,7 @@ function EvolvClient(options) {
         timestamp: timestamp
       }
     });
-    context.set('contaminations', contextContaminations);
+    context.set('contaminations', contextContaminations.concat(contaminations));
 
     contaminatableAllocations.forEach(function(alloc) {
       eventBeacon.emit('contamination', assign({
