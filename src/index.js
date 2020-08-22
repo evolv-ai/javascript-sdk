@@ -234,7 +234,7 @@ function EvolvClient(options) {
       return conf.cid;
     });
     const contaminatableAllocations = allocations.filter(function(alloc) {
-      return contaminatedCids.indexOf(alloc.cid) < 0;
+      return contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
     });
 
     if (!contaminatableAllocations.length) {
