@@ -195,8 +195,16 @@ function EvolvClient(options) {
             return;
           }
 
+          const timestamp = Date.now();
+          const contextConfirmations = confirmableAllocations.map(function(alloc) {
+            return {
+              cid: alloc.cid,
+              timestamp: timestamp
+            }
+          });
+          context.set('confirmations', contextConfirmations);
+
           confirmableAllocations.forEach(function(alloc) {
-            context.pushToArray('confirmations', {cid: alloc.cid, timestamp: Date.now()})
             eventBeacon.emit('confirmation', assign({
               uid: alloc.uid,
               sid: alloc.sid,
@@ -217,15 +225,32 @@ function EvolvClient(options) {
    */
   this.contaminate = function() {
     const remoteContext = context.remoteContext;
-    if (
-      !remoteContext.experiments ||
-      !remoteContext.experiments.allocations || !remoteContext.experiments.allocations.length
-    ) {
-      return [];
+    const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
+    if (!allocations || !allocations.length) {
+      return;
     }
 
-    remoteContext.experiments.allocations.forEach(function(alloc) {
-      context.pushToArray('contaminations', {cid: alloc.cid, timestamp: Date.now()})
+    const contaminatedCids = (context.get('contaminations') || []).map(function(conf) {
+      return conf.cid;
+    });
+    const contaminatableAllocations = allocations.filter(function(alloc) {
+      return contaminatedCids.indexOf(alloc.cid) < 0;
+    });
+
+    if (!contaminatableAllocations.length) {
+      return;
+    }
+
+    const timestamp = Date.now();
+    const contextContaminations = contaminatableAllocations.map(function(alloc) {
+      return {
+        cid: alloc.cid,
+        timestamp: timestamp
+      }
+    });
+    context.set('contaminations', contextContaminations);
+
+    contaminatableAllocations.forEach(function(alloc) {
       eventBeacon.emit('contamination', assign({
         uid: alloc.uid,
         sid: alloc.sid,
