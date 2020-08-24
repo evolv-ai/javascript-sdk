@@ -78,8 +78,9 @@ function activeEntryPoints(entryKeys) {
 
 // Exposed for testing
 export function evaluatePredicates(version, context, config) {
+  const result = new Map();
   if (!config._experiments || !config._experiments.length) {
-    return {};
+    return result;
   }
 
   function evaluateBranch(context, config, prefix, disabled, entry) {
@@ -110,7 +111,6 @@ export function evaluatePredicates(version, context, config) {
 
   const evaluableContext = context.resolve();
 
-  const result = new Map();
   config._experiments.forEach(function(exp) {
     const evaluableConfig = objects.assign({}, exp);
     delete evaluableConfig.id;
