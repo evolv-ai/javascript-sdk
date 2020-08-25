@@ -125,6 +125,7 @@ function EvolvContext(store) {
   this.update = function(update, local) {
     if (Object.keys(update).length === 0 && update.constructor === Object) {
       // We will deprecate this at some point.
+      console.warn('Evolv: Calling update() with an empty object to reapply variants has been deprecated. Contact support for the new method to call.');
       store.clearActiveKeys();
     }
 
