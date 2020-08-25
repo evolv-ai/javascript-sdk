@@ -89,7 +89,7 @@ describe('context', () => {
       context.update({ test: true })
     });
 
-    it('should emit CONTEXT_VALUE_ADDED when key is added to context', (done) => {
+    it('should emit CONTEXT_VALUE_ADDED when nested key is added to context', (done) => {
       waitFor(context, CONTEXT_VALUE_ADDED, (type, key, value, local) => {
         try {
           expect(type).to.be.equal(CONTEXT_VALUE_ADDED);
