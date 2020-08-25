@@ -41,8 +41,8 @@ function EvolvClient(options) {
   options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
   options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
 
-  const context = options.context || new Context();
   const store = options.store || new Store(options);
+  const context = options.context || new Context(store);
   const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context) : null;
   const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events', context);
 
@@ -133,11 +133,20 @@ function EvolvClient(options) {
    * Check all active keys that start with the specified prefix.
    *
    * @param {String} prefix The prefix of the keys to check.
-   * @returns {SubscribablePromise.<Array.<String>|Error>} A SubscribablePromise that resolves to an array of keys when
-   * the specified prefix.
+   * @returns {SubscribablePromise.<Object>|Error>} A SubscribablePromise that resolves to object
+   * describing the state of active keys.
    * @method
    */
   this.getActiveKeys = store.getActiveKeys.bind(store);
+
+  /**
+   * Clears the active keys to reset the key states
+   *
+   * @param {String} prefix The prefix of the keys clear.
+   * @returns {SubscribablePromise.<void>|Error>} A SubscribablePromise that resolve to nothing
+   * @method
+   */
+  this.clearActiveKeys = store.clearActiveKeys.bind(store);
 
   /**
    * Get the configuration for a specified key.
