@@ -107,7 +107,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.get('web.7w3zpgfy9')).to.be.an('undefined');
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
-  expect((await evolv.getActiveKeys('web')).length).to.equal(0);
+  expect((await evolv.getActiveKeys('web')).current.length).to.equal(0);
 
   evolv.confirm();
 
@@ -118,7 +118,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
-  expect(await evolv.getActiveKeys('web')).to.have.members([
+  expect((await evolv.getActiveKeys('web')).current).to.have.members([
     "web",
     "web.ab8numq2j",
     "web.ab8numq2j.am94yhwo2",
@@ -154,7 +154,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g.type')).to.equal('noop');
   expect((await evolv.get('web.7w3zpgfy9.azevlvf5g')).type).to.equal('noop');
-  expect(await evolv.getActiveKeys('web')).to.have.members([
+  expect((await evolv.getActiveKeys('web')).current).to.have.members([
     "web",
     "web.7w3zpgfy9",
     "web.7w3zpgfy9.azevlvf5g",
@@ -169,7 +169,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
-  expect((await evolv.getActiveKeys()).length).to.equal(0);
+  expect((await evolv.getActiveKeys()).current.length).to.equal(0);
 
   expect(initializedSpy).to.have.been.called.once;
   expect(contextInitializedSpy).to.have.been.called.once;
