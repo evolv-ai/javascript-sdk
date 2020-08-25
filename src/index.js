@@ -140,12 +140,19 @@ function EvolvClient(options) {
   this.getActiveKeys = store.getActiveKeys.bind(store);
 
   /**
-   * Clears the active keys to reset the key states
+   * Clears the active keys to reset the key states.
    *
    * @param {String} prefix The prefix of the keys clear.
    * @method
    */
   this.clearActiveKeys = store.clearActiveKeys.bind(store);
+
+  /**
+   * Reevaluates the current context.
+   *
+   * @method
+   */
+  this.reevaluateContext = store.reevaluateContext.bind(store);
 
   /**
    * Get the configuration for a specified key.

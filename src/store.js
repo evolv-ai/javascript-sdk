@@ -658,6 +658,7 @@ function EvolvStore(options) {
     this, CONFIG_SOURCE, getActiveKeys.bind(this, activeKeys, previousKeys));
 
   this.clearActiveKeys = clearActiveKeys.bind(this, activeKeys);
+  this.reevaluateContext = reevaluateContext.bind(this);
 }
 
 export default EvolvStore;
