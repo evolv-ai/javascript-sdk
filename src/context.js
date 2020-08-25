@@ -19,7 +19,7 @@ export const DEFAULT_QUEUE_LIMIT = 50;
  *
  * @constructor
  */
-function EvolvContext() {
+function EvolvContext(store) {
   let uid;
   let sid;
   let remoteContext;
@@ -123,6 +123,11 @@ function EvolvContext() {
    * @param local {Boolean} If true, the values will only be added to the localContext.
    */
   this.update = function(update, local) {
+    if (Object.keys(update).length === 0 && update.constructor === Object) {
+      // We will deprecate this at some point.
+      store.clearActiveKeys();
+    }
+
     ensureInitialized();
     let context = local ? localContext : remoteContext;
     const flattened = objects.flatten(update);

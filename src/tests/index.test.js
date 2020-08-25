@@ -700,8 +700,8 @@ describe('Evolv client unit tests', () => {
       version: 1,
       autoConfirm: false
     };
-    context = new Context();
     store = new Store(options);
+    context = new Context(store);
   });
 
   describe('confirm', () => {

@@ -79,6 +79,18 @@ function getActiveKeys(activeKeys, previousKeys, prefix) {
   };
 }
 
+function clearActiveKeys(activeKeys, prefix) {
+  if (!prefix) {
+    activeKeys.clear();
+  }
+
+  activeKeys.forEach(function(key) {
+    if (strings.startsWith(key, prefix)) {
+      activeKeys.delete(key);
+    }
+  })
+}
+
 function activeEntryPoints(entryKeys) {
   const eids = [];
 
@@ -644,6 +656,8 @@ function EvolvStore(options) {
     this, CONFIG_SOURCE, getValueActive.bind(this, activeKeys));
   this.getActiveKeys = createRequestSubscribablePromise.bind(
     this, CONFIG_SOURCE, getActiveKeys.bind(this, activeKeys, previousKeys));
+
+  this.clearActiveKeys = clearActiveKeys.bind(this, activeKeys);
 }
 
 export default EvolvStore;
