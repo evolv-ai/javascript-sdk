@@ -310,12 +310,15 @@ function EvolvClient(options) {
         }
 
         const updated = assign({}, c);
-        updated.web = {
-          client: {
-            browser: updated.browser
-          }
-        };
-        delete updated.browser;
+        if (updated.browser) {
+          updated.web = {
+            client: {
+              browser: updated.browser
+            }
+          };
+          delete updated.browser;
+        }
+
         context.update(updated, false);
       })
       .catch(function() {

@@ -145,12 +145,13 @@ function EvolvContext(store) {
       context = remoteContext;
     }
 
+    const thisRef = this;
     const updated = this.resolve();
     Object.keys(flattened).forEach(function(key) {
       if (typeof flattenedBefore[key] === 'undefined') {
-        emit(this, CONTEXT_VALUE_ADDED, key, context[key], local, updated);
+        emit(thisRef, CONTEXT_VALUE_ADDED, key, flattened[key], local, updated);
       } else if (flattenedBefore[key] !== context[key]) {
-        emit(this, CONTEXT_VALUE_CHANGED, key, context[key], flattenedBefore[key], local, updated);
+        emit(thisRef, CONTEXT_VALUE_CHANGED, key, flattened[key], flattenedBefore[key], local, updated);
       }
     });
     emit(this, CONTEXT_CHANGED, updated);
