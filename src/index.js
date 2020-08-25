@@ -133,7 +133,7 @@ function EvolvClient(options) {
    * Check all active keys that start with the specified prefix.
    *
    * @param {String} prefix The prefix of the keys to check.
-   * @returns {SubscribablePromise.<Object>|Error>} A SubscribablePromise that resolves to object
+   * @returns {SubscribablePromise.<Object|Error>} A SubscribablePromise that resolves to object
    * describing the state of active keys.
    * @method
    */
@@ -143,7 +143,6 @@ function EvolvClient(options) {
    * Clears the active keys to reset the key states
    *
    * @param {String} prefix The prefix of the keys clear.
-   * @returns {SubscribablePromise.<void>|Error>} A SubscribablePromise that resolve to nothing
    * @method
    */
   this.clearActiveKeys = store.clearActiveKeys.bind(store);
