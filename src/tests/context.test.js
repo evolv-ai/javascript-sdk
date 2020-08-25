@@ -1,6 +1,7 @@
 import chai from 'chai';
-import Context from '../context.js';
+import Context, { CONTEXT_VALUE_ADDED, CONTEXT_VALUE_CHANGED } from '../context.js';
 import Store from '../store.js';
+import { waitFor } from '../waitforit.js';
 
 const { expect } = chai;
 
@@ -71,6 +72,59 @@ describe('context', () => {
       context.update({ test: true });
 
       expect(clearActiveKeysCalled).to.be.false;
+    });
+
+    it('should emit CONTEXT_VALUE_ADDED when key is added to context', (done) => {
+      waitFor(context, CONTEXT_VALUE_ADDED, (type, key, value, local) => {
+        try {
+          expect(type).to.be.equal(CONTEXT_VALUE_ADDED);
+          expect(key).to.be.equal('test');
+          expect(value).to.be.equal(true);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      context.update({ test: true })
+    });
+
+    it('should emit CONTEXT_VALUE_ADDED when nested key is added to context', (done) => {
+      waitFor(context, CONTEXT_VALUE_ADDED, (type, key, value, local) => {
+        try {
+          expect(type).to.be.equal(CONTEXT_VALUE_ADDED);
+          expect(key).to.be.equal('test.boolean');
+          expect(value).to.be.equal(true);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      context.update(
+        {
+          test: {
+            boolean: true
+          }
+        }
+      )
+    });
+
+    it('should emit CONTEXT_VALUE_CHANGED when key is updated in context', (done) => {
+      context.set('test', true);
+
+      waitFor(context, CONTEXT_VALUE_CHANGED, (type, key, value, local) => {
+        try {
+          expect(type).to.be.equal(CONTEXT_VALUE_CHANGED);
+          expect(key).to.be.equal('test');
+          expect(value).to.be.equal(false);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      context.update({ test: false })
     });
   });
 });
