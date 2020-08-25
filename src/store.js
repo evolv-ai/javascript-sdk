@@ -2,6 +2,7 @@ import MiniPromise from './ponyfills/minipromise.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
 
+import { copySet } from './helpers/set-utils.js';
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
 import { CONTEXT_CHANGED } from './context.js';
@@ -52,15 +53,30 @@ function getValueActive(activeKeys, key) {
   return activeKeys.has(key);
 }
 
-function getActiveKeys(activeKeys, prefix) {
+function getActiveKeys(activeKeys, previousKeys, prefix) {
   const result = [];
-  activeKeys.forEach(function(key) {
-    if (!prefix || strings.startsWith(key, prefix)) {
+  const previous = [];
+
+  function hasPrefix(key) {
+    return !prefix || strings.startsWith(key, prefix);
+  }
+
+  activeKeys.forEach(function (key) {
+    if (hasPrefix(key)) {
       result.push(key);
     }
   });
 
-  return result;
+  previousKeys.forEach(function (key) {
+    if (hasPrefix(key)) {
+      previous.push(key);
+    }
+  });
+
+  return {
+    current: result,
+    previous: previous
+  };
 }
 
 function activeEntryPoints(entryKeys) {
@@ -216,6 +232,7 @@ function EvolvStore(options) {
   let config = null;
   let activeEids = new Set();
   let activeKeys = new Set();
+  let previousKeys = new Set();
   let genomeFailed = false;
   let configFailed = false;
 
@@ -247,6 +264,7 @@ function EvolvStore(options) {
 
     activeEids = undefined;
     activeKeys = undefined;
+    previousKeys = undefined;
 
     delete genomeKeyStates.needed;
     delete genomeKeyStates.requested;
@@ -287,6 +305,10 @@ function EvolvStore(options) {
     activeEids = result.activeEids;
 
     const newActiveKeys = objects.flattenKeys(effectiveGenome);
+
+    previousKeys.clear();
+    copySet(activeKeys, previousKeys);
+
     activeKeys.clear();
     newActiveKeys.forEach(function(key) {
       activeKeys.add(key);
@@ -621,7 +643,7 @@ function EvolvStore(options) {
   this.isActive = createRequestSubscribablePromise.bind(
     this, CONFIG_SOURCE, getValueActive.bind(this, activeKeys));
   this.getActiveKeys = createRequestSubscribablePromise.bind(
-    this, CONFIG_SOURCE, getActiveKeys.bind(this, activeKeys));
+    this, CONFIG_SOURCE, getActiveKeys.bind(this, activeKeys, previousKeys));
 }
 
 export default EvolvStore;

@@ -31,6 +31,7 @@
     "test:debug": "mocha debug --experimental-modules",
     "prebuild": "npm run docs",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
+    "watch": "webpack --experimental-modules --config=webpack.dev.cjs --watch",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/context.js src/docs/README.md",
     "staging:release": "npm run deploy:version:s3 && npm run deploy:next:s3 && npm run deploy:next:npm",
     "release": "npm run deploy:version:s3 && npm run deploy:latest:s3 && npm run deploy:latest:npm",
