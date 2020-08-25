@@ -110,7 +110,7 @@ describe('context', () => {
       )
     });
 
-    it('should emit CONTEXT_VALUE_ADDED when key is added to context', (done) => {
+    it('should emit CONTEXT_VALUE_CHANGED when key is added to context', (done) => {
       context.set('test', true);
 
       waitFor(context, CONTEXT_VALUE_CHANGED, (type, key, value, local) => {
