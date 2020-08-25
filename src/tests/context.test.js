@@ -1,5 +1,6 @@
 import chai from 'chai';
 import Context from '../context.js';
+import Store from '../store.js';
 
 const { expect } = chai;
 
@@ -31,6 +32,45 @@ describe('context', () => {
       expect(result).to.have.lengthOf(2);
       expect(result[0]).to.be.equal(2);
       expect(result[1]).to.be.equal(3);
+    });
+  });
+
+  describe('update', () => {
+    const options = {
+      version: 1,
+      environment: 'test',
+      endpoint: 'https://participants.test.evolv.ai/'
+    }
+    let store;
+    let context;
+    beforeEach(() => {
+      store = new Store(options);
+      context = new Context(store);
+      context.initialize('test', 'test', {}, {});
+    });
+
+    it('should call clearActiveKeys if object is empty', () => {
+      // this functionality will be deprecated when that happens remove me
+      let clearActiveKeysCalled = false;
+      store.clearActiveKeys = (activeKeys, prefix) => {
+        clearActiveKeysCalled = true;
+      }
+
+      context.update({});
+
+      expect(clearActiveKeysCalled).to.be.true;
+    });
+
+    it('should not call clearActiveKeys if object is not empty', () => {
+      // this functionality will be deprecated when that happens remove me
+      let clearActiveKeysCalled = false;
+      store.clearActiveKeys = (activeKeys, prefix) => {
+        clearActiveKeysCalled = true;
+      }
+
+      context.update({ test: true });
+
+      expect(clearActiveKeysCalled).to.be.false;
     });
   });
 });
