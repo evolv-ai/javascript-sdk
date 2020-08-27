@@ -199,7 +199,7 @@ function EvolvClient(options) {
             return;
           }
 
-          const confirmations = context.get('confirmations') || [];
+          const confirmations = context.get('experiments.confirmations') || [];
           const confirmedCids = confirmations.map(function(conf) {
             return conf.cid;
           });
@@ -218,7 +218,17 @@ function EvolvClient(options) {
               timestamp: timestamp
             }
           });
-          context.set('confirmations', contextConfirmations.concat(confirmations));
+
+          // We will deprecate 'confirmations' in favor of 'experiments.confirmations'
+          // When deprecated delete below and uncomment next line
+          // context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
+          const newConfirmations = contextConfirmations.concat(confirmations);
+          context.update({
+            'confirmations': newConfirmations,
+            'experiments': {
+              'confirmations': newConfirmations
+            }
+          });
 
           confirmableAllocations.forEach(function(alloc) {
             eventBeacon.emit('confirmation', assign({
@@ -246,7 +256,7 @@ function EvolvClient(options) {
       return;
     }
 
-    const contaminations = context.get('contaminations') || [];
+    const contaminations = context.get('experiments.contaminations') || [];
     const contaminatedCids = contaminations.map(function(conf) {
       return conf.cid;
     });
@@ -265,7 +275,17 @@ function EvolvClient(options) {
         timestamp: timestamp
       }
     });
-    context.set('contaminations', contextContaminations.concat(contaminations));
+
+    // We will deprecate 'contaminations' in favor of 'experiments.contaminations'
+    // When deprecated delete below and uncomment next line
+    // context.set('experiments.contaminations', contextContaminations.concat(contaminations));
+    const newContaminations = contextContaminations.concat(contaminations);
+    context.update({
+      'contaminations': newContaminations,
+      'experiments': {
+        'contaminations': newContaminations
+      }
+    });
 
     contaminatableAllocations.forEach(function(alloc) {
       eventBeacon.emit('contamination', assign({
