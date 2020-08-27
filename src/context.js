@@ -187,6 +187,13 @@ function EvolvContext(store) {
    */
   this.get = function(key) {
     ensureInitialized();
+
+    // Remove me when 'confirmations' and 'contaminations' are no longer set
+    if (key === 'confirmations' || key === 'contaminations') {
+      console.warn('[Deprecation] Retrieving confirmations and contaminations from the Evolv context with keys "confirmations"',
+       ' and "contaminations" is deprecated. Please use "experiments.confirmations" and "experiments.contaminations" instead.');
+    }
+
     return objects.getValueForKey(key, remoteContext) || objects.getValueForKey(key, localContext);
   };
 
