@@ -195,7 +195,7 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
 
   results.forEach(function(expResults, eid) {
     const expKeyStates = new Map();
-    configKeyStates.experiments.set(eid, expKeyStates)
+    configKeyStates.experiments.set(eid, expKeyStates);
 
     const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedKeys);
 
@@ -324,23 +324,23 @@ function EvolvStore(options) {
     effectiveGenome = result.effectiveGenome;
     activeEids = result.activeEids;
 
-    const newActiveKeys = [];
-    configKeyStates.experiments.forEach(function(expKeyStates, exp) {
+    previousKeys.clear();
+    copySet(activeKeys, previousKeys);
+    activeKeys.clear();
+
+    configKeyStates.experiments.forEach(function(expKeyStates) {
       const active = expKeyStates.get('active');
       if (active) {
         active.forEach(function(key) {
-          newActiveKeys.push(key);
+          activeKeys.add(key);
         })
       }
     });
 
-    previousKeys.clear();
-    copySet(activeKeys, previousKeys);
-
-    activeKeys.clear();
-    newActiveKeys.forEach(function(key) {
-      activeKeys.add(key);
-    })
+    const newActiveKeys = []
+    activeKeys.forEach(function(key) {
+      newActiveKeys.push(key);
+    });
     context.set('keys.active', newActiveKeys);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
