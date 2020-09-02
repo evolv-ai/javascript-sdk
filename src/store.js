@@ -181,15 +181,23 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
   return expKeyStates;
 }
 
-export function setActiveAndEntryKeyStates(version, context, config, experimentsKeyStates, loadedGenomeKeys) {
+export function setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates) {
+  const loadedKeys = new Set()
+  genomeKeyStates.loaded.forEach(function(key) {
+    loadedKeys.add(key);
+  });
+  configKeyStates.loaded.forEach(function(key) {
+    loadedKeys.add(key);
+  });
+
   const results = evaluatePredicates(version, context, config);
-  experimentsKeyStates.clear();
+  configKeyStates.experiments.clear();
 
   results.forEach(function(expResults, eid) {
     const expKeyStates = new Map();
-    experimentsKeyStates.set(eid, expKeyStates)
+    configKeyStates.experiments.set(eid, expKeyStates);
 
-    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedGenomeKeys);
+    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedKeys);
 
     const activeKeyStates = new Set();
     newExpKeyStates.active.forEach(function(key) {
@@ -310,21 +318,29 @@ function EvolvStore(options) {
     }
     reevaluatingContext = true;
 
-    setActiveAndEntryKeyStates(version, context, config, configKeyStates.experiments, genomeKeyStates.loaded);
+    setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates);
     const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
     effectiveGenome = result.effectiveGenome;
     activeEids = result.activeEids;
 
-    const newActiveKeys = objects.flattenKeys(effectiveGenome);
-
     previousKeys.clear();
     copySet(activeKeys, previousKeys);
-
     activeKeys.clear();
-    newActiveKeys.forEach(function(key) {
-      activeKeys.add(key);
-    })
+
+    configKeyStates.experiments.forEach(function(expKeyStates) {
+      const active = expKeyStates.get('active');
+      if (active) {
+        active.forEach(function(key) {
+          activeKeys.add(key);
+        })
+      }
+    });
+
+    const newActiveKeys = []
+    activeKeys.forEach(function(key) {
+      newActiveKeys.push(key);
+    });
     context.set('keys.active', newActiveKeys);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);

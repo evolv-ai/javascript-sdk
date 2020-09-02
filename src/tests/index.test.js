@@ -169,7 +169,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
   expect(await evolv.get('web.7w3zpgfy9.azevlvf5g')).to.be.an('undefined');
-  expect((await evolv.getActiveKeys()).current.length).to.equal(0);
+  expect((await evolv.getActiveKeys()).current.length).to.equal(1);
 
   expect(initializedSpy).to.have.been.called.once;
   expect(contextInitializedSpy).to.have.been.called.once;
@@ -691,7 +691,7 @@ describe('Evolv client integration tests', () => {
       expect(messages[13].sid).to.equal(sid)
       expect(messages[14].type).to.equal("context.value.changed")
       expect(messages[14].payload.key).to.equal("keys.active")
-      expect(messages[14].payload.value).to.eql([])
+      expect(messages[14].payload.value).to.eql(["web"])
       expect(messages[14].sid).to.equal(sid)
     });
   });
