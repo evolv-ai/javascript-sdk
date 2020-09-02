@@ -94,7 +94,7 @@ async function validateClient(evolv, options, uid, sid) {
   expect(await evolv.getConfig('web')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j')).to.be.an('undefined');
   expect(await evolv.getConfig('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
-  expect(contextChangedSpy).to.have.been.called(4);
+  expect(contextChangedSpy).to.have.been.called;
 
   const valueWebKeySpy = chai.spy();
   const valueWebAb8numq2jKeySpy = chai.spy();
@@ -112,7 +112,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.set('user_attributes.country', 'usa');
-  expect(contextChangedSpy).to.have.been.called(6);
+  expect(contextChangedSpy).to.have.been.called;
   expect(await evolv.isActive('web.ab8numq2j')).to.be.true;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2.id')).to.equal('2fxe5dy5j');
   expect((await evolv.get('web.ab8numq2j.am94yhwo2')).id).to.equal('2fxe5dy5j');
@@ -148,7 +148,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.getActiveKeys('nope').listen(noKeysSpy);
 
   evolv.context.set('web.url', 'https://www.lunch.com/dev1/features.html');
-  expect(contextChangedSpy).to.have.been.called(11);
+  expect(contextChangedSpy).to.have.been.called;
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.true;
@@ -164,7 +164,7 @@ async function validateClient(evolv, options, uid, sid) {
   evolv.confirm();
 
   evolv.context.remove('web.url');
-  expect(contextChangedSpy).to.have.been.called(13);
+  expect(contextChangedSpy).to.have.been.called;
   expect(await evolv.isActive('web.ab8numq2j')).to.be.false;
   expect(await evolv.get('web.ab8numq2j.am94yhwo2')).to.be.an('undefined');
   expect(await evolv.isActive('web.7w3zpgfy9')).to.be.false;
@@ -616,10 +616,14 @@ describe('Evolv client integration tests', () => {
       // console.log(JSON.stringify(results.analyticsPayloads))
       // console.log(JSON.stringify(results.analyticsPayloads[0].messages))
 
-      expect(results.analyticsPayloads.length).to.equal(1);
+      expect(results.analyticsPayloads.length).to.equal(2);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
-      const messages = results.analyticsPayloads[0].messages
-      expect(messages.length).to.equal(13)
+      expect(results.analyticsPayloads[1].uid).to.equal(uid);
+
+      const messages = results.analyticsPayloads[0].messages;
+      const messages1 = results.analyticsPayloads[1].messages;
+      expect(messages.length).to.equal(4)
+      expect(messages1.length).to.equal(9)
       expect(messages[0].type).to.equal("context.initialized")
       expect(messages[0].payload).to.eql( {
         "remote": true,
@@ -646,44 +650,44 @@ describe('Evolv client integration tests', () => {
       expect(messages[3].payload.key).to.equal("experiments.exclusions")
       expect(messages[3].payload.value).to.eql([])
       expect(messages[3].sid).to.equal(sid)
-      expect(messages[4].type).to.equal("context.value.added")
-      expect(messages[4].payload.key).to.equal("user_attributes.country")
-      expect(messages[4].payload.value).to.equal("usa")
-      expect(messages[4].sid).to.equal(sid)
-      expect(messages[5].type).to.equal("context.value.changed")
-      expect(messages[5].payload.key).to.equal("keys.active")
-      expect(messages[5].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
-      expect(messages[5].sid).to.equal(sid)
-      expect(messages[6].type).to.equal("context.value.added")
-      expect(messages[6].payload.key).to.equal("confirmations")
-      expect(messages[6].payload.value.length).to.equal(1)
-      expect(messages[6].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[6].sid).to.equal(sid)
-      expect(messages[7].type).to.equal("context.value.added")
-      expect(messages[7].payload.key).to.equal("events")
-      expect(messages[7].payload.value.length).to.equal(1)
-      expect(messages[7].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[7].sid).to.equal(sid)
-      expect(messages[8].type).to.equal("context.value.added")
-      expect(messages[8].payload.key).to.equal("contaminations")
-      expect(messages[8].payload.value.length).to.equal(1)
-      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[8].sid).to.equal(sid)
-      expect(messages[9].type).to.equal("context.value.changed")
-      expect(messages[9].payload.key).to.equal("web.url")
-      expect(messages[9].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(messages[9].sid).to.equal(sid)
-      expect(messages[10].type).to.equal("context.value.changed")
-      expect(messages[10].payload.key).to.equal("keys.active")
-      expect(messages[10].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
-      expect(messages[10].sid).to.equal(sid)
-      expect(messages[11].type).to.equal("context.value.removed")
-      expect(messages[11].payload.key).to.equal("web.url")
-      expect(messages[11].sid).to.equal(sid)
-      expect(messages[12].type).to.equal("context.value.changed")
-      expect(messages[12].payload.key).to.equal("keys.active")
-      expect(messages[12].payload.value).to.eql(["web"])
-      expect(messages[12].sid).to.equal(sid)
+      expect(messages1[0].type).to.equal("context.value.added")
+      expect(messages1[0].payload.key).to.equal("user_attributes.country")
+      expect(messages1[0].payload.value).to.equal("usa")
+      expect(messages1[0].sid).to.equal(sid)
+      expect(messages1[1].type).to.equal("context.value.changed")
+      expect(messages1[1].payload.key).to.equal("keys.active")
+      expect(messages1[1].payload.value).to.eql(["web", "web.ab8numq2j", "web.ab8numq2j.am94yhwo2", "web.ab8numq2j.am94yhwo2.id", "web.ab8numq2j.am94yhwo2.type", "web.ab8numq2j.am94yhwo2.script", "web.ab8numq2j.am94yhwo2.styles"])
+      expect(messages1[1].sid).to.equal(sid)
+      expect(messages1[2].type).to.equal("context.value.added")
+      expect(messages1[2].payload.key).to.equal("confirmations")
+      expect(messages1[2].payload.value.length).to.equal(1)
+      expect(messages1[2].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages1[2].sid).to.equal(sid)
+      expect(messages1[3].type).to.equal("context.value.added")
+      expect(messages1[3].payload.key).to.equal("events")
+      expect(messages1[3].payload.value.length).to.equal(1)
+      expect(messages1[3].payload.value[0].type).to.equal("lunch-time")
+      expect(messages1[3].sid).to.equal(sid)
+      expect(messages1[4].type).to.equal("context.value.added")
+      expect(messages1[4].payload.key).to.equal("contaminations")
+      expect(messages1[4].payload.value.length).to.equal(1)
+      expect(messages1[4].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages1[4].sid).to.equal(sid)
+      expect(messages1[5].type).to.equal("context.value.changed")
+      expect(messages1[5].payload.key).to.equal("web.url")
+      expect(messages1[5].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
+      expect(messages1[5].sid).to.equal(sid)
+      expect(messages1[6].type).to.equal("context.value.changed")
+      expect(messages1[6].payload.key).to.equal("keys.active")
+      expect(messages1[6].payload.value).to.eql(["web", "web.7w3zpgfy9", "web.7w3zpgfy9.azevlvf5g", "web.7w3zpgfy9.azevlvf5g.type"])
+      expect(messages1[6].sid).to.equal(sid)
+      expect(messages1[7].type).to.equal("context.value.removed")
+      expect(messages1[7].payload.key).to.equal("web.url")
+      expect(messages1[7].sid).to.equal(sid)
+      expect(messages1[8].type).to.equal("context.value.changed")
+      expect(messages1[8].payload.key).to.equal("keys.active")
+      expect(messages1[8].payload.value).to.eql(["web"])
+      expect(messages1[8].sid).to.equal(sid)
     });
   });
 });
