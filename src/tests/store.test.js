@@ -329,10 +329,10 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
-      const configKeyStates = { experiments: new Map() };
+      const configKeyStates = { loaded: new Set(), experiments: new Map() };
       const genomeConfigKeyStates = { loaded: new Set(["web","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type","web.fiddrbo15","web.fiddrbo15.ma3mr8iy6","web.fiddrbo15.ma3mr8iy6.type","web.ooycjnptz","web.ooycjnptz.lo7yrjkkg","web.ooycjnptz.lo7yrjkkg.type","web.nt1g7tbs2","web.nt1g7tbs2.vzyq1yz56","web.nt1g7tbs2.vzyq1yz56.type","web.2nshubits","web.2nshubits.p89utjadn","web.2nshubits.p89utjadn.id","web.2nshubits.p89utjadn.type","web.2nshubits.p89utjadn.script","web.2nshubits.p89utjadn.styles","web.2nshubits.u4nehfi0j","web.2nshubits.u4nehfi0j.type","web.fidcrbo15","web.fidcrbo15.ma9mr8iy6","web.fidcrbo15.ma9mr8iy6.type","web.ooycjpptz","web.ooycjpptz.lo7yrjkkg","web.ooycjpptz.lo7yrjkkg.type","web.nt1g7tfs2","web.nt1g7tfs2.vzyq1yz56","web.nt1g7tfs2.vzyq1yz56.type"]) };
 
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
       const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(2);
@@ -346,6 +346,66 @@ describe('store.js', () => {
       expect(Array.from(result.get('64928df20a').get('active'))).to.be.eql([]);
       expect(result.get('64928df20a').has('entry')).to.be.true;
       expect(Array.from(result.get('64928df20a').get('entry'))).to.be.eql([]);
+    });
+
+    it('should produce active keys that are in the config but not in genome', () => {
+      const config = {
+        "_published": 1598994807.0831175,
+        "_client": {
+          "browser": "chrome",
+          "device": "desktop",
+          "location": "US",
+          "platform": "macos"
+        },
+        "_experiments": [{
+          "web": {
+            "dependencies": "\n",
+            "47b7t1xuc": {
+              "_is_entry_point": true,
+              "_predicate": {
+                "combinator": "and",
+                "rules": [{
+                  "field": "web.url",
+                  "operator": "regex64_match",
+                  "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
+                }]
+              }
+            },
+            "bszvsce8f": {
+              "_is_entry_point": true,
+              "_predicate": {
+                "combinator": "and",
+                "rules": [{
+                  "field": "web.url",
+                  "operator": "regex64_match",
+                  "value": "L2h0dHBzPzpcL1wvW14vXStcL3Byb2R1Y3RcLmh0bWwoPzokfFw/fCMpL2k="
+                }]
+              }
+            }
+          },
+          "_predicate": {},
+          "id": "913f49193b",
+          "_paused": false
+        }]
+      }
+      const context = new Context();
+      context.initialize(123, 321, {
+        web: {
+          url: 'https://test.site.com/index.html'
+        }
+      });
+      const configKeyStates = { loaded: new Set(["web","web.47b7t1xuc","web.47b7t1xuc.7coo4n5jr","web.47b7t1xuc.7coo4n5jr.id","web.47b7t1xuc.7coo4n5jr.type","web.47b7t1xuc.7coo4n5jr.script","web.47b7t1xuc.7coo4n5jr.styles","web.dependencies","web.bszvsce8f"]), experiments: new Map() };
+      const genomeKeyStates = { loaded: new Set() }
+
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeKeyStates);
+      const result = configKeyStates.experiments;
+
+      expect(result.size).to.be.equal(1);
+      expect(result.has('913f49193b')).to.be.true;
+      expect(result.get('913f49193b').has('active')).to.be.true;
+      expect(Array.from(result.get('913f49193b').get('active'))).to.be.eql(["web","web.47b7t1xuc","web.47b7t1xuc.7coo4n5jr","web.47b7t1xuc.7coo4n5jr.id","web.47b7t1xuc.7coo4n5jr.type","web.47b7t1xuc.7coo4n5jr.script","web.47b7t1xuc.7coo4n5jr.styles","web.dependencies"]);
+      expect(result.get('913f49193b').has('entry')).to.be.true;
+      expect(Array.from(result.get('913f49193b').get('entry'))).to.be.eql(["web.47b7t1xuc","web.47b7t1xuc.7coo4n5jr","web.47b7t1xuc.7coo4n5jr.id","web.47b7t1xuc.7coo4n5jr.type","web.47b7t1xuc.7coo4n5jr.script","web.47b7t1xuc.7coo4n5jr.styles"]);
     });
   });
 
@@ -541,7 +601,7 @@ describe('store.js', () => {
         }
       }
       context = new Context();
-      configKeyStates = { experiments: new Map() };
+      configKeyStates = { loaded: new Set(), experiments: new Map() };
       genomeConfigKeyStates = { loaded: new Set(["web","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type","web.fiddrbo15","web.fiddrbo15.ma3mr8iy6","web.fiddrbo15.ma3mr8iy6.type","web.ooycjnptz","web.ooycjnptz.lo7yrjkkg","web.ooycjnptz.lo7yrjkkg.type","web.nt1g7tbs2","web.nt1g7tbs2.vzyq1yz56","web.nt1g7tbs2.vzyq1yz56.type","web.2nshubits","web.2nshubits.p89utjadn","web.2nshubits.p89utjadn.id","web.2nshubits.p89utjadn.type","web.2nshubits.p89utjadn.script","web.2nshubits.p89utjadn.styles","web.2nshubits.u4nehfi0j","web.2nshubits.u4nehfi0j.type","web.fidcrbo15","web.fidcrbo15.ma9mr8iy6","web.fidcrbo15.ma9mr8iy6.type","web.ooycjpptz","web.ooycjpptz.lo7yrjkkg","web.ooycjpptz.lo7yrjkkg.type","web.nt1g7tfs2","web.nt1g7tfs2.vzyq1yz56","web.nt1g7tfs2.vzyq1yz56.type"]) };
     })
 
@@ -551,7 +611,7 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
@@ -580,7 +640,7 @@ describe('store.js', () => {
         },
         device: 'mobile'
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates.experiments, genomeConfigKeyStates.loaded);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
