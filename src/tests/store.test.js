@@ -461,7 +461,7 @@ describe('store.js', () => {
       expect(result.size).to.be.equal(2);
       expect(result.has('60f67d8648')).to.be.true;
       expect(result.get('60f67d8648').has('active')).to.be.true;
-      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type","web.dependencies"]);
+      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web","web.dependencies","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type"]);
       expect(result.get('60f67d8648').has('entry')).to.be.true;
       expect(Array.from(result.get('60f67d8648').get('entry'))).to.be.eql(["web.2nsqubits", "web.2nsqubits.p99utjadn", "web.2nsqubits.p99utjadn.id", "web.2nsqubits.p99utjadn.type", "web.2nsqubits.p99utjadn.script", "web.2nsqubits.p99utjadn.styles", "web.2nsqubits.u4mehfi0j", "web.2nsqubits.u4mehfi0j.type"]);
       expect(result.has('64928df20a')).to.be.true;
