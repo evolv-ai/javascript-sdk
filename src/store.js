@@ -24,6 +24,40 @@ export const CONFIG_UPDATED = 'config.updated';
 export const EFFECTIVE_GENOME_UPDATED = 'effective.genome.updated';
 export const STORE_DESTROYED = 'store.destroyed';
 
+/**
+ * Determines if the the key exists in any of the experiment's key states.
+ *
+ * @param {Object} keyStates The keyStates object containing experiments key states.
+ * @param {String} stateName Name of the state to search for the key in.
+ * @param {String} key Key to serch in the key state set for.
+ * @param {Boolean} [prefix] Whether or not to use key as a prefix to search for.
+ * @returns {Boolean} Whether or not key exists in chosen key state in any experiment.
+ */
+export function expKeyStatesHas(keyStates, stateName, key, prefix) {
+  prefix = prefix || false;
+
+  let hasIt = false;
+  keyStates.experiments.forEach(function(expKeyStates) {
+    const state = expKeyStates.get(stateName);
+    if (!state) {
+      return;
+    }
+
+    if (prefix) {
+      state.forEach(function(stateKey) {
+        if (!key || strings.startsWith(stateKey, key)) {
+          hasIt = true;
+        }
+      });
+    } else {
+      if (state.has(key)) {
+        hasIt = true;
+      }
+    }
+  });
+  return hasIt;
+}
+
 function moveKeys(keys, from, to) {
   keys.forEach(function(key) {
     from.delete(key);
@@ -182,22 +216,31 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
 }
 
 export function setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates) {
-  const loadedKeys = new Set()
-  genomeKeyStates.loaded.forEach(function(key) {
-    loadedKeys.add(key);
-  });
-  configKeyStates.loaded.forEach(function(key) {
-    loadedKeys.add(key);
-  });
-
   const results = evaluatePredicates(version, context, config);
-  configKeyStates.experiments.clear();
 
   results.forEach(function(expResults, eid) {
-    const expKeyStates = new Map();
-    configKeyStates.experiments.set(eid, expKeyStates);
+    const expConfigKeyStates = configKeyStates.experiments.get(eid);
+    if (!expConfigKeyStates)  {
+      return;
+    }
 
-    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedKeys);
+    const expGenomeKeyStates = genomeKeyStates.experiments.get(eid) || new Map();
+    const expConfigLoaded = expConfigKeyStates.get('loaded');
+    const expGenomeLoaded = expGenomeKeyStates.get('loaded');
+
+    const loadedKeys = new Set();
+    if (expConfigLoaded) {
+      expConfigLoaded.forEach(function(key) {
+        loadedKeys.add(key);
+      });
+    }
+    if (expGenomeLoaded) {
+      expGenomeLoaded.forEach(function(key) {
+        loadedKeys.add(key);
+      });
+    }
+
+    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults, loadedKeys);
 
     const activeKeyStates = new Set();
     newExpKeyStates.active.forEach(function(key) {
@@ -209,8 +252,8 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
       entryKeyStates.add(key);
     })
 
-    expKeyStates.set('active', activeKeyStates);
-    expKeyStates.set('entry', entryKeyStates);
+    expConfigKeyStates.set('active', activeKeyStates);
+    expConfigKeyStates.set('entry', entryKeyStates);
   });
 }
 
@@ -259,13 +302,12 @@ function EvolvStore(options) {
   const genomeKeyStates = {
     needed: new Set(),
     requested: new Set(),
-    loaded: new Set()
+    experiments: new Map()
   };
 
   const configKeyStates = {
     needed: new Set(),
     requested: new Set(),
-    loaded: new Set(),
     experiments: new Map()
   };
 
@@ -288,11 +330,10 @@ function EvolvStore(options) {
 
     delete genomeKeyStates.needed;
     delete genomeKeyStates.requested;
-    delete genomeKeyStates.loaded;
+    delete genomeKeyStates.experiments;
 
     delete configKeyStates.needed;
     delete configKeyStates.requested;
-    delete configKeyStates.loaded;
     delete configKeyStates.experiments;
 
     outstandingValuePromises.forEach(function(p) {
@@ -372,9 +413,13 @@ function EvolvStore(options) {
       }
 
       genomes[clean.eid] = alloc.genome;
+      const expLoaded = new Set();
+      const expMap = new Map();
+      expMap.set('loaded', expLoaded)
+      genomeKeyStates.experiments.set(clean.eid, expMap);
       objects.flattenKeys(alloc.genome, function(key) {
         return !strings.startsWith(key, '_');
-      }).forEach(genomeKeyStates.loaded.add.bind(genomeKeyStates.loaded));
+      }).forEach(expLoaded.add.bind(expLoaded));
     });
     context.set('experiments.allocations', allocs);
     context.set('experiments.exclusions', exclusions);
@@ -389,9 +434,13 @@ function EvolvStore(options) {
     value._experiments.forEach(function(exp) {
       const clean = objects.assign({}, exp);
       delete clean.id;
+      const expLoaded = new Set();
+      const expMap = new Map();
+      expMap.set('loaded', expLoaded)
+      configKeyStates.experiments.set(exp.id, expMap);
       objects.flattenKeys(clean, function(key) {
         return !strings.startsWith(key, '_');
-      }).forEach(configKeyStates.loaded.add.bind(configKeyStates.loaded));
+      }).forEach(expLoaded.add.bind(expLoaded));
     });
   }
 
@@ -413,18 +462,13 @@ function EvolvStore(options) {
     let removeConfig = [];
     let removeValue = [];
     outstandingValuePromises.concat(outstandingConfigPromises).forEach(function(promise) {
-      if (promise.source === GENOME_SOURCE && (!promise.key || !genomeKeyStates.loaded.has(promise.key))) {
+      if (promise.source === GENOME_SOURCE && (!promise.key || !expKeyStatesHas(genomeKeyStates, 'loaded', promise.key))) {
         return;
       }
 
       let configLoaded = true;
       if (promise.key) {
-        configLoaded = false;
-        configKeyStates.loaded.forEach(function(prefix) {
-          if (strings.startsWith(promise.key, prefix)) {
-            configLoaded = true;
-          }
-        });
+        configLoaded = expKeyStatesHas(configKeyStates, 'loaded', promise.key, true);
       }
 
       if (!configLoaded && !(configRequest && (version === 1 || requestedKeys.indexOf(promise.key) >= 0))) {
@@ -570,16 +614,12 @@ function EvolvStore(options) {
       keyStates = genomeKeyStates;
       failed = genomeFailed;
       outstandingPromises = outstandingValuePromises;
-      loaded = keyStates.loaded.has(key);
+      loaded = expKeyStatesHas(keyStates, 'loaded', key);
     } else {
       keyStates = configKeyStates;
       failed = configFailed;
       outstandingPromises = outstandingConfigPromises;
-      keyStates.loaded.forEach(function(prefix) {
-        if (!key || strings.startsWith(key, prefix)) {
-          loaded = true;
-        }
-      });
+      loaded = expKeyStatesHas(keyStates, 'loaded', key, true);
     }
 
     if (loaded) {
@@ -587,7 +627,7 @@ function EvolvStore(options) {
       return promise;
     }
 
-    if (keyStates.loaded.has(key)) {
+    if (expKeyStatesHas(keyStates, 'loaded', key)) {
       resolve(transform(key, effectiveGenome, config));
       return promise;
     }
