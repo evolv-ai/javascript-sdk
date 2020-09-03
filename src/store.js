@@ -24,6 +24,15 @@ export const CONFIG_UPDATED = 'config.updated';
 export const EFFECTIVE_GENOME_UPDATED = 'effective.genome.updated';
 export const STORE_DESTROYED = 'store.destroyed';
 
+/**
+ * Determines if the the key exists in any of the experiment's key states.
+ *
+ * @param {Object} keyStates The keyStates object containing experiments key states.
+ * @param {String} stateName Name of the state to search for the key in.
+ * @param {String} key Key to serch in the key state set for.
+ * @param {Boolean} [prefix] Whether or not to use key as a prefix to search for.
+ * @returns {Boolean} Whether or not key exists in chosen key state in any experiment.
+ */
 export function expKeyStatesHas(keyStates, stateName, key, prefix) {
   prefix = prefix || false;
 
@@ -210,22 +219,28 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
   const results = evaluatePredicates(version, context, config);
 
   results.forEach(function(expResults, eid) {
-    const expKeyStates = configKeyStates.experiments.get(eid);
-    if (!expKeyStates) {
+    const expConfigKeyStates = configKeyStates.experiments.get(eid);
+    if (!expConfigKeyStates)  {
       return;
     }
 
-    const loadedKeys = new Set();
-    const loadedExpGen = (genomeKeyStates.experiments.get(eid) || new Map()).get('loaded') || new Set();
-    const loadedExpCon = expKeyStates.get('loaded') || new Set();
-    loadedExpGen.forEach(function(key) {
-      loadedKeys.add(key);
-    });
-    loadedExpCon.forEach(function(key) {
-      loadedKeys.add(key);
-    });
+    const expGenomeKeyStates = genomeKeyStates.experiments.get(eid) || new Map();
+    const expConfigLoaded = expConfigKeyStates.get('loaded');
+    const expGenomeLoaded = expGenomeKeyStates.get('loaded');
 
-    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults,  loadedKeys);
+    const loadedKeys = new Set();
+    if (expConfigLoaded) {
+      expConfigLoaded.forEach(function(key) {
+        loadedKeys.add(key);
+      });
+    }
+    if (expGenomeLoaded) {
+      expGenomeLoaded.forEach(function(key) {
+        loadedKeys.add(key);
+      });
+    }
+
+    const newExpKeyStates = getActiveAndEntryExperimentKeyStates(expResults, loadedKeys);
 
     const activeKeyStates = new Set();
     newExpKeyStates.active.forEach(function(key) {
@@ -237,8 +252,8 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
       entryKeyStates.add(key);
     })
 
-    expKeyStates.set('active', activeKeyStates);
-    expKeyStates.set('entry', entryKeyStates);
+    expConfigKeyStates.set('active', activeKeyStates);
+    expConfigKeyStates.set('entry', entryKeyStates);
   });
 }
 
