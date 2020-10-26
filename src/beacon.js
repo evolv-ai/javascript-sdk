@@ -105,7 +105,7 @@ export default function Emitter(endpoint, context) {
       type: type,
       payload: payload,
       sid: context.sid,
-      timestamp: Date.now(),
+      timestamp: (new Date()).getTime()
     });
 
     if (flush) {

@@ -172,7 +172,7 @@ function EvolvClient(options) {
    * @param flush {Boolean} If true, the event will be sent immediately.
    */
   this.emit = function(type, metadata, flush) {
-    context.pushToArray('events', {type: type,  timestamp: Date.now()})
+    context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
     eventBeacon.emit(type, assign({
       uid: context.uid,
       sid: context.sid,
@@ -211,7 +211,7 @@ function EvolvClient(options) {
             return;
           }
 
-          const timestamp = Date.now();
+          const timestamp = (new Date()).getTime();
           const contextConfirmations = confirmableAllocations.map(function(alloc) {
             return {
               cid: alloc.cid,
@@ -268,7 +268,7 @@ function EvolvClient(options) {
       return;
     }
 
-    const timestamp = Date.now();
+    const timestamp = (new Date()).getTime();
     const contextContaminations = contaminatableAllocations.map(function(alloc) {
       return {
         cid: alloc.cid,
