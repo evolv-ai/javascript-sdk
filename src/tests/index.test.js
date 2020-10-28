@@ -724,14 +724,14 @@ describe('Evolv client unit tests', () => {
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
 
-      context.initialize()
-      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}])
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
       options.context = context;
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
           const confirmations = context.get('confirmations');
-          expect(confirmations.length).to.be.equal(1)
+          expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
         } catch (err) {
@@ -743,7 +743,7 @@ describe('Evolv client unit tests', () => {
       client.confirm();
       emit(context, EFFECTIVE_GENOME_UPDATED, {});
     });
-  })
+  });
 
   describe('contaminate', () => {
     it('should contaminate once', () => {
@@ -752,12 +752,62 @@ describe('Evolv client unit tests', () => {
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
 
-      context.initialize()
-      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}])
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
       options.context = context;
 
       const client = new Evolv(options);
       client.contaminate();
+
+      expect(context.remoteContext.contaminations).to.be.lengthOf(1);
+      expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
+    });
+
+    it('should error if details, but no reason are included in the contamination', () => {
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
+      options.context = context;
+
+      const client = new Evolv(options);
+      let correctlyErrored = false;
+      try {
+        client.contaminate({});
+      } catch(err) {
+        correctlyErrored = true;
+      }
+
+      expect(correctlyErrored).to.be.equal(true);
+    });
+
+    it('should should send the contamination details to the events endpoint', (done) => {
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      let contaminationDetails = {
+        reason: 'broken',
+        details: 'mistake'
+      };
+
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
+      options.context = context;
+      options.beacon = {
+        emit: function(type, details) {
+          expect(details.contaminationReason).to.equal(contaminationDetails);
+          done();
+        }
+      };
+
+      const client = new Evolv(options);
+
+      client.contaminate(contaminationDetails);
 
       expect(context.remoteContext.contaminations).to.be.lengthOf(1);
       expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');

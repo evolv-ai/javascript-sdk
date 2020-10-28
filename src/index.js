@@ -44,7 +44,7 @@ function EvolvClient(options) {
   const store = options.store || new Store(options);
   const context = options.context || new Context(store);
   const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context) : null;
-  const eventBeacon = new Beacon(options.endpoint + '/' + options.environment + '/events', context);
+  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context);
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -248,12 +248,19 @@ function EvolvClient(options) {
   /**
    * Marks a consumer as unsuccessfully retrieving and / or applying requested values, making them ineligible for
    * inclusion in optimization statistics.
+   *
+   * @param details {Object} Optional. Information on the reason for contamination. If provided, the object should
+   * contain a reason. Optionally, a 'details' value should be included for extra debugging info
    */
-  this.contaminate = function() {
+  this.contaminate = function(details) {
     const remoteContext = context.remoteContext;
     const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
     if (!allocations || !allocations.length) {
       return;
+    }
+
+    if (details && !details.reason) {
+      throw new Error('Evolv: contamination details must include a reason');
     }
 
     const contaminations = context.get('experiments.contaminations') || [];
@@ -292,7 +299,8 @@ function EvolvClient(options) {
         uid: alloc.uid,
         sid: alloc.sid,
         eid: alloc.eid,
-        cid: alloc.cid
+        cid: alloc.cid,
+        contaminationReason: details
       }, context.remoteContext));
     });
     eventBeacon.flush();
