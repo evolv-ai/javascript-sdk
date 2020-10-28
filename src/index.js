@@ -250,7 +250,7 @@ function EvolvClient(options) {
    * inclusion in optimization statistics.
    *
    * @param details {Object} Optional. Information on the reason for contamination. If provided, the object should
-   * contain a reason ('timeout-exceeded',  'error-thrown' or 'user-generated') and optional details
+   * contain a reason. Optionally, a 'details' value should be included for extra debugging info
    */
   this.contaminate = function(details) {
     const remoteContext = context.remoteContext;
