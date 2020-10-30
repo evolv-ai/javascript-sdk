@@ -377,7 +377,8 @@ function EvolvStore(options) {
         })
         const pruned = objects.prune(effectiveGenome, active);
         Object.keys(pruned).forEach(function(key) {
-          activeVariants.add(key.concat(':', md5(JSON.stringify(pruned[key]))));
+          const variant = JSON.stringify(pruned[key]);
+          activeVariants.add(key.concat(':', variant.length > 32 ? md5(variant) : variant));
         })
       }
     });
