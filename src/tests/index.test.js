@@ -620,9 +620,6 @@ describe('Evolv client integration tests', () => {
 
       const results = await validateClient(evolv, options, uid, sid);
 
-      console.log(JSON.stringify(results.analyticsPayloads))
-      console.log(JSON.stringify(results.analyticsPayloads[0].messages))
-
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
       // expect(results.analyticsPayloads[1].uid).to.equal(uid);
