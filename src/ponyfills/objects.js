@@ -138,16 +138,30 @@ export function expand(map) {
   return expanded;
 }
 
-export function filter(map, active) {
-  const flattened = flatten(map);
-  const filtered = {};
-  active.forEach(function(key) {
-    if (key in flattened) {
-      filtered[key] = flattened[key];
+export function prune(map, active) {
+  const pruned = {};
+  active.forEach(function (key) {
+    const keyParts = key.split('.');
+    let current = map;
+    for (let i = 0; i < keyParts.length; i++) {
+      let now = current[keyParts[i]];
+      if (now) {
+        if (i === keyParts.length - 1) {
+          pruned[key] = now;
+          break;
+        }
+        current = now;
+      } else {
+        break;
+      }
     }
-  });
+  })
+  return pruned;
+}
 
-  return expand(filtered);
+export function filter(map, active) {
+  const pruned = prune(map, active)
+  return expand(pruned)
 }
 
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "sources" }]*/

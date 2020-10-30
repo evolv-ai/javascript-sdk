@@ -59,4 +59,100 @@ describe('objects', () => {
       expect(result.value2).to.equal('value2');
     });
   });
+
+  describe('prune', () => {
+    const obj = {
+      gods: {
+        zeus: {
+          strength: 123
+        },
+        apollo: {
+          powers: {
+            flight: true
+          }
+        }
+      },
+      goddesses: {
+        athena: {
+          strength: 456
+        }
+      }
+    }
+    it('should produce keys and values from object', () => {
+      const result = objects.prune(obj, ['gods.zeus', 'gods.apollo', 'goddesses.athena'])
+
+      expect(result).to.be.eql(
+        {
+          'gods.zeus': {
+            strength: 123
+          },
+          'gods.apollo': {
+            powers: {
+              flight: true
+            }
+          },
+          'goddesses.athena': {
+            strength: 456
+          }
+        }
+      )
+    });
+
+    it('should not produce keys and values from object if they dont exist', () => {
+      const result = objects.prune(obj, ['titans.cronus'])
+
+      expect(result).to.be.eql({});
+    });
+
+    it('should produce some keys and values from object if some dont exist and some do', () => {
+      const result = objects.prune(obj, ['titans.cronus', 'goddesses.athena'])
+
+      expect(result).to.be.eql(
+        {
+          'goddesses.athena': {
+            strength: 456
+          }
+        }
+      );
+    });
+  });
+
+  describe('filter', () => {
+    const obj = {
+      gods: {
+        zeus: {
+          strength: 123
+        },
+        apollo: {
+          powers: {
+            flight: true
+          }
+        }
+      },
+      goddesses: {
+        athena: {
+          strength: 456
+        }
+      }
+    }
+
+    it('should produce filtered object based upon keys', () => {
+      const result = objects.filter(obj, ['gods.zeus', 'goddesses.athena'])
+
+      expect(result).to.be.eql(
+        {
+          gods: {
+            zeus: {
+              strength: 123
+            }
+          },
+          goddesses: {
+            athena: {
+              strength: 456
+            }
+          }
+        }
+      );
+    });
+  })
 });

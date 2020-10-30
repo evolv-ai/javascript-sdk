@@ -215,7 +215,7 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
   return expKeyStates;
 }
 
-export function setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates) {
+export function setActiveAndEntryKeyStates(version, context, config, configKeyStates) {
   const results = evaluatePredicates(version, context, config);
 
   results.forEach(function(expResults, eid) {
@@ -224,18 +224,11 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
       return;
     }
 
-    const expGenomeKeyStates = genomeKeyStates.experiments.get(eid) || new Map();
     const expConfigLoaded = expConfigKeyStates.get('loaded');
-    const expGenomeLoaded = expGenomeKeyStates.get('loaded');
 
     const loadedKeys = new Set();
     if (expConfigLoaded) {
       expConfigLoaded.forEach(function(key) {
-        loadedKeys.add(key);
-      });
-    }
-    if (expGenomeLoaded) {
-      expGenomeLoaded.forEach(function(key) {
         loadedKeys.add(key);
       });
     }
@@ -296,6 +289,8 @@ function EvolvStore(options) {
   let activeEids = new Set();
   let activeKeys = new Set();
   let previousKeys = new Set();
+  let activeVariants = new Set();
+  let previousVariants = new Set();
   let genomeFailed = false;
   let configFailed = false;
 
@@ -359,7 +354,7 @@ function EvolvStore(options) {
     }
     reevaluatingContext = true;
 
-    setActiveAndEntryKeyStates(version, context, config, configKeyStates, genomeKeyStates);
+    setActiveAndEntryKeyStates(version, context, config, configKeyStates);
     const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
     effectiveGenome = result.effectiveGenome;
@@ -369,11 +364,19 @@ function EvolvStore(options) {
     copySet(activeKeys, previousKeys);
     activeKeys.clear();
 
+    previousVariants.clear();
+    copySet(activeVariants, previousVariants);
+    activeVariants.clear();
+
     configKeyStates.experiments.forEach(function(expKeyStates) {
       const active = expKeyStates.get('active');
       if (active) {
         active.forEach(function(key) {
           activeKeys.add(key);
+        })
+        const pruned = objects.prune(effectiveGenome, active);
+        Object.keys(pruned).forEach(function(key) {
+          activeVariants.add(key.concat(':', strings.hashCode(JSON.stringify(pruned[key]))));
         })
       }
     });
@@ -383,6 +386,12 @@ function EvolvStore(options) {
       newActiveKeys.push(key);
     });
     context.set('keys.active', newActiveKeys);
+
+    const newActiveVariants = []
+    activeVariants.forEach(function(variant) {
+      newActiveVariants.push(variant);
+    });
+    context.set('variants.active', newActiveVariants);
 
     emit(context, EFFECTIVE_GENOME_UPDATED, effectiveGenome);
     subscriptions.forEach(function(listener) {
@@ -439,8 +448,9 @@ function EvolvStore(options) {
       expMap.set('loaded', expLoaded)
       configKeyStates.experiments.set(exp.id, expMap);
       objects.flattenKeys(clean, function(key) {
-        return !strings.startsWith(key, '_');
-      }).forEach(expLoaded.add.bind(expLoaded));
+        return !strings.startsWith(key, '_') || key === '_values';
+      }).filter(function(key) { return strings.endsWith(key, '_values') })
+      .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
     });
   }
 

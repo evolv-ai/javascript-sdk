@@ -255,6 +255,12 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "p99utjadn": {
+                "_values": true
+              },
+              "u4mehfi0j": {
+                "_values": true
               }
             },
             "fiddrbo15": {
@@ -266,6 +272,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3Byb2R1Y3RcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "ma3mr8iy6": {
+                "_values": true
               }
             },
             "ooycjnptz": {
@@ -277,6 +286,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3ByaWNpbmdcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "lo7yrjkkg": {
+                "_values": true
               }
             },
             "nt1g7tbs2": {
@@ -288,6 +300,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2NoZWNrb3V0XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "vzyq1yz56": {
+                "_values": true
               }
             }
           },
@@ -306,6 +321,12 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "p89utjadn": {
+                "_values": true
+              },
+              "u4nehfi0j": {
+                "_values": true
               }
             },
             "fidcrbo15": {
@@ -317,6 +338,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3Byb2R1Y3RcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "ma9mr8iy6": {
+                "_values": true
               }
             },
             "ooycjpptz": {
@@ -328,6 +352,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3ByaWNpbmdcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "lo7yrjkkg": {
+                "_values": true
               }
             },
             "nt1g7tfs2": {
@@ -339,6 +366,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2NoZWNrb3V0XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "vzyq1yz56": {
+                "_values": true
               }
             }
           },
@@ -355,70 +385,6 @@ describe('store.js', () => {
           "_paused": false
         }]
       }
-      const genomes = {
-        "60f67d8648": {
-          "web": {
-            "2nsqubits": {
-              "p99utjadn": {
-                "id": "tifv3fu1g",
-                "type": "compound",
-                "_metadata": {},
-                "script": "",
-                "styles": "a#learn.btn.btn-primary.btn-lg {\n  background-color: yellow\n}"
-              },
-              "u4mehfi0j": {
-                "type": "noop"
-              }
-            },
-            "fiddrbo15": {
-              "ma3mr8iy6": {
-                "type": "noop"
-              }
-            },
-            "ooycjnptz": {
-              "lo7yrjkkg": {
-                "type": "noop"
-              }
-            },
-            "nt1g7tbs2": {
-              "vzyq1yz56": {
-                "type": "noop"
-              }
-            }
-          }
-        },
-        "64928df20a": {
-          "web": {
-            "2nshubits": {
-              "p89utjadn": {
-                "id": "tift3fu1g",
-                "type": "compound",
-                "_metadata": {},
-                "script": "",
-                "styles": "a#learn.btn.btn-primary.btn-lg {\n  background-color: yellow\n}"
-              },
-              "u4nehfi0j": {
-                "type": "noop"
-              }
-            },
-            "fidcrbo15": {
-              "ma9mr8iy6": {
-                "type": "noop"
-              }
-            },
-            "ooycjpptz": {
-              "lo7yrjkkg": {
-                "type": "noop"
-              }
-            },
-            "nt1g7tfs2": {
-              "vzyq1yz56": {
-                "type": "noop"
-              }
-            }
-          }
-        }
-      }
       context = new Context();
       context.initialize(123, 321, {
         web: {
@@ -427,7 +393,6 @@ describe('store.js', () => {
       });
 
       const configKeyStates = { experiments: new Map([]) };
-      const genomeConfigKeyStates = { experiments: new Map() };
 
       config._experiments.forEach(function(exp) {
         const clean = objects.assign({}, exp);
@@ -437,33 +402,20 @@ describe('store.js', () => {
         expMap.set('loaded', expLoaded)
         configKeyStates.experiments.set(exp.id, expMap);
         objects.flattenKeys(clean, function(key) {
-          return !strings.startsWith(key, '_');
-        }).forEach(expLoaded.add.bind(expLoaded));
+          return !strings.startsWith(key, '_') || key === '_values';
+        }).filter(function(key) { return strings.endsWith(key, '_values') })
+        .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
       });
 
-      const expLoaded1 = new Set();
-      const expMap1 = new Map([['loaded', expLoaded1]])
-      genomeConfigKeyStates.experiments.set('60f67d8648', expMap1)
-      objects.flattenKeys(genomes['60f67d8648'], function(key) {
-        return !strings.startsWith(key, '_');
-      }).forEach(expLoaded1.add.bind(expLoaded1));
-
-      const expLoaded2 = new Set();
-      const expMap2 = new Map([['loaded', expLoaded2]])
-      genomeConfigKeyStates.experiments.set('64928df20a', expMap2)
-      objects.flattenKeys(genomes['64928df20a'], function(key) {
-        return !strings.startsWith(key, '_');
-      }).forEach(expLoaded2.add.bind(expLoaded2));
-
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
       const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(2);
       expect(result.has('60f67d8648')).to.be.true;
       expect(result.get('60f67d8648').has('active')).to.be.true;
-      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web","web.dependencies","web.2nsqubits","web.2nsqubits.p99utjadn","web.2nsqubits.p99utjadn.id","web.2nsqubits.p99utjadn.type","web.2nsqubits.p99utjadn.script","web.2nsqubits.p99utjadn.styles","web.2nsqubits.u4mehfi0j","web.2nsqubits.u4mehfi0j.type"]);
+      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web.2nsqubits.p99utjadn","web.2nsqubits.u4mehfi0j"]);
       expect(result.get('60f67d8648').has('entry')).to.be.true;
-      expect(Array.from(result.get('60f67d8648').get('entry'))).to.be.eql(["web.2nsqubits", "web.2nsqubits.p99utjadn", "web.2nsqubits.p99utjadn.id", "web.2nsqubits.p99utjadn.type", "web.2nsqubits.p99utjadn.script", "web.2nsqubits.p99utjadn.styles", "web.2nsqubits.u4mehfi0j", "web.2nsqubits.u4mehfi0j.type"]);
+      expect(Array.from(result.get('60f67d8648').get('entry'))).to.be.eql(["web.2nsqubits.p99utjadn", "web.2nsqubits.u4mehfi0j"]);
       expect(result.has('64928df20a')).to.be.true;
       expect(result.get('64928df20a').has('active')).to.be.true;
       expect(Array.from(result.get('64928df20a').get('active'))).to.be.eql([]);
@@ -518,9 +470,8 @@ describe('store.js', () => {
         }
       });
       const configKeyStates = { experiments: new Map([['913f49193b', new Map([['loaded', new Set(["web","web.47b7t1xuc","web.47b7t1xuc.7coo4n5jr","web.47b7t1xuc.7coo4n5jr.id","web.47b7t1xuc.7coo4n5jr.type","web.47b7t1xuc.7coo4n5jr.script","web.47b7t1xuc.7coo4n5jr.styles","web.dependencies","web.bszvsce8f"])]])]]) };
-      const genomeKeyStates = { experiments: new Map([['913f49193b', new Map([['loaded', new Set()]])]]) };
 
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
       const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(1);
@@ -537,7 +488,6 @@ describe('store.js', () => {
     let genomes;
     let context;
     let configKeyStates;
-    let genomeConfigKeyStates;
     beforeEach(() => {
       config = {
         "_published": 1597878596.6255178,
@@ -559,6 +509,12 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "p99utjadn": {
+                "_values": true
+              },
+              "u4mehfi0j": {
+                "_values": true
               }
             },
             "fiddrbo15": {
@@ -570,6 +526,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3Byb2R1Y3RcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "ma3mr8iy6": {
+                "_values": true
               }
             },
             "ooycjnptz": {
@@ -581,6 +540,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3ByaWNpbmdcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "lo7yrjkkg": {
+                "_values": true
               }
             },
             "nt1g7tbs2": {
@@ -592,6 +554,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2NoZWNrb3V0XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "vzyq1yz56": {
+                "_values": true
               }
             }
           },
@@ -610,6 +575,12 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "p89utjadn": {
+                "_values": true
+              },
+              "u4nehfi0j": {
+                "_values": true
               }
             },
             "fidcrbo15": {
@@ -621,6 +592,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3Byb2R1Y3RcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "ma9mr8iy6": {
+                "_values": true
               }
             },
             "ooycjpptz": {
@@ -632,6 +606,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL3ByaWNpbmdcLmh0bWwoPzokfFw/fCMpL2k="
                 }]
+              },
+              "lo7yrjkkg": {
+                "_values": true
               }
             },
             "nt1g7tfs2": {
@@ -643,6 +620,9 @@ describe('store.js', () => {
                   "operator": "regex64_match",
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2NoZWNrb3V0XC5odG1sKD86JHxcP3wjKS9p"
                 }]
+              },
+              "vzyq1yz56": {
+                "_values": true
               }
             }
           },
@@ -666,7 +646,6 @@ describe('store.js', () => {
               "p99utjadn": {
                 "id": "tifv3fu1g",
                 "type": "compound",
-                "_metadata": {},
                 "script": "",
                 "styles": "a#learn.btn.btn-primary.btn-lg {\n  background-color: yellow\n}"
               },
@@ -697,7 +676,6 @@ describe('store.js', () => {
               "p89utjadn": {
                 "id": "tift3fu1g",
                 "type": "compound",
-                "_metadata": {},
                 "script": "",
                 "styles": "a#learn.btn.btn-primary.btn-lg {\n  background-color: yellow\n}"
               },
@@ -725,7 +703,6 @@ describe('store.js', () => {
       }
       context = new Context();
       configKeyStates = { experiments: new Map([]) };
-      genomeConfigKeyStates = { experiments: new Map() };
 
       config._experiments.forEach(function(exp) {
         const clean = objects.assign({}, exp);
@@ -735,23 +712,10 @@ describe('store.js', () => {
         expMap.set('loaded', expLoaded)
         configKeyStates.experiments.set(exp.id, expMap);
         objects.flattenKeys(clean, function(key) {
-          return !strings.startsWith(key, '_');
-        }).forEach(expLoaded.add.bind(expLoaded));
+          return !strings.startsWith(key, '_') || key === '_values';
+        }).filter(function(key) { return strings.endsWith(key, '_values') })
+        .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
       });
-
-      const expLoaded1 = new Set();
-      const expMap1 = new Map([['loaded', expLoaded1]])
-      genomeConfigKeyStates.experiments.set('60f67d8648', expMap1)
-      objects.flattenKeys(genomes['60f67d8648'], function(key) {
-        return !strings.startsWith(key, '_');
-      }).forEach(expLoaded1.add.bind(expLoaded1));
-
-      const expLoaded2 = new Set();
-      const expMap2 = new Map([['loaded', expLoaded2]])
-      genomeConfigKeyStates.experiments.set('64928df20a', expMap2)
-      objects.flattenKeys(genomes['64928df20a'], function(key) {
-        return !strings.startsWith(key, '_');
-      }).forEach(expLoaded2.add.bind(expLoaded2));
     });
 
     it('should generate genome for one experiment of two in same environment', () => {
@@ -760,7 +724,7 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
@@ -789,7 +753,7 @@ describe('store.js', () => {
         },
         device: 'mobile'
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates, genomeConfigKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
