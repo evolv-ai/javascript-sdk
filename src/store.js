@@ -3,6 +3,7 @@ import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
 
 import { copySet } from './helpers/set-utils.js';
+import { md5 } from './helpers/hash.js';
 import { evaluate } from './predicates.js';
 import { waitFor, emit } from './waitforit.js';
 import { CONTEXT_CHANGED } from './context.js';
@@ -376,7 +377,7 @@ function EvolvStore(options) {
         })
         const pruned = objects.prune(effectiveGenome, active);
         Object.keys(pruned).forEach(function(key) {
-          activeVariants.add(key.concat(':', JSON.stringify(pruned[key])));
+          activeVariants.add(key.concat(':', md5(JSON.stringify(pruned[key]))));
         })
       }
     });
