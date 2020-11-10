@@ -251,10 +251,12 @@ function EvolvClient(options) {
    *
    * @param details {Object} Optional. Information on the reason for contamination. If provided, the object should
    * contain a reason. Optionally, a 'details' value should be included for extra debugging info
+   * @param {boolean} allExperiments If true, the user will be excluded from all optimizations, including optimization
+   * not applicable to this page
    */
-  this.contaminate = function(details) {
+  this.contaminate = function(details, allExperiments) {
     const remoteContext = context.remoteContext;
-    const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
+    const allocations = (remoteContext.experiments || {}).allocations; // undefined is a valid state, we want to know if its undefined
     if (!allocations || !allocations.length) {
       return;
     }
@@ -268,7 +270,7 @@ function EvolvClient(options) {
       return conf.cid;
     });
     const contaminatableAllocations = allocations.filter(function(alloc) {
-      return contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
+      return contaminatedCids.indexOf(alloc.cid) < 0 && (allExperiments || store.activeEids.has(alloc.eid));
     });
 
     if (!contaminatableAllocations.length) {
