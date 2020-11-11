@@ -58,6 +58,20 @@ export function expKeyStatesHas(keyStates, stateName, key, prefix) {
   return hasIt;
 }
 
+export function setConfigLoadedKeys(keyStates, exp) {
+  const clean = objects.assign({}, exp);
+  delete clean.id;
+  const expLoaded = new Set();
+  const expMap = new Map();
+  expMap.set('loaded', expLoaded)
+  keyStates.experiments.set(exp.id, expMap);
+  objects.flattenKeys(clean, function(key) {
+    return!strings.startsWith(key, '_') || key === '_values' || key === '_initializers'
+  }).filter(function(key) { return strings.endsWith(key, '_values') || strings.endsWith(key, '_initializers') })
+  .forEach(function(key) { expLoaded.add(key.replace(/._values|._initializers/gi, '')) });
+}
+
+
 function moveKeys(keys, from, to) {
   keys.forEach(function(key) {
     from.delete(key);
@@ -377,7 +391,7 @@ function EvolvStore(options) {
         const pruned = objects.prune(effectiveGenome, active);
         Object.keys(pruned).forEach(function(key) {
           activeVariants.add(key.concat(':', strings.hashCode(JSON.stringify(pruned[key]))));
-        })
+        });
       }
     });
 
@@ -441,16 +455,7 @@ function EvolvStore(options) {
       clientContext = config._client;
     }
     value._experiments.forEach(function(exp) {
-      const clean = objects.assign({}, exp);
-      delete clean.id;
-      const expLoaded = new Set();
-      const expMap = new Map();
-      expMap.set('loaded', expLoaded)
-      configKeyStates.experiments.set(exp.id, expMap);
-      objects.flattenKeys(clean, function(key) {
-        return !strings.startsWith(key, '_') || key === '_values';
-      }).filter(function(key) { return strings.endsWith(key, '_values') })
-      .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
+      setConfigLoadedKeys(configKeyStates, exp);
     });
   }
 
