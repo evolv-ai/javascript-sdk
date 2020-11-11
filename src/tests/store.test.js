@@ -4,9 +4,7 @@ import chai from 'chai';
 const { expect } = chai;
 
 import Context from '../context.js';
-import { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates, generateEffectiveGenome } from '../store.js';
-import * as objects from '../ponyfills/objects.js';
-import * as strings from '../ponyfills/strings.js';
+import { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates, generateEffectiveGenome, setConfigLoadedKeys } from '../store.js';
 
 
 describe('store.js', () => {
@@ -256,6 +254,7 @@ describe('store.js', () => {
                   "value": "L2h0dHBzPzpcL1wvW14vXStcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
                 }]
               },
+              "_initializers": true,
               "p99utjadn": {
                 "_values": true
               },
@@ -395,16 +394,7 @@ describe('store.js', () => {
       const configKeyStates = { experiments: new Map([]) };
 
       config._experiments.forEach(function(exp) {
-        const clean = objects.assign({}, exp);
-        delete clean.id;
-        const expLoaded = new Set();
-        const expMap = new Map();
-        expMap.set('loaded', expLoaded)
-        configKeyStates.experiments.set(exp.id, expMap);
-        objects.flattenKeys(clean, function(key) {
-          return !strings.startsWith(key, '_') || key === '_values';
-        }).filter(function(key) { return strings.endsWith(key, '_values') })
-        .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
+        setConfigLoadedKeys(configKeyStates, exp)
       });
 
       setActiveAndEntryKeyStates(1, context, config, configKeyStates);
@@ -413,9 +403,9 @@ describe('store.js', () => {
       expect(result.size).to.be.equal(2);
       expect(result.has('60f67d8648')).to.be.true;
       expect(result.get('60f67d8648').has('active')).to.be.true;
-      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web.2nsqubits.p99utjadn","web.2nsqubits.u4mehfi0j"]);
+      expect(Array.from(result.get('60f67d8648').get('active'))).to.be.eql(["web.2nsqubits", "web.2nsqubits.p99utjadn","web.2nsqubits.u4mehfi0j"]); // should include context level keys and variant level keys
       expect(result.get('60f67d8648').has('entry')).to.be.true;
-      expect(Array.from(result.get('60f67d8648').get('entry'))).to.be.eql(["web.2nsqubits.p99utjadn", "web.2nsqubits.u4mehfi0j"]);
+      expect(Array.from(result.get('60f67d8648').get('entry'))).to.be.eql(["web.2nsqubits", "web.2nsqubits.p99utjadn", "web.2nsqubits.u4mehfi0j"]); // should include context level keys and variant level keys
       expect(result.has('64928df20a')).to.be.true;
       expect(result.get('64928df20a').has('active')).to.be.true;
       expect(Array.from(result.get('64928df20a').get('active'))).to.be.eql([]);
@@ -705,16 +695,7 @@ describe('store.js', () => {
       configKeyStates = { experiments: new Map([]) };
 
       config._experiments.forEach(function(exp) {
-        const clean = objects.assign({}, exp);
-        delete clean.id;
-        const expLoaded = new Set();
-        const expMap = new Map();
-        expMap.set('loaded', expLoaded)
-        configKeyStates.experiments.set(exp.id, expMap);
-        objects.flattenKeys(clean, function(key) {
-          return !strings.startsWith(key, '_') || key === '_values';
-        }).filter(function(key) { return strings.endsWith(key, '_values') })
-        .forEach(function(key) { expLoaded.add(key.replace(/._values/gi, '')) });
+        setConfigLoadedKeys(configKeyStates, exp)
       });
     });
 
