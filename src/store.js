@@ -61,14 +61,22 @@ export function expKeyStatesHas(keyStates, stateName, key, prefix) {
 export function setConfigLoadedKeys(keyStates, exp) {
   const clean = objects.assign({}, exp);
   delete clean.id;
+
   const expLoaded = new Set();
   const expMap = new Map();
-  expMap.set('loaded', expLoaded)
+
+  expMap.set('loaded', expLoaded);
   keyStates.experiments.set(exp.id, expMap);
+
   objects.flattenKeys(clean, function(key) {
-    return!strings.startsWith(key, '_') || key === '_values' || key === '_initializers'
-  }).filter(function(key) { return strings.endsWith(key, '_values') || strings.endsWith(key, '_initializers') })
-  .forEach(function(key) { expLoaded.add(key.replace(/._values|._initializers/gi, '')) });
+    return !strings.startsWith(key, '_') || key === '_values' || key === '_initializers';
+  })
+    .filter(function(key) {
+      return strings.endsWith(key, '_values') || strings.endsWith(key, '_initializers');
+    })
+    .forEach(function(key) {
+      expLoaded.add(key.replace(/._values|._initializers/gi, ''));
+    });
 }
 
 
