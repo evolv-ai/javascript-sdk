@@ -29,7 +29,7 @@ export function endsWith(string, searchString, length) {
 		return string.endsWith(searchString, length);
 	}
 	const len = length === undefined || length > string.length ? string.length : length;
-	return this.substring(len - searchString.length, len) === searchString;
+	return string.substring(len - searchString.length, len) === searchString;
 }
 
 /**
