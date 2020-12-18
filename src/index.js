@@ -203,8 +203,12 @@ function EvolvClient(options) {
           const confirmedCids = confirmations.map(function(conf) {
             return conf.cid;
           });
+          const contaminations = context.get('experiments.contaminations') || [];
+          const contaminatedCids = contaminations.map(function(cont) {
+            return cont.cid;
+          });
           const confirmableAllocations = allocations.filter(function(alloc) {
-            return confirmedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
+            return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
           });
 
           if (!confirmableAllocations.length) {
