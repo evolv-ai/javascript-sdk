@@ -772,7 +772,7 @@ describe('Evolv client unit tests', () => {
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
 
-      context.initialize()
+      context.initialize();
       context.set("experiments.allocations", [{eid: '1234', cid: '5678'}, {eid: '12345', cid: '678910'}]);
       options.context = context;
 
@@ -832,7 +832,87 @@ describe('Evolv client unit tests', () => {
       expect(context.remoteContext.contaminations).to.be.lengthOf(1);
       expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     });
-  })
+
+    it('should not confirm into allocated experiments that have been contaminated', (done) => {
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}, {eid: '12345', cid: '678910'}]);
+      options.context = context;
+      options.beacon = {
+        emit: function(type, details) {
+        },
+        flush: function() {}
+      };
+
+      const client = new Evolv(options);
+      client.contaminate();
+
+      expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(1);
+      expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
+
+      client.confirm();
+
+      waitFor(context, EFFECTIVE_GENOME_UPDATED, () => {
+        setTimeout(() => { // Ensure we evaluate after the code waiting on EFFECTIVE_GENOME_UPDATE
+          try {
+            expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(1);
+            expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
+            expect(context.remoteContext.experiments.confirmations).to.be.undefined;
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }, 10);
+      });
+
+      client.confirm();
+      emit(context, EFFECTIVE_GENOME_UPDATED, {});
+    });
+
+    it('should confirm into allocated experiments that have been contaminated after another contamination', (done) => {
+      var activeEntryPoint = '1234';
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve([activeEntryPoint]) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set([activeEntryPoint]); } });
+      options.store = store;
+
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}, {eid: '12345', cid: '678910'}]);
+      options.context = context;
+      options.beacon = {
+        emit: function(type, details) {
+        },
+        flush: function() {}
+      };
+
+      const client = new Evolv(options);
+      client.contaminate();
+
+      expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(1);
+      expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
+
+      // Confirm into non contaminated cid
+      waitFor(context, Evolv.CONFIRMED, () => {
+        try {
+          expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(1);
+          expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
+          expect(context.remoteContext.experiments.confirmations).to.be.lengthOf(1);
+          expect(context.remoteContext.experiments.confirmations[0].cid).to.be.equal('678910');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      activeEntryPoint = '12345';
+      client.confirm();
+      emit(context, EFFECTIVE_GENOME_UPDATED, {});
+    });
+  });
 
   it('should contaminate inactive eids when allExperiments is set to true', () => {
     store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
@@ -845,7 +925,7 @@ describe('Evolv client unit tests', () => {
       details: 'mistake'
     };
 
-    context.initialize()
+    context.initialize();
     context.set("experiments.allocations", [{eid: '1234', cid: '5678'}, {eid: '12345', cid: '678910'}])
     options.context = context;
 
