@@ -125,7 +125,7 @@ function EvolvContext(store) {
   this.update = function(update, local) {
     if (Object.keys(update).length === 0 && update.constructor === Object) {
       // We will deprecate this at some point.
-      console.warn('[Deprecation] Calling evolv.context.update({}) to reapply variants has been deprecated. Contact support for the new method to use.');
+      console.warn('[Deprecation] Calling evolv.context.update({}) to reapply variants has been deprecated. Please use \'evolv.rerun()\' instead.');
       store.clearActiveKeys();
     }
 
