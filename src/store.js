@@ -318,7 +318,7 @@ export function generateEffectiveGenome(expsKeyStates, genomes) {
   expsKeyStates.forEach(function (expKeyStates, eid) {
     const active = expKeyStates.get('active');
     if (eid in genomes && active) {
-      const activeGenome = objects.filter(genomes[eid], active);
+      const activeGenome = objects.filter(objects.deepClone(genomes[eid]), active);
 
       if (Object.keys(activeGenome).length) {
         activeEids.add(eid);

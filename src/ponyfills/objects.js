@@ -156,7 +156,41 @@ export function prune(map, active) {
       }
     }
   })
+
+  reattributePredicatedValues(pruned, active);
   return pruned;
+}
+
+export function reattributePredicatedValues(pruned, active) {
+  function reattribute(o, a, collected) {
+    if (typeof o !== 'object' || o === null) {
+      return o;
+    }
+
+    if (o._predicated_values) {
+      const predicatedKeyPrefix = collected.join('.')
+      for (let i = 0; i < o._predicated_values.length; i++) {
+        if (a.has(predicatedKeyPrefix + '.predicated_values_' + o._predicated_values[i]._id)) {
+          return o._predicated_values[i]._value;
+        }
+      }
+      if (a.has(predicatedKeyPrefix + '.default_value')) {
+        return o._default_value;
+      }
+      return null;
+    }
+
+    const keys = Object.keys(o)
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const newCollected = collected.concat([key])
+      o[key] = reattribute(o[key], a, newCollected)
+    }
+
+    return o;
+  }
+
+  reattribute(pruned, active, [])
 }
 
 export function filter(map, active) {
