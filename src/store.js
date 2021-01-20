@@ -237,7 +237,7 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
   return expKeyStates;
 }
 
-export function setActiveAndEntryKeyStates(version, context, config, configKeyStates) {
+export function setActiveAndEntryKeyStates(version, context, config, allocations, configKeyStates) {
   const results = evaluatePredicates(version, context, config);
 
   results.forEach(function(expResults, eid) {
@@ -262,6 +262,11 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
       activeKeyStates.add(key);
     })
 
+    const allocation = (allocations || []).filter(function(a) { return a.eid === eid })[0]
+    if (allocation) {
+      evaluateAllocationPredicates(context, allocation, activeKeyStates)
+    }
+
     const entryKeyStates = new Set();
     newExpKeyStates.entry.forEach(function(key) {
       entryKeyStates.add(key);
@@ -270,6 +275,41 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
     expConfigKeyStates.set('active', activeKeyStates);
     expConfigKeyStates.set('entry', entryKeyStates);
   });
+}
+
+export function evaluateAllocationPredicates(context, allocation, activeKeyStates) {
+  const genome = allocation.genome;
+  if (!genome) {
+    return;
+  }
+
+  const evaluableContext = context.resolve();
+  activeKeyStates.forEach(function(key) {
+    const keyParts = key.split('.')
+    let predicatedVariant = genome;
+    for (let i = 0; i < keyParts.length; i++) {
+      predicatedVariant = (predicatedVariant[keyParts[i]] || {})
+    }
+
+    const predicatedValues = predicatedVariant._predicated_values;
+    if (predicatedValues) {
+      let predicatedId;
+      for (let i = 0; i < predicatedValues.length; i++) {
+        const variant = predicatedValues[i];
+        if (!evaluate(evaluableContext, variant._predicate).rejected) {
+          predicatedId = 'predicated_values_' + variant._id;
+          break;
+        }
+      }
+
+      if (!predicatedId) {
+        predicatedId = 'default_value'
+      }
+
+      const predicatedKey = key + '.' + predicatedId;
+      activeKeyStates.add(predicatedKey);
+    }
+  })
 }
 
 export function generateEffectiveGenome(expsKeyStates, genomes) {
@@ -376,7 +416,7 @@ function EvolvStore(options) {
     }
     reevaluatingContext = true;
 
-    setActiveAndEntryKeyStates(version, context, config, configKeyStates);
+    setActiveAndEntryKeyStates(version, context, config, allocations, configKeyStates);
     const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
     effectiveGenome = result.effectiveGenome;
