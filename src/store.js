@@ -297,13 +297,13 @@ export function evaluateAllocationPredicates(context, allocation, activeKeyState
       for (let i = 0; i < predicatedValues.length; i++) {
         const variant = predicatedValues[i];
         if (!evaluate(evaluableContext, variant._predicate).rejected) {
-          predicatedId = 'predicated_values_' + variant._id;
+          predicatedId = variant._id;
           break;
         }
       }
 
       if (!predicatedId) {
-        predicatedId = 'default_value'
+        predicatedId = 'default'
       }
 
       const predicatedKey = key + '.' + predicatedId;
