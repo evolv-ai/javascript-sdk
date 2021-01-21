@@ -170,7 +170,7 @@ export function reattributePredicatedValues(pruned, active) {
     if (o._predicated_values) {
       const predicatedKeyPrefix = collected.join('.')
       for (let i = 0; i < o._predicated_values.length; i++) {
-        if (a.has(predicatedKeyPrefix + '.' + o._predicated_values[i]._id)) {
+        if (a.has(predicatedKeyPrefix + '.' + o._predicated_values[i]._assignment_id)) {
           return o._predicated_values[i]._value;
         }
       }
