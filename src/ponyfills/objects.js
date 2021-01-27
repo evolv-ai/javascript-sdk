@@ -138,6 +138,11 @@ export function expand(map) {
   return expanded;
 }
 
+/**
+ * @param {object} map
+ * @param {Set<string>} active
+ * @returns {object}
+ */
 export function prune(map, active) {
   const pruned = {};
   active.forEach(function (key) {
@@ -161,33 +166,39 @@ export function prune(map, active) {
   return pruned;
 }
 
+/**
+ * @param {object} pruned
+ * @param {Set<string>} active
+ * @returns void
+ */
 export function reattributePredicatedValues(pruned, active) {
-  function reattribute(o, a, collected) {
-    if (typeof o !== 'object' || o === null) {
-      return o;
+  function reattribute(obj, _active, collected) {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
     }
 
-    if (o._predicated_values) {
-      const predicatedKeyPrefix = collected.join('.')
-      for (let i = 0; i < o._predicated_values.length; i++) {
-        if (a.has(predicatedKeyPrefix + '.' + o._predicated_values[i]._assignment_id)) {
-          return o._predicated_values[i]._value;
+    if (obj._predicated_values) {
+      const predicatedKeyPrefix = collected.join('.');
+
+      for (let i = 0; i < obj._predicated_values.length; i++) {
+        if (_active.has(predicatedKeyPrefix + '.' + obj._predicated_values[i]._assignment_id)) {
+          return obj._predicated_values[i]._value;
         }
       }
-      if (a.has(predicatedKeyPrefix + '.default')) {
-        return o._default_value;
-      }
+
       return null;
     }
 
-    const keys = Object.keys(o)
+    const keys = Object.keys(obj);
+
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
-      const newCollected = collected.concat([key])
-      o[key] = reattribute(o[key], a, newCollected)
+      const newCollected = collected.concat([key]);
+
+      obj[key] = reattribute(obj[key], _active, newCollected);
     }
 
-    return o;
+    return obj;
   }
 
   reattribute(pruned, active, [])

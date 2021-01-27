@@ -6,9 +6,11 @@ const OR = 'or';
 
 const FILTER_OPERATORS = {
   contains: function(a, b) { return a.indexOf(b) >= 0; },
+  defined: function(a) { return a !== undefined; },
   equal: function(a, b) { return a === b; },
   exists: function(a) { return a !== null; }, // Check that the key exists in the dictionary object
   not_contains: function(a, b) { return !(a.indexOf(b) >= 0); },
+  not_defined: function(a) { return a === undefined; },
   not_equal: function(a, b) { return a !== b; },
   not_regex_match: function(value, pattern) { return value && !value.match(pattern); },
   not_regex64_match: function(value, pattern) { return !regex64Match(value, pattern) },
@@ -113,22 +115,38 @@ function evaluatePredicate(user, query, passedRules, failedRules) {
   return query.combinator === AND;
 }
 
+/**
+ * @typedef EvaluationResult
+ * @property {Set<object>} passed
+ * @property {Set<object>} failed
+ * @property {boolean} rejected
+ * @property {Set<string>} touched
+ */
 
 /**
-Evaluates a query against a user object and saves passing/failing rule ids to provided sets.
-
-  @param context A context object containing describing the context the predicate should be evaluated against.
-  @param predicate Nested predicate object that rules structured into groups as a deeply nested tree.
-               note: There is no set limit to the depth of this tree, hence we must work with it
-               using recursion.
-*/
+ * Evaluates a query against a user object and saves passing/failing rule ids to provided sets.
+ * @param context A context object containing describing the context the predicate should be evaluated against.
+ * @param predicate Nested predicate object that rules structured into groups as a deeply nested tree.
+ *                  note: There is no set limit to the depth of this tree, hence we must work with it
+ *                  using recursion.
+ * @returns {EvaluationResult}
+ */
 export function evaluate(context, predicate) {
   const result = {
     passed: new Set(),
-    failed: new Set()
+    failed: new Set(),
+    touched: new Set()
   };
 
   result.rejected = !evaluatePredicate(context, predicate, result.passed, result.failed);
+
+  result.passed.forEach(function(item) {
+    result.touched.add(item.field);
+  });
+
+  result.failed.forEach(function(item) {
+    result.touched.add(item.field);
+  });
 
   return result;
 }

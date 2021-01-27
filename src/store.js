@@ -1,4 +1,5 @@
 import MiniPromise from './ponyfills/minipromise.js';
+import { fromArray } from './ponyfills/arrays.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
 
@@ -292,18 +293,41 @@ export function evaluateAllocationPredicates(context, allocation, activeKeyState
     }
 
     const predicatedValues = predicatedVariant._predicated_values;
+    const touchedKeys = new Set();
+
     if (predicatedValues) {
       let predicatedId;
+
       for (let i = 0; i < predicatedValues.length; i++) {
         const variant = predicatedValues[i];
-        if (!evaluate(evaluableContext, variant._predicate).rejected) {
+
+        /* In the event that the predicate is null (i.e. a default value), a virtual
+         * predicate is constructed which yields true only when all of the keys touched
+         * by previous predicates are been defined on the context. */
+        const predicate = variant._predicate
+          ? variant._predicate
+          : {
+            combinator: 'and',
+            rules: fromArray(touchedKeys).map(function(field) {
+              return {
+                field: field,
+                operator: 'defined'
+              };
+            })
+          };
+
+        const result = evaluate(evaluableContext, predicate);
+
+        copySet(result.touched, touchedKeys);
+
+        if (!result.rejected) {
           predicatedId = variant._assignment_id;
           break;
         }
       }
 
       if (!predicatedId) {
-        predicatedId = 'default'
+        return;
       }
 
       const predicatedKey = key + '.' + predicatedId;
