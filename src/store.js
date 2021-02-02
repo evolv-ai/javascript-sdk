@@ -278,6 +278,12 @@ export function setActiveAndEntryKeyStates(version, context, config, allocations
   });
 }
 
+/**
+ * @param {object} context
+ * @param {{ genome: object }} allocation
+ * @param {Set<string>} activeKeyStates
+ * @returns void
+ */
 export function evaluateAllocationPredicates(context, allocation, activeKeyStates) {
   const genome = allocation.genome;
   if (!genome) {
@@ -321,7 +327,7 @@ export function evaluateAllocationPredicates(context, allocation, activeKeyState
         copySet(result.touched, touchedKeys);
 
         if (!result.rejected) {
-          predicatedId = variant._assignment_id;
+          predicatedId = variant._predicate_assignment_id;
           break;
         }
       }
