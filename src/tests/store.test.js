@@ -391,13 +391,15 @@ describe('store.js', () => {
         }
       });
 
+      let allocations;
+
       const configKeyStates = { experiments: new Map([]) };
 
       config._experiments.forEach(function(exp) {
         setConfigLoadedKeys(configKeyStates, exp)
       });
 
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, allocations, configKeyStates);
       const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(2);
@@ -459,9 +461,10 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
+      let allocations;
       const configKeyStates = { experiments: new Map([['913f49193b', new Map([['loaded', new Set(["web","web.47b7t1xuc","web.47b7t1xuc.7coo4n5jr","web.47b7t1xuc.7coo4n5jr.id","web.47b7t1xuc.7coo4n5jr.type","web.47b7t1xuc.7coo4n5jr.script","web.47b7t1xuc.7coo4n5jr.styles","web.dependencies","web.bszvsce8f"])]])]]) };
 
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, allocations, configKeyStates);
       const result = configKeyStates.experiments;
 
       expect(result.size).to.be.equal(1);
@@ -478,6 +481,7 @@ describe('store.js', () => {
     let genomes;
     let context;
     let configKeyStates;
+    let allocations;
     beforeEach(() => {
       config = {
         "_published": 1597878596.6255178,
@@ -705,7 +709,7 @@ describe('store.js', () => {
           url: 'https://test.site.com/index.html'
         }
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, allocations, configKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
@@ -734,7 +738,7 @@ describe('store.js', () => {
         },
         device: 'mobile'
       });
-      setActiveAndEntryKeyStates(1, context, config, configKeyStates);
+      setActiveAndEntryKeyStates(1, context, config, allocations, configKeyStates);
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 

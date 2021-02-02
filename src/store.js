@@ -1,4 +1,5 @@
 import MiniPromise from './ponyfills/minipromise.js';
+import { fromArray } from './ponyfills/arrays.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
 
@@ -237,7 +238,7 @@ export function getActiveAndEntryExperimentKeyStates(results, keyStatesLoaded) {
   return expKeyStates;
 }
 
-export function setActiveAndEntryKeyStates(version, context, config, configKeyStates) {
+export function setActiveAndEntryKeyStates(version, context, config, allocations, configKeyStates) {
   const results = evaluatePredicates(version, context, config);
 
   results.forEach(function(expResults, eid) {
@@ -262,6 +263,11 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
       activeKeyStates.add(key);
     })
 
+    const allocation = (allocations || []).filter(function(a) { return a.eid === eid })[0]
+    if (allocation) {
+      evaluateAllocationPredicates(context, allocation, activeKeyStates)
+    }
+
     const entryKeyStates = new Set();
     newExpKeyStates.entry.forEach(function(key) {
       entryKeyStates.add(key);
@@ -272,13 +278,77 @@ export function setActiveAndEntryKeyStates(version, context, config, configKeySt
   });
 }
 
+/**
+ * @param {object} context
+ * @param {{ genome: object }} allocation
+ * @param {Set<string>} activeKeyStates
+ * @returns void
+ */
+export function evaluateAllocationPredicates(context, allocation, activeKeyStates) {
+  const genome = allocation.genome;
+  if (!genome) {
+    return;
+  }
+
+  const evaluableContext = context.resolve();
+  activeKeyStates.forEach(function(key) {
+    const keyParts = key.split('.')
+    let predicatedVariant = genome;
+    for (let i = 0; i < keyParts.length; i++) {
+      predicatedVariant = (predicatedVariant[keyParts[i]] || {})
+    }
+
+    const predicatedValues = predicatedVariant._predicated_values;
+    const touchedKeys = new Set();
+
+    if (predicatedValues) {
+      let predicatedId;
+
+      for (let i = 0; i < predicatedValues.length; i++) {
+        const variant = predicatedValues[i];
+
+        /* In the event that the predicate is null (i.e. a default value), a virtual
+         * predicate is constructed which yields true only when all of the keys touched
+         * by previous predicates are been defined on the context. */
+        const predicate = variant._predicate
+          ? variant._predicate
+          : {
+            combinator: 'and',
+            rules: fromArray(touchedKeys).map(function(field) {
+              return {
+                field: field,
+                operator: 'defined'
+              };
+            })
+          };
+
+        const result = evaluate(evaluableContext, predicate);
+
+        copySet(result.touched, touchedKeys);
+
+        if (!result.rejected) {
+          predicatedId = variant._predicate_assignment_id;
+          break;
+        }
+      }
+
+      if (!predicatedId) {
+        return;
+      }
+
+      const predicatedKey = key + '.' + predicatedId;
+      activeKeyStates.add(predicatedKey);
+    }
+  })
+}
+
 export function generateEffectiveGenome(expsKeyStates, genomes) {
   let effectiveGenome = {};
   const activeEids = new Set();
   expsKeyStates.forEach(function (expKeyStates, eid) {
     const active = expKeyStates.get('active');
     if (eid in genomes && active) {
-      const activeGenome = objects.filter(genomes[eid], active);
+      const activeGenome = objects.filter(objects.deepClone(genomes[eid]), active);
 
       if (Object.keys(activeGenome).length) {
         activeEids.add(eid);
@@ -376,7 +446,7 @@ function EvolvStore(options) {
     }
     reevaluatingContext = true;
 
-    setActiveAndEntryKeyStates(version, context, config, configKeyStates);
+    setActiveAndEntryKeyStates(version, context, config, allocations, configKeyStates);
     const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
     effectiveGenome = result.effectiveGenome;

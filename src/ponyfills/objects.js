@@ -138,6 +138,11 @@ export function expand(map) {
   return expanded;
 }
 
+/**
+ * @param {object} map
+ * @param {Set<string>} active
+ * @returns {object}
+ */
 export function prune(map, active) {
   const pruned = {};
   active.forEach(function (key) {
@@ -156,7 +161,47 @@ export function prune(map, active) {
       }
     }
   })
+
+  reattributePredicatedValues(pruned, active);
   return pruned;
+}
+
+/**
+ * @param {object} pruned
+ * @param {Set<string>} active
+ * @returns void
+ */
+export function reattributePredicatedValues(pruned, active) {
+  function reattribute(obj, _active, collected) {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+
+    if (obj._predicated_values) {
+      const predicatedKeyPrefix = collected.join('.');
+
+      for (let i = 0; i < obj._predicated_values.length; i++) {
+        if (_active.has(predicatedKeyPrefix + '.' + obj._predicated_values[i]._predicate_assignment_id)) {
+          return obj._predicated_values[i]._value;
+        }
+      }
+
+      return null;
+    }
+
+    const keys = Object.keys(obj);
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const newCollected = collected.concat([key]);
+
+      obj[key] = reattribute(obj[key], _active, newCollected);
+    }
+
+    return obj;
+  }
+
+  reattribute(pruned, active, [])
 }
 
 export function filter(map, active) {

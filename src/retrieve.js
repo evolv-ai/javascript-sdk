@@ -34,7 +34,7 @@ export function str2ab(str) {
  * Converts an msCrypto operation to a promise if needed.
  *
  * @param op The op (or Promise) to convert if needed.
- * @returns {{PromiseLike} A promise
+ * @returns {PromiseLike} A promise
  */
 function cryptoOperationToPromise(op) {
   if (op.then) {
