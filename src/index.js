@@ -412,9 +412,9 @@ function EvolvClient(options) {
    * then calling this will allow data to be sent back to Evolv
    */
   this.allowEvents = function() {
-    eventBeacon.allowFlush();
+    eventBeacon.unblockAndFlush();
     if (options.analytics) {
-      contextBeacon.allowFlush();
+      contextBeacon.unblockAndFlush();
     }
   };
 
