@@ -101,7 +101,7 @@ export default function Emitter(endpoint, context, blockTransmit) {
     window.addEventListener('beforeunload', transmit);
   }
 
-  this.allowFlush = function() {
+  this.unblockAndFlush = function() {
     _blockTransmit = false;
     transmit();
   };
