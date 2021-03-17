@@ -17,10 +17,11 @@ function fallbackBeacon(url, data, sync) {
   return true;
 }
 
-export default function Emitter(endpoint, context) {
+export default function Emitter(endpoint, context, blockTransmit) {
   const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
   const v1Events = endpointMatch && endpointMatch[1] === 'v1' && endpointMatch[2] === 'events';
 
+  let _blockTransmit = blockTransmit || false;
   let messages = [];
   let timer;
 
@@ -49,7 +50,7 @@ export default function Emitter(endpoint, context) {
       sync = currentEvent === 'unload' || currentEvent === 'beforeunload';
     }
 
-    if (!messages.length) {
+    if (!messages.length || _blockTransmit) {
       return;
     }
 
@@ -99,6 +100,11 @@ export default function Emitter(endpoint, context) {
     window.addEventListener('unload', transmit);
     window.addEventListener('beforeunload', transmit);
   }
+
+  this.allowFlush = function() {
+    _blockTransmit = false;
+    transmit();
+  };
 
   this.emit = function(type, payload, flush) {
     messages.push({
