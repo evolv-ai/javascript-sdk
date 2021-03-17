@@ -721,7 +721,7 @@ describe('Evolv client integration tests', () => {
   });
 
   describe('prevent beacon', () => {
-    it('should block beacoon calls', async () => {
+    it('should block beacon calls', async () => {
       const uid = 123;
       const sid = 321;
       const environment = '579b106c73';
