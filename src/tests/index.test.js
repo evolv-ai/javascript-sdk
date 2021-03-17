@@ -838,7 +838,7 @@ describe('Evolv client integration tests', () => {
         endpoint,
         version,
         analytics,
-        blockEvents: true
+        bufferEvents: true
       };
       const evolv = new Evolv(options);
 

@@ -43,8 +43,8 @@ function EvolvClient(options) {
 
   const store = options.store || new Store(options);
   const context = options.context || new Context(store);
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, options.blockEvents) : null;
-  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context, options.blockEvents);
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, options.bufferEvents) : null;
+  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context, options.bufferEvents);
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -408,7 +408,7 @@ function EvolvClient(options) {
 
   /**
    * If the client was configured with
-   * blockEvents: true
+   * bufferEvents: true
    * then calling this will allow data to be sent back to Evolv
    */
   this.allowEvents = function() {
