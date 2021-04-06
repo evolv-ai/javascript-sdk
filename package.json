@@ -58,7 +58,7 @@
     "jsdoc": "^3.6.3",
     "mocha": "^7.1.0",
     "webcrypto": "git+https://github.com/nodejs/webcrypto.git",
-    "webpack": "^4.42.0",
+    "webpack": "^5.30.0",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2",
     "xhr-mock": "^2.5.1",
