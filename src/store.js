@@ -669,12 +669,10 @@ function EvolvStore(options) {
       genomeKeyStates.needed.forEach(requestedKeys.push.bind(requestedKeys));
       genomeKeyStates.needed.clear();
       retrieve({
-        method: 'post',
-        encoding: 'application/x-www-form-urlencoded',
-        url: prefix + '/allocations',
+        method: 'get',
+        url: prefix + '/' + context.uid + '/allocations',
         keyId: keyId,
-        key: key,
-        data: {uid: context.uid, sid: context.sid}
+        key: key
       })
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));

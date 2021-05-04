@@ -284,13 +284,10 @@ describe('Evolv client integration tests', () => {
           }));
       });
 
-      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
         allocSignature = req.header('Signature');
-        if (req.header('Content-Type') !== 'application/x-www-form-urlencoded') {
-          return res.status(415);
-        }
 
-        if (req.method() !== 'POST') {
+        if (req.method() !== 'GET') {
           return res.status(405);
         }
 
@@ -430,7 +427,7 @@ describe('Evolv client integration tests', () => {
         }));
       });
 
-      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
         allocSignature = req.header('Signature');
         allocBody = req.body() || '';
         return res.status(200).body(JSON.stringify([
@@ -565,7 +562,7 @@ describe('Evolv client integration tests', () => {
         }));
       });
 
-      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
@@ -788,7 +785,7 @@ describe('Evolv client integration tests', () => {
         }));
       });
 
-      xhrMock.post(`${endpoint}v${version}/${environment}/allocations`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
