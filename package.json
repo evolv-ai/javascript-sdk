@@ -28,6 +28,7 @@
     "prepublishOnly": "webpack --experimental-modules --config=webpack.prod.cjs",
     "lint": "eslint src",
     "test": "mocha --experimental-modules",
+    "coverage": "npx nyc mocha --experimental-loader=@istanbuljs/esm-loader-hook npm run test",
     "test:debug": "mocha debug --experimental-modules",
     "prebuild": "npm run docs",
     "build": "webpack --experimental-modules --config=webpack.dev.cjs",
@@ -51,12 +52,14 @@
     "deepmerge": "^4.2.2"
   },
   "devDependencies": {
+    "@istanbuljs/esm-loader-hook": "^0.1.2",
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
     "eslint": "^7.4.0",
     "eslint-plugin-es": "^3.0.1",
     "jsdoc": "^3.6.3",
     "mocha": "^7.1.0",
+    "nyc": "^15.1.0",
     "webcrypto": "git+https://github.com/nodejs/webcrypto.git",
     "webpack": "^5.30.0",
     "webpack-cli": "^3.3.11",
@@ -70,5 +73,14 @@
     ],
     "spec": "src/**/*.test.js",
     "recursive": true
+  },
+  "nyc": {
+    "all": true,
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "**/*.test.js"
+    ]
   }
 }
