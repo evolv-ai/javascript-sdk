@@ -126,7 +126,7 @@ function nodeRequest(options) {
     }
 
     const schema = parts[1];
-    (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
+    self && (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
