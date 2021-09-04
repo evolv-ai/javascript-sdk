@@ -104,7 +104,7 @@ function xhrRequest(options) {
       }
     });
     xhr.addEventListener('error', reject);
-    xhr.open(options.method, options.url, options.sync);
+    xhr.open(options.method, options.url, !options.sync);
     if (options.method.toUpperCase() === 'POST' || options.method.toUpperCase() === 'PUT') {
       xhr.setRequestHeader('Content-Type', options.encoding);
     }
