@@ -845,6 +845,9 @@ describe('Evolv client integration tests', () => {
       expect(results.eventPayloads.length).to.equal(0);
 
       evolv.allowEvents();
+
+      await new Promise(resolve => setTimeout(resolve, 1));
+
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
