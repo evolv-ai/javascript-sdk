@@ -648,6 +648,11 @@ function EvolvStore(options) {
 
     waitingToPullImmediate = false;
 
+    // FIXME: Temporary fix for AP-490 while tracking down root cause of
+    //        out-of-sequence calls to update() causing errors
+    let configHasBeenLoaded = false;
+    let stashedGenomeResults;
+
     if (configKeyStates.needed.size || version === 1) {
       const requestedKeys = [];
       configKeyStates.needed.forEach(requestedKeys.push.bind(requestedKeys));
@@ -658,7 +663,17 @@ function EvolvStore(options) {
         keyId: keyId,
         key: key
       })
-        .then(update.bind(this, true, requestedKeys))
+        .then(function(result) {
+          // FIXME: Temporary fix for AP-490 while tracking down root cause of
+          //        out-of-sequence calls to update() causing errors
+          update(true, requestedKeys, result);
+
+          configHasBeenLoaded = true;
+
+          if (stashedGenomeResults) {
+            update(false, requestedKeys, stashedGenomeResults);
+          }
+        })
         .catch(failed.bind(this, true, requestedKeys));
       moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
       emit(context, CONFIG_REQUEST_SENT, requestedKeys);
@@ -674,7 +689,16 @@ function EvolvStore(options) {
         keyId: keyId,
         key: key
       })
-        .then(update.bind(this, false, requestedKeys))
+        .then(function(result) {
+          // FIXME: Temporary fix for AP-490 while tracking down root cause of
+          //        out-of-sequence calls to update() causing errors
+          if (!configHasBeenLoaded) {
+            stashedGenomeResults = result;
+            return;
+          }
+
+          update(false, requestedKeys, result);
+        })
         .catch(failed.bind(this, false, requestedKeys));
       moveKeys(requestedKeys, genomeKeyStates.needed, genomeKeyStates.requested);
       emit(context, GENOME_REQUEST_SENT, requestedKeys);
