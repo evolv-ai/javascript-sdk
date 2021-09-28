@@ -559,7 +559,7 @@ function EvolvStore(options) {
         return;
       }
 
-      let configLoaded = true;
+      let configLoaded = !!config;
       if (promise.key) {
         configLoaded = expKeyStatesHas(configKeyStates, 'loaded', promise.key, true);
       }
