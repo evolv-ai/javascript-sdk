@@ -13,7 +13,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v1
         with:
-          node-version: '13'
+          node-version: '14'
       - name: Checkout Ref
         uses: actions/checkout@v1
       - name: Run Tests and Lint
