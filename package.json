@@ -25,14 +25,14 @@
     "node": ">=13"
   },
   "scripts": {
-    "prepublishOnly": "webpack --experimental-modules --config=webpack.prod.cjs",
+    "prepublishOnly": "webpack --config=webpack.prod.cjs",
     "lint": "eslint src",
     "test": "mocha --experimental-modules",
     "coverage": "npx nyc mocha --experimental-loader=@istanbuljs/esm-loader-hook npm run test",
     "test:debug": "mocha debug --experimental-modules",
     "prebuild": "npm run docs",
-    "build": "webpack --experimental-modules --config=webpack.dev.cjs",
-    "watch": "webpack --experimental-modules --config=webpack.dev.cjs --watch",
+    "build": "webpack --config=webpack.dev.cjs",
+    "watch": "webpack --config=webpack.dev.cjs --watch",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/context.js src/docs/README.md",
     "staging:release": "npm run deploy:version:s3 && npm run deploy:next:s3 && npm run deploy:next:npm",
     "release": "npm run deploy:version:s3 && npm run deploy:latest:s3 && npm run deploy:latest:npm",
