@@ -912,6 +912,32 @@ describe('Evolv client unit tests', () => {
       client.confirm();
       emit(context, EFFECTIVE_GENOME_UPDATED, {});
     });
+
+    it('should properly confirm into allocated experiment once genome is updated and entry point is true', (done) => {
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234','6666']); } });
+      options.store = store;
+
+      context.initialize();
+      context.set("experiments.allocations", [{eid: '1234', cid: '5678'},{eid: '6666', cid: '7777'}]);
+      options.context = context;
+
+      waitFor(context, Evolv.CONFIRMED, () => {
+        try {
+          const confirmations = context.get('confirmations');
+          expect(confirmations.length).to.be.equal(1);
+          expect(confirmations[0].cid).to.be.equal('5678');
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      const client = new Evolv(options);
+      client.confirm();
+      emit(context, EFFECTIVE_GENOME_UPDATED, {});
+    });
   });
 
   describe('contaminate', () => {
