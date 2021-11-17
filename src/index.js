@@ -208,7 +208,7 @@ function EvolvClient(options) {
             return cont.cid;
           });
           const confirmableAllocations = allocations.filter(function(alloc) {
-            return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid);
+            return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid) && entryPointEids.indexOf(alloc.eid) >= 0;
           });
 
           if (!confirmableAllocations.length) {
