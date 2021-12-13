@@ -8,7 +8,12 @@ const FILTER_OPERATORS = {
   contains: function(a, b) { return a.indexOf(b) >= 0; },
   defined: function(a) { return a !== undefined; },
   equal: function(a, b) { return a === b; },
-  exists: function(a) { return a !== null; }, // Check that the key exists in the dictionary object
+  exists: function(a) { return a !== null && a !== undefined }, // Check that the key exists in the dictionary object
+  greater_than: function(a, b) { return a > b; },
+  greater_than_or_equal_to: function(a, b) { return a >= b; },
+  is_true: function(a) { return a === true },
+  is_false: function(a) { return a === false },
+  not_exists: function(a) { return a === null || a === undefined }, // Check that the key does not exists in the dictionary object
   not_contains: function(a, b) { return !(a.indexOf(b) >= 0); },
   not_defined: function(a) { return a === undefined; },
   not_equal: function(a, b) { return a !== b; },
@@ -19,6 +24,8 @@ const FILTER_OPERATORS = {
   kv_equal: function(obj, params) { return obj[params[0]] === params[1]; },
   kv_not_contains: function(obj, params) { return !((params[0] in obj) && (obj[params[0]].indexOf(params[1]) >= 0)); },
   kv_not_equal: function(obj, params) { return obj[params[0]] !== params[1]; },
+  less_than: function(a, b) { return a < b; },
+  less_than_or_equal_to: function(a, b) { return a <= b; },
   regex_match: function(value, pattern) { return value && value.match(pattern); },
   regex64_match: regex64Match,
   starts_with: function(a, b){ return strings.startsWith(a, b); }
