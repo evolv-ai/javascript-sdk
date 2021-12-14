@@ -648,6 +648,54 @@ describe('predicates.js', () => {
       assert.equal(1, result.passed.size);
       assert.equal(0, result.failed.size);
     });
+
+    it('should evaluate "Typeless equal" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'typeless_equal',
+            value: 1200,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "Typeless not_equal" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'typeless_not_equal',
+            value: 1250,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
     
   });
 });
