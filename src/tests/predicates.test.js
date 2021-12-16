@@ -656,7 +656,7 @@ describe('predicates.js', () => {
         rules: [
           {
             field: 'web.pageWidth',
-            operator: 'typeless_equal',
+            operator: 'loose_equal',
             value: 1200,
             index: 0
           }
@@ -680,7 +680,7 @@ describe('predicates.js', () => {
         rules: [
           {
             field: 'web.pageWidth',
-            operator: 'typeless_not_equal',
+            operator: 'loose_not_equal',
             value: 1250,
             index: 0
           }

@@ -26,8 +26,8 @@ const FILTER_OPERATORS = {
   kv_not_equal: function(obj, params) { return obj[params[0]] !== params[1]; },
   less_than: function(a, b) { return a < b; },
   less_than_or_equal_to: function(a, b) { return a <= b; },
-  typeless_equal: function(a, b) { return a == b; },
-  typeless_not_equal: function(a, b) { return a != b; },
+  loose_equal: function(a, b) { return a == b; },
+  loose_not_equal: function(a, b) { return a != b; },
   regex_match: function(value, pattern) { return value && value.match(pattern); },
   regex64_match: regex64Match,
   starts_with: function(a, b){ return strings.startsWith(a, b); }
