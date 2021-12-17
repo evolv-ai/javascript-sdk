@@ -9,6 +9,7 @@ import Store, { EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED } from './store.js';
 import { waitFor, waitOnceFor, emit, destroyScope } from './waitforit.js';
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
+import { buildOptions } from './build-options.js';
 
 /**
  * @typedef {Promise} SubscribablePromise
@@ -23,23 +24,13 @@ import { assign } from './ponyfills/objects.js';
  *
  * The client provides asynchronous access to key states, values, contexts, and configurations.
  *
- * @param options {Object} An object of options for the client.
+ * @param opts {Partial<EvolvClientOptions>} An object of options for the client.
  * @constructor
  */
-function EvolvClient(options) {
+function EvolvClient(opts) {
   let initialized = false;
 
-  if (!options.environment) {
-    throw new Error('"environment" must be specified');
-  }
-
-  if (!('autoConfirm' in options)) {
-    options.autoConfirm = true;
-  }
-
-  options.version = options.version || 1;
-  options.endpoint = (options.endpoint || 'https://participants.evolv.ai/') + 'v' + options.version;
-  options.analytics = 'analytics' in options ? options.analytics : options.version > 1;
+  const options = buildOptions(opts);
 
   const store = options.store || new Store(options);
   const context = options.context || new Context(store);
