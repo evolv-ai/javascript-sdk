@@ -45,7 +45,7 @@ export default function Emitter(endpoint, context, blockTransmit) {
 
   function transmit() {
     let sync = false;
-    if (typeof this !== 'undefined') {
+    if (typeof this !== 'undefined' && this !== null) {
       const currentEvent = this.event && this.event.type;
       sync = currentEvent === 'unload' || currentEvent === 'beforeunload';
     }
