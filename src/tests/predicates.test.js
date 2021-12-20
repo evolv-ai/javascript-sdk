@@ -509,6 +509,9 @@ describe('predicates.js', () => {
           }]
       };
       const context = {
+        web:{
+          referrer: 'localhost'
+        },
         platform: 'ios',
       };
       const result = predicates.evaluate(context, predicate);
@@ -516,5 +519,183 @@ describe('predicates.js', () => {
       assert.equal(2, result.passed.size);
       assert.equal(0, result.failed.size);
     });
+
+    it('should evaluate greater than and less than properties', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'greater_than',
+            value: 1200,
+            index: 0
+          },
+          {
+            field: 'web.pageWidth',
+            operator: 'less_than',
+            value: 1400,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1300
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(2, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "greater than or equal to" and "less than or equal to" properties', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'greater_than_or_equal_to',
+            value: 1200,
+            index: 0
+          },
+          {
+            field: 'web.pageWidth',
+            operator: 'less_than_or_equal_to',
+            value: 1500,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(2, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "does not exist" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'platform',
+            operator: 'not_exists',
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "is True" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.isDesktop',
+            operator: 'is_true',
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          isDesktop: true
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "is False" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.isDesktop',
+            operator: 'is_false',
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          isDesktop: false
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "Typeless equal" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'loose_equal',
+            value: 1200,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
+    it('should evaluate "Typeless not_equal" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.pageWidth',
+            operator: 'loose_not_equal',
+            value: 1250,
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          pageWidth: 1200
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+    
   });
 });
