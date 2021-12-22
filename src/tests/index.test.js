@@ -192,13 +192,27 @@ async function validateClient(evolv, options, uid, sid) {
 describe('Evolv client integration tests', () => {
   beforeEach(() => {
     xhrMock.setup();
+
+    function mockStorage() {
+      var storage = {};
+      return {
+          setItem: function(key, value) {
+              storage[key] = value || '';
+          },
+          getItem: function(key) {
+              return storage[key];
+          }
+      };
+    };
     // Uncomment to hit Frazer's endpoint
     // global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
     global.crypto = webcrypto.crypto;
+    global.sessionStorage = mockStorage();
   });
   afterEach(() => {
     delete global.crypto;
     delete global.XMLHttpRequest;
+    global.sessionStorage;
     xhrMock.teardown();
   });
 
@@ -340,9 +354,14 @@ describe('Evolv client integration tests', () => {
         endpoint,
         version
       };
+
+      global.sessionStorage.setItem('fe', JSON.stringify({example: true}));
+
       const evolv = new Evolv(options);
 
       await validateClient(evolv, options, uid, sid);
+
+      expect(evolv.context.get('fired_events.example')).to.equal(true);
 
       expect(evolv.context.get('web.client.browser')).to.equal('chrome');
       expect(evolv.context.get('platform')).to.equal('windows');
@@ -1110,5 +1129,23 @@ describe('Evolv client unit tests', () => {
     expect(context.remoteContext.contaminations).to.be.lengthOf(2);
     expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     expect(context.remoteContext.contaminations[1].cid).to.be.equal('678910');
+  });
+
+  describe('events in context', () => {
+    it('should add event to localContext and sessionStorage when they are fired', () => {
+      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
+      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
+      options.store = store;
+
+      context.initialize();
+      options.context = context;
+
+      const client = new Evolv(options);
+      client.emit('example', true, true);
+      expect(context.localContext.fired_events.example).to.equal(true);
+      expect(JSON.parse(global.sessionStorage.getItem('fe')).example).to.equal(true);
+
+    });
   });
 });

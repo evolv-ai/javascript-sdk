@@ -173,6 +173,19 @@ function EvolvClient(options) {
    */
   this.emit = function(type, metadata, flush) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
+
+    context.set('fired_events.'+type, true, true);
+    const firedEvents = sessionStorage.getItem('fe');
+    let eventsList = {};
+    if(firedEvents) {
+      const firedEventsObj = JSON.parse(firedEvents);
+      firedEventsObj[type] = true;
+      eventsList= firedEventsObj;
+    } else {
+      eventsList[type] = true;
+    }
+    sessionStorage.setItem('fe', JSON.stringify(eventsList));
+
     eventBeacon.emit(type, assign({
       uid: context.uid,
       sid: context.sid,
@@ -332,6 +345,13 @@ function EvolvClient(options) {
 
     if (!sid) {
       throw new Error('Evolv: "sid" must be specified');
+    }
+
+    const firedEvents = sessionStorage.getItem('fe');
+    if(firedEvents) {
+      const firedEventsObj = JSON.parse(firedEvents);
+      localContext = localContext ? localContext : {}
+      localContext['fired_events'] = firedEventsObj
     }
 
     context.initialize(uid, sid, remoteContext, localContext);
