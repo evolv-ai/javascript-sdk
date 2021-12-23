@@ -175,7 +175,7 @@ function EvolvClient(options) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
 
     context.set('fired_events.'+type, true, true);
-    const firedEvents = sessionStorage.getItem('fe');
+    const firedEvents = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('fe') : '';
     let eventsList = {};
     if(firedEvents) {
       const firedEventsObj = JSON.parse(firedEvents);
@@ -184,7 +184,9 @@ function EvolvClient(options) {
     } else {
       eventsList[type] = true;
     }
-    sessionStorage.setItem('fe', JSON.stringify(eventsList));
+    if(typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('fe', JSON.stringify(eventsList));
+    }
 
     eventBeacon.emit(type, assign({
       uid: context.uid,
@@ -347,7 +349,7 @@ function EvolvClient(options) {
       throw new Error('Evolv: "sid" must be specified');
     }
 
-    const firedEvents = sessionStorage.getItem('fe');
+    const firedEvents = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('fe') : '';
     if(firedEvents) {
       const firedEventsObj = JSON.parse(firedEvents);
       localContext = localContext ? localContext : {}
