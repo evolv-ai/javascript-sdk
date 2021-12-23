@@ -363,6 +363,10 @@ export function generateEffectiveGenome(expsKeyStates, genomes) {
   }
 }
 
+/**
+ * @param {Partial<EvolvClientOptions>} options
+ * @constructor
+ */
 function EvolvStore(options) {
   const version = options.version || 1;
   const prefix = options.endpoint + '/' + options.environment;
@@ -657,7 +661,7 @@ function EvolvStore(options) {
         url: prefix + '/' + context.uid + '/configuration.json',
         keyId: keyId,
         key: key
-      })
+      }, options.hooks)
         .then(update.bind(this, true, requestedKeys))
         .catch(failed.bind(this, true, requestedKeys));
       moveKeys(requestedKeys, configKeyStates.needed, configKeyStates.requested);
@@ -673,7 +677,7 @@ function EvolvStore(options) {
         url: prefix + '/' + context.uid + '/allocations',
         keyId: keyId,
         key: key
-      })
+      }, options.hooks)
         .then(update.bind(this, false, requestedKeys))
         .catch(failed.bind(this, false, requestedKeys));
       moveKeys(requestedKeys, genomeKeyStates.needed, genomeKeyStates.requested);

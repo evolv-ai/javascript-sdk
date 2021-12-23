@@ -154,7 +154,26 @@ function nodeRequest(options) {
   });
 }
 
-export default function retrieve(options) {
+/**
+ * @typedef RetrieveOptions
+ * @property {string} method
+ * @property {string} url
+ * @property {string} keyId
+ * @property {string} key
+ * @property {object|*} [data]
+ * @property {string} [encoding]
+ */
+
+/**
+ * @param {RetrieveOptions} opts
+ * @param {RequestHooks} [hooks]
+ * @returns {Promise<unknown> | MiniPromise}
+ */
+export default function retrieve(opts, hooks) {
+  const options = (hooks && typeof hooks.beforeOptions === 'function')
+    ? hooks.beforeOptions(opts)
+    : opts;
+
   return MiniPromise.createPromise(function(resolve, reject) {
     const completeOptions = assign({}, options);
     completeOptions.encoding = completeOptions.encoding || 'application/json; charset=UTF-8';

@@ -5,9 +5,10 @@ import webcrypto from 'webcrypto';
 
 import Evolv from '../index.js';
 import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
-import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from "../context.js";
+import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from '../context.js';
 import { waitFor, emit } from '../waitforit.js';
-import base64 from "../ponyfills/base64.js";
+import base64 from '../ponyfills/base64.js';
+import { buildOptions } from '../build-options.js';
 
 chai.use(spies);
 const expect = chai.expect;
@@ -31,7 +32,8 @@ async function validateSignature(keys, signature, body) {
   return await crypto.subtle.verify(algorithm, cryptoKey, signatureData, textEncoder.encode(body).buffer);
 }
 
-async function validateClient(evolv, options, uid, sid) {
+async function validateClient(evolv, opts, uid, sid) {
+  const options = buildOptions(opts);
   let initializedSpy = chai.spy();
   evolv.once(Evolv.INITIALIZED, initializedSpy);
   expect(initializedSpy).to.not.have.been.called;
