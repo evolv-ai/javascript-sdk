@@ -34,8 +34,15 @@ function EvolvClient(opts) {
 
   const store = options.store || new Store(options);
   const context = options.context || new Context(store);
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, options.bufferEvents) : null;
-  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context, options.bufferEvents);
+
+  /** @type Partial<EmitterOptions> */
+  const beaconOptions = {
+    blockTransmit: options.bufferEvents,
+    clientName: options.clientName
+  };
+
+  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions) : null;
+  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context, beaconOptions);
 
   /**
    * The context against which the key predicates will be evaluated.

@@ -237,3 +237,19 @@ export function assign(target, sources) {
 
   return to;
 }
+
+/**
+ * Returns a copy of the given object where properties with the value of undefined are omitted.
+ *
+ * @param {Object} obj
+ * @returns {Object}
+ */
+export function omitUndefined(obj) {
+  return Object.keys(obj).reduce(function(acc, key) {
+    if (obj[key] !== undefined) {
+      acc[key] = obj[key];
+    }
+
+    return acc;
+  }, {});
+}

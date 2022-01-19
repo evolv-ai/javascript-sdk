@@ -1,4 +1,5 @@
 import retrieve from './retrieve.js';
+import { assign, omitUndefined } from './ponyfills/objects.js';
 
 const DELAY = 1;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
@@ -17,11 +18,32 @@ function fallbackBeacon(url, data, sync) {
   return true;
 }
 
-export default function Emitter(endpoint, context, blockTransmit) {
+/**
+ * @typedef EmitterOptions
+ * @property {boolean} [blockTransmit=false]
+ * @property {string} [clientName="javascript-sdk"]
+ */
+
+/**
+ * @param endpoint
+ * @param context
+ * @param {Partial<EmitterOptions>} [options={}]
+ * @constructor
+ */
+export default function Emitter(endpoint, context, options) {
   const endpointMatch = endpoint.match(ENDPOINT_PATTERN);
   const v1Events = endpointMatch && endpointMatch[1] === 'v1' && endpointMatch[2] === 'events';
 
-  let _blockTransmit = blockTransmit || false;
+  /** @type EmitterOptions */
+  const defaults = {
+    blockTransmit: false,
+    clientName: 'javascript-sdk'
+  };
+
+  /** @type EmitterOptions */
+  const opts = assign({}, defaults, omitUndefined(options));
+
+  let blockTransmit = opts.blockTransmit;
   let messages = [];
   let timer;
 
@@ -39,6 +61,7 @@ export default function Emitter(endpoint, context, blockTransmit) {
   function wrapMessages(msgs) {
     return {
       uid: context.uid,
+      client: opts.clientName,
       messages: msgs
     }
   }
@@ -50,7 +73,7 @@ export default function Emitter(endpoint, context, blockTransmit) {
       sync = currentEvent === 'unload' || currentEvent === 'beforeunload';
     }
 
-    if (!messages.length || _blockTransmit) {
+    if (!messages.length || blockTransmit) {
       return;
     }
 
@@ -102,7 +125,7 @@ export default function Emitter(endpoint, context, blockTransmit) {
   }
 
   this.unblockAndFlush = function() {
-    _blockTransmit = false;
+    blockTransmit = false;
     transmit();
   };
 
