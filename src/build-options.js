@@ -17,6 +17,7 @@ import { assign } from './ponyfills/objects.js';
  * @property {*} [context]
  * @property {*} [auth]
  * @property {boolean} [bufferEvents]
+ * @property {string} [clientName]
  */
 
 /**
