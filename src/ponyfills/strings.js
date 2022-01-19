@@ -1,3 +1,5 @@
+import hashing from '@sentienttechnologies/hashing'
+
 /**
  * Method determines whether a string begins with the characters of a specified string,
  * returning true or false as appropriate.
@@ -38,9 +40,4 @@ export function endsWith(string, searchString, length) {
  * @param string The string to be hashed
  * @returns {number} The numeric hash of the string
  */
-export function hashCode(string) {
-  for(var ret = 0, i = 0, len = string.length; i < len; i++) {
-    ret = (31 * ret + string.charCodeAt(i)) << 0;
-  }
-  return ret;
-}
+export const hashCode = hashing.objectHash;

@@ -472,7 +472,7 @@ function EvolvStore(options) {
         })
         const pruned = objects.prune(effectiveGenome, active);
         Object.keys(pruned).forEach(function(key) {
-          activeVariants.add(key.concat(':', strings.hashCode(JSON.stringify(pruned[key]))));
+          activeVariants.add(key.concat(':', strings.hashCode(pruned[key])));
         });
       }
     });

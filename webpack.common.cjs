@@ -18,6 +18,7 @@ module.exports = {
     http: { commonjs: 'http' },
     https: { commonjs: 'https' },
     deepmerge: { commonjs2: 'deepmerge' },
-    'base64-arraybuffer': { commonjs2: 'base64-arraybuffer' }
+    'base64-arraybuffer': { commonjs2: 'base64-arraybuffer' },
+    '@sentienttechnologies/hashing': { commonjs2: '@sentienttechnologies/hashing' }
   }
 };
