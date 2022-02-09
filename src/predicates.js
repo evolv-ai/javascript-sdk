@@ -10,7 +10,7 @@ const FILTER_OPERATORS = {
   equal: function(a, b) { return a === b; },
   exists: function(a) { return a !== null && a !== undefined }, // Check that the key exists in the dictionary object
   greater_than: function(a, b) { return a > b; },
-  greater_than_or_equal_to: function(a, b) { return a >= b; },
+  greater_than_or_equal_to: function(a, b) { return a >= b; }, 
   is_true: function(a) { return a === true },
   is_false: function(a) { return a === false },
   not_exists: function(a) { return a === null || a === undefined }, // Check that the key does not exists in the dictionary object
