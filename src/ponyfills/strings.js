@@ -1,5 +1,3 @@
-import hashing from '@evolv/hashing'
-
 /**
  * Method determines whether a string begins with the characters of a specified string,
  * returning true or false as appropriate.
@@ -33,11 +31,3 @@ export function endsWith(string, searchString, length) {
 	const len = length === undefined || length > string.length ? string.length : length;
 	return string.substring(len - searchString.length, len) === searchString;
 }
-
-/**
- * Method produces a consistent numeric hash for a string.
- *
- * @param string The string to be hashed
- * @returns {number} The numeric hash of the string
- */
-export const hashCode = hashing.objectHash;

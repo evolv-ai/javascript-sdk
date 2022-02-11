@@ -667,7 +667,7 @@ describe('Evolv client integration tests', () => {
       expect(messages[6].sid).to.equal(sid)
       expect(messages[7].type).to.equal("context.value.changed")
       expect(messages[7].payload.key).to.equal("variants.active")
-      expect(messages[7].payload.value).to.eql(["web.ab8numq2j.am94yhwo2:1813410159"])
+      expect(messages[7].payload.value).to.eql(["web.ab8numq2j.am94yhwo2:1486101989"])
       expect(messages[7].sid).to.equal(sid)
       expect(messages[8].type).to.equal("context.value.added")
       expect(messages[8].payload.key).to.equal("confirmations")
