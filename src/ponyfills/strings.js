@@ -1,4 +1,4 @@
-import hashing from '@sentienttechnologies/hashing'
+import hashing from '@evolv/hashing'
 
 /**
  * Method determines whether a string begins with the characters of a specified string,
