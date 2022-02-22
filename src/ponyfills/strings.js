@@ -31,16 +31,3 @@ export function endsWith(string, searchString, length) {
 	const len = length === undefined || length > string.length ? string.length : length;
 	return string.substring(len - searchString.length, len) === searchString;
 }
-
-/**
- * Method produces a consistent numeric hash for a string.
- *
- * @param string The string to be hashed
- * @returns {number} The numeric hash of the string
- */
-export function hashCode(string) {
-  for(var ret = 0, i = 0, len = string.length; i < len; i++) {
-    ret = (31 * ret + string.charCodeAt(i)) << 0;
-  }
-  return ret;
-}

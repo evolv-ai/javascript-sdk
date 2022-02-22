@@ -2,6 +2,8 @@ import MiniPromise from './ponyfills/minipromise.js';
 import { fromArray } from './ponyfills/arrays.js';
 import * as objects from './ponyfills/objects.js';
 import * as strings from './ponyfills/strings.js';
+import { objectHash } from '@evolv/hashing';
+
 
 import { copySet } from './helpers/set-utils.js';
 import { evaluate } from './predicates.js';
@@ -472,7 +474,7 @@ function EvolvStore(options) {
         })
         const pruned = objects.prune(effectiveGenome, active);
         Object.keys(pruned).forEach(function(key) {
-          activeVariants.add(key.concat(':', strings.hashCode(JSON.stringify(pruned[key]))));
+          activeVariants.add(key.concat(':', objectHash(pruned[key])));
         });
       }
     });
