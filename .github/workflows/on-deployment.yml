@@ -3,6 +3,9 @@ name: Deploy to Environment
 on:
   deployment
 
+env:
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
 jobs:
   deploy:
     name: Deploy to Environment
@@ -12,6 +15,15 @@ jobs:
         uses: actions/checkout@v1
         with:
           ref: ${{ github.event.deployment.ref }}
+
+      - name: Prepare .npmrc file
+        run: |
+          cat > .npmrc <<EOL
+          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+          registry=https://registry.npmjs.org/
+          always-auth=true
+          EOL
+
       - name: Set Variables
         id: set_variables
         run: |
