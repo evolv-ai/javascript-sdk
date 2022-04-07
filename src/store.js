@@ -698,9 +698,15 @@ function EvolvStore(options) {
     });
 
     promise.listen = function(listener) {
-      subscriptions.add(function(effectiveGenome, config) {
+      const subscription = function(effectiveGenome, config) {
         listener(transform(key, effectiveGenome, config));
-      });
+      };
+
+      subscriptions.add(subscription);
+
+      return () => {
+        subscriptions.remove(subscription);
+      };
     };
 
     let keyStates;

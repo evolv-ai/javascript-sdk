@@ -1,0 +1,29 @@
+{
+  "name": "@evolv/react",
+  "version": "1.0.0",
+  "description": "A React wrapper for the Evolv client.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha --experimental-modules"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@evolv/client": "file:..",
+    "@testing-library/react-hooks": "^7.0.2",
+    "mocha": "^9.2.0",
+    "chai": "^4.3.6",
+    "chai-spies": "^1.0.0",
+    "react": "^17.0.2",
+    "react-test-renderer": "^17.0.2"
+  },
+  "mocha": {
+    "extension": [
+      "js"
+    ],
+    "spec": "src/**/*.test.js",
+    "recursive": true
+  }
+}
