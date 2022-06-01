@@ -120,13 +120,14 @@ function nodeRequest(options) {
   const self = this;
 
   return MiniPromise.createPromise(function(resolve, reject) {
+    let response = '';
     const parts = URL_PATTERN.exec(options.url);
     if (!parts) {
       throw new Error('Evolv: Invalid endpoint URL');
     }
 
     const schema = parts[1];
-    self && (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
+    (schema === 'http' ? import('http') : import('https')).then(function (http) {
       const hostname = parts[2];
       const path = parts[3];
       const headers = {
@@ -145,10 +146,22 @@ function nodeRequest(options) {
         method: options.method,
         headers: headers
       }, function (res) {
-        res.on('data', resolve);
+        res.on('data', chunk => {
+          response += chunk;
+        });
+        res.on('end', function () {
+          if (res.statusCode === 200) {
+            resolve(JSON.parse(response));
+          } else if (res.statusCode === 202) {
+            resolve();
+          } else {
+            const message = 'Evolv: Invalid status ' + res.statusCode + ' for response ' + res.statusMesssage;
+            reject(message);
+          }
+        });
       });
       req.on('error', reject);
-      req.write(options.payload);
+      options.payload && req.write(options.payload);
       req.end();
     });
   });
