@@ -21,7 +21,6 @@ export const DEFAULT_QUEUE_LIMIT = 50;
  */
 function EvolvContext(store) {
   let uid;
-  let sid;
   let remoteContext;
   let localContext;
   let initialized = false;
@@ -30,11 +29,6 @@ function EvolvContext(store) {
    * A unique identifier for the participant.
    */
   Object.defineProperty(this, 'uid', { get: function() { return uid; } });
-
-  /**
-   * A unique identifier for the current session of the participant.
-   */
-  Object.defineProperty(this, 'sid', { get: function() { return sid; } });
 
   /**
    * The context information for evaluation of predicates and analytics.
@@ -56,12 +50,11 @@ function EvolvContext(store) {
     }
   }
 
-  this.initialize = function(_uid, _sid, _remoteContext, _localContext) {
+  this.initialize = function(_uid, _remoteContext, _localContext) {
     if (initialized) {
       throw new Error('Evolv: The context is already initialized');
     }
     uid = _uid;
-    sid = _sid;
     remoteContext = _remoteContext ? objects.deepClone(_remoteContext) : {};
     localContext = _localContext ? objects.deepClone(_localContext) : {};
     initialized = true;
