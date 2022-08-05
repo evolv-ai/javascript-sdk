@@ -16,9 +16,9 @@ describe('context', () => {
     it('Should create an array if none', () => {
       expect(context.get('my.values')).to.be.undefined;
 
-      // context.pushToArray('my.values', 1);
+      context.pushToArray('my.values', 1);
 
-      // expect(context.get('my.values')).to.eql([1]);
+      expect(context.get('my.values')).to.eql([1]);
     });
 
     it('Should respect limit and act as a FIFO queue', () => {
