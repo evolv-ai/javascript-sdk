@@ -1,8 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 import _xhrMock from 'xhr-mock';
-import webcrypto from 'webcrypto';
-
+import { Crypto }  from "@peculiar/webcrypto";
 import Evolv from '../index.js';
 import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
 import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from '../context.js';
@@ -196,7 +195,7 @@ describe('Evolv client integration tests', () => {
     xhrMock.setup();
     // Uncomment to hit Frazer's endpoint
     // global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
-    global.crypto = webcrypto.crypto;
+    global.crypto = new Crypto();
   });
   afterEach(() => {
     delete global.crypto;
