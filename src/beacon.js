@@ -133,7 +133,6 @@ export default function Emitter(endpoint, context, options) {
     messages.push({
       type: type,
       payload: payload,
-      sid: context.sid,
       timestamp: (new Date()).getTime()
     });
 

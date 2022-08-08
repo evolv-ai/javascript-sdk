@@ -10,7 +10,7 @@ describe('context', () => {
     let context;
     beforeEach(() => {
       context = new Context();
-      context.initialize('test', 'test', {}, {});
+      context.initialize('test', {}, {});
     });
 
     it('Should create an array if none', () => {
@@ -47,7 +47,7 @@ describe('context', () => {
     beforeEach(() => {
       store = new Store(options);
       context = new Context(store);
-      context.initialize('test', 'test', {}, {});
+      context.initialize('test', {}, {});
     });
 
     it('should call clearActiveKeys if object is empty', () => {

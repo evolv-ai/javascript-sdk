@@ -173,7 +173,6 @@ function EvolvClient(opts) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
     eventBeacon.emit(type, assign({
       uid: context.uid,
-      sid: context.sid,
       metadata: metadata
     }), flush);
     emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
@@ -235,7 +234,6 @@ function EvolvClient(opts) {
           confirmableAllocations.forEach(function(alloc) {
             eventBeacon.emit('confirmation', assign({
               uid: alloc.uid,
-              sid: alloc.sid,
               eid: alloc.eid,
               cid: alloc.cid
             }, context.remoteContext));
@@ -301,7 +299,6 @@ function EvolvClient(opts) {
     contaminatableAllocations.forEach(function(alloc) {
       eventBeacon.emit('contamination', assign({
         uid: alloc.uid,
-        sid: alloc.sid,
         eid: alloc.eid,
         cid: alloc.cid,
         contaminationReason: details
@@ -315,11 +312,10 @@ function EvolvClient(opts) {
    * Initializes the client with required context information.
    *
    * @param {String} uid A globally unique identifier for the current participant.
-   * @param {String} sid A globally unique session identifier for the current participant.
    * @param {Object} remoteContext A map of data used for evaluating context predicates and analytics.
    * @param {Object} localContext A map of data used only for evaluating context predicates.
    */
-  this.initialize = function (uid, sid, remoteContext, localContext) {
+  this.initialize = function (uid, remoteContext, localContext) {
     if (initialized) {
       throw new Error('Evolv: Client is already initialized');
     }
@@ -328,11 +324,7 @@ function EvolvClient(opts) {
       throw new Error('Evolv: "uid" must be specified');
     }
 
-    if (!sid) {
-      throw new Error('Evolv: "sid" must be specified');
-    }
-
-    context.initialize(uid, sid, remoteContext, localContext);
+    context.initialize(uid, remoteContext, localContext);
     store.initialize(context);
 
     store.getClientContext()

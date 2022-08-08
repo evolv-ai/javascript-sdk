@@ -1,8 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 import _xhrMock from 'xhr-mock';
-import webcrypto from 'webcrypto';
-
+import { Crypto }  from "@peculiar/webcrypto";
 import Evolv from '../index.js';
 import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
 import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from '../context.js';
@@ -32,7 +31,7 @@ async function validateSignature(keys, signature, body) {
   return await crypto.subtle.verify(algorithm, cryptoKey, signatureData, textEncoder.encode(body).buffer);
 }
 
-async function validateClient(evolv, opts, uid, sid) {
+async function validateClient(evolv, opts, uid) {
   const options = buildOptions(opts);
   let initializedSpy = chai.spy();
   evolv.once(Evolv.INITIALIZED, initializedSpy);
@@ -65,7 +64,7 @@ async function validateClient(evolv, opts, uid, sid) {
 
   xhrMock.post(`${options.endpoint}/${options.environment}/events`, beaconHandler);
 
-  evolv.initialize(uid, sid, {
+  evolv.initialize(uid, {
       remote: true,
       web: {
         url: 'https://www.lunch.com/dev1/index.html'
@@ -196,7 +195,7 @@ describe('Evolv client integration tests', () => {
     xhrMock.setup();
     // Uncomment to hit Frazer's endpoint
     // global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
-    global.crypto = webcrypto.crypto;
+    global.crypto = new Crypto();
   });
   afterEach(() => {
     delete global.crypto;
@@ -207,7 +206,6 @@ describe('Evolv client integration tests', () => {
   describe('API v1', () => {
     it('should load variants and reevaluate context correctly', async () => {
       const uid = 123;
-      const sid = 321;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 1
@@ -296,7 +294,6 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
-            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -344,7 +341,7 @@ describe('Evolv client integration tests', () => {
       };
       const evolv = new Evolv(options);
 
-      await validateClient(evolv, options, uid, sid);
+      await validateClient(evolv, options, uid);
 
       expect(evolv.context.get('web.client.browser')).to.equal('chrome');
       expect(evolv.context.get('platform')).to.equal('windows');
@@ -355,7 +352,6 @@ describe('Evolv client integration tests', () => {
 
     it('should load variants and reevaluate context correctly with authentication', async () => {
       const uid = 123;
-      const sid = 321;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const id = 'mine';
@@ -435,7 +431,6 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
-            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -487,7 +482,7 @@ describe('Evolv client integration tests', () => {
       };
       const evolv = new Evolv(options);
 
-      await validateClient(evolv, options, uid, sid);
+      await validateClient(evolv, options, uid);
 
       const keys = {};
       keys[id] = secret;
@@ -499,7 +494,6 @@ describe('Evolv client integration tests', () => {
   describe('API v2', () => {
     it('should load variants and reevaluate context correctly', async () => {
       const uid = 123;
-      const sid = 321;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
@@ -568,7 +562,6 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
-            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -617,7 +610,7 @@ describe('Evolv client integration tests', () => {
       };
       const evolv = new Evolv(options);
 
-      const results = await validateClient(evolv, options, uid, sid);
+      const results = await validateClient(evolv, options, uid);
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
@@ -634,46 +627,36 @@ describe('Evolv client integration tests', () => {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       })
-      expect(messages[0].sid).to.equal(sid)
       expect(messages[1].type).to.equal("context.value.added")
       expect(messages[1].payload.key).to.equal("keys.active")
       expect(messages[1].payload.value).to.eql([])
-      expect(messages[1].sid).to.equal(sid)
       expect(messages[2].type).to.equal("context.value.added")
       expect(messages[2].payload.key).to.equal("variants.active")
       expect(messages[2].payload.value).to.eql([])
-      expect(messages[2].sid).to.equal(sid)
       expect(messages[3].type).to.equal("context.value.added")
       expect(messages[3].payload.key).to.equal("experiments.allocations")
       expect(messages[3].payload.value).to.eql([{
         "cid": "0cf8ffcedea2:0f39849197",
         "eid": "0f39849197",
         "excluded": false,
-        "sid": 321,
         "uid": 123
       }]);
-      expect(messages[3].sid).to.equal(sid)
       expect(messages[4].type).to.equal("context.value.added")
       expect(messages[4].payload.key).to.equal("experiments.exclusions")
       expect(messages[4].payload.value).to.eql([])
-      expect(messages[4].sid).to.equal(sid)
       expect(messages[5].type).to.equal("context.value.added")
       expect(messages[5].payload.key).to.equal("user_attributes.country")
       expect(messages[5].payload.value).to.equal("usa")
-      expect(messages[5].sid).to.equal(sid)
       expect(messages[6].type).to.equal("context.value.changed")
       expect(messages[6].payload.key).to.equal("keys.active")
       expect(messages[6].payload.value).to.eql(["web.ab8numq2j.am94yhwo2"])
-      expect(messages[6].sid).to.equal(sid)
       expect(messages[7].type).to.equal("context.value.changed")
       expect(messages[7].payload.key).to.equal("variants.active")
       expect(messages[7].payload.value).to.eql(["web.ab8numq2j.am94yhwo2:1486101989"])
-      expect(messages[7].sid).to.equal(sid)
       expect(messages[8].type).to.equal("context.value.added")
       expect(messages[8].payload.key).to.equal("confirmations")
       expect(messages[8].payload.value.length).to.equal(1)
       expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[8].sid).to.equal(sid)
       expect(messages[9].type).to.equal("context.value.added")
       expect(messages[9].payload.key).to.equal("experiments.confirmations")
       expect(messages[9].payload.value.length).to.equal(1)
@@ -682,47 +665,37 @@ describe('Evolv client integration tests', () => {
       expect(messages[10].payload.key).to.equal("events")
       expect(messages[10].payload.value.length).to.equal(1)
       expect(messages[10].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[10].sid).to.equal(sid)
       expect(messages[11].type).to.equal("context.value.added")
       expect(messages[11].payload.key).to.equal("contaminations")
       expect(messages[11].payload.value.length).to.equal(1)
       expect(messages[11].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[11].sid).to.equal(sid)
       expect(messages[12].type).to.equal("context.value.added")
       expect(messages[12].payload.key).to.equal("experiments.contaminations")
       expect(messages[12].payload.value.length).to.equal(1)
       expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[12].sid).to.equal(sid)
       expect(messages[13].type).to.equal("context.value.changed")
       expect(messages[13].payload.key).to.equal("web.url")
       expect(messages[13].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(messages[13].sid).to.equal(sid)
       expect(messages[14].type).to.equal("context.value.changed")
       expect(messages[14].payload.key).to.equal("keys.active")
       expect(messages[14].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g"])
-      expect(messages[14].sid).to.equal(sid)
       expect(messages[15].type).to.equal("context.value.changed")
       expect(messages[15].payload.key).to.equal("variants.active")
       expect(messages[15].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g:1777529126"])
-      expect(messages[16].sid).to.equal(sid)
       expect(messages[16].type).to.equal("context.value.removed")
       expect(messages[16].payload.key).to.equal("web.url")
-      expect(messages[16].sid).to.equal(sid)
       expect(messages[17].type).to.equal("context.value.changed")
       expect(messages[17].payload.key).to.equal("keys.active")
       expect(messages[17].payload.value).to.eql([])
-      expect(messages[17].sid).to.equal(sid)
       expect(messages[18].type).to.equal("context.value.changed")
       expect(messages[18].payload.key).to.equal("variants.active")
       expect(messages[18].payload.value).to.eql([])
-      expect(messages[18].sid).to.equal(sid)
     });
   });
 
   describe('prevent beacon', () => {
     it('should block beacon calls', async () => {
       const uid = 123;
-      const sid = 321;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
@@ -791,7 +764,6 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify([
           {
             uid: uid,
-            sid: sid,
             eid: "0f39849197",
             cid: "0cf8ffcedea2:0f39849197",
             genome: {
@@ -841,7 +813,7 @@ describe('Evolv client integration tests', () => {
       };
       const evolv = new Evolv(options);
 
-      const results = await validateClient(evolv, options, uid, sid);
+      const results = await validateClient(evolv, options, uid);
 
       expect(results.analyticsPayloads.length).to.equal(0);
       expect(results.eventPayloads.length).to.equal(0);
@@ -862,7 +834,6 @@ describe('Evolv client integration tests', () => {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       });
-      expect(messages[0].sid).to.equal(sid);
 
       expect(results.eventPayloads.length).to.equal(1);
       const eventsMessages = results.eventPayloads[0].messages;
