@@ -1,6 +1,6 @@
 {
   "name": "@evolv/client",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "This is the official JavaScript client for the Evolv Technologies optimization platform.",
   "main": "dist/index.js",
   "module": "src/index.js",
