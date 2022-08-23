@@ -701,6 +701,10 @@ function EvolvStore(options) {
       subscriptions.add(function(effectiveGenome, config) {
         listener(transform(key, effectiveGenome, config));
       });
+
+      return function() {
+        subscriptions.delete(listener);
+      };
     };
 
     let keyStates;
