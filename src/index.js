@@ -13,10 +13,18 @@ import { buildOptions } from './build-options.js';
 
 /**
  * @typedef {Promise} SubscribablePromise
- * @property {function(function):undefined} then Then
- * @property {function(function):undefined} listen Listen
- * @property {function(function):undefined} catch Catch
- * @property {function(function):undefined} finally Finally
+ * @description Object similar to a standard Promise but which can also be subscribed to to observe subsequent values
+ *              Note that the standard promise methods will only handle the first calls to `resolve()` or `reject()`.
+ * @property {function(function):undefined} then Equivalent to `Promise.then()`
+ * @property {function(function):function} listen Subscribes listener to the promise. Returns a function that can be called to unsubscribe
+ * @property {function(function):undefined} catch Equivalent to `Promise.catch()`
+ * @property {function(function):undefined} finally Equivalent to `Promise.finally()`
+ */
+
+/**
+ * @callback Listener
+ * @param {string} eventName
+ * @param {...*} args
  */
 
 /**
@@ -79,7 +87,7 @@ function EvolvClient(opts) {
    * * "event.emitted" - Called when an event is emitted through the beacon (topic, type, score)
    *
    * @param {String} topic The event topic on which the listener should be invoked.
-   * @param {Function} listener The listener to be invoked for the specified topic.
+   * @param {Listener} listener The listener to be invoked for the specified topic.
    * @method
    * @see {@link EvolvClient#once} for listeners that should only be invoked once.
    */
@@ -92,18 +100,18 @@ function EvolvClient(opts) {
    * See the "on" function for supported events.
    *
    * @param {String} topic The event topic on which the listener should be invoked.
-   * @param {Function} listener The listener to be invoked for the specified topic.
+   * @param {Listener} listener The listener to be invoked for the specified topic.
    * @method
    * @see {@link EvolvClient#on} for listeners that should be invoked on each event.
    */
   this.once = waitOnceFor.bind(undefined, context);
 
   /**
-   * Preload all keys under under the specified prefixes.
+   * Preload all keys under the specified prefixes.
    *
    * @param {Array.<String>} prefixes A list of prefixes to keys to load.
-   * @param {Boolean} configOnly If true, only the config would be loaded. (default: false)
-   * @param {Boolean} immediate Forces the requests to the server. (default: false)
+   * @param {Boolean} [configOnly = false] If true, only the config would be loaded.
+   * @param {Boolean} [immediate = false] Forces the requests to the server.
    * @method
    */
   this.preload = store.preload.bind(store);
@@ -130,8 +138,8 @@ function EvolvClient(opts) {
   /**
    * Check all active keys that start with the specified prefix.
    *
-   * @param {String} prefix The prefix of the keys to check.
-   * @returns {SubscribablePromise.<Object|Error>} A SubscribablePromise that resolves to object
+   * @param {String} [prefix] The prefix of the keys to check.
+   * @returns {SubscribablePromise.<{ current: string[], previous: string[] }|Error>} A SubscribablePromise that resolves to object
    * describing the state of active keys.
    * @method
    */
@@ -140,8 +148,9 @@ function EvolvClient(opts) {
   /**
    * Clears the active keys to reset the key states.
    *
-   * @param {String} prefix The prefix of the keys clear.
+   * @param {String} [prefix] The prefix of the keys clear.
    * @method
+   * @deprecated
    */
   this.clearActiveKeys = store.clearActiveKeys.bind(store);
 
@@ -166,8 +175,8 @@ function EvolvClient(opts) {
    * Send an event to the events endpoint.
    *
    * @param {String} type The type associated with the event.
-   * @param metadata {Object} Any metadata to attach to the event.
-   * @param flush {Boolean} If true, the event will be sent immediately.
+   * @param {Object} [metadata] Any metadata to attach to the event.
+   * @param {Boolean} [flush = false] If true, the event will be sent immediately.
    */
   this.emit = function(type, metadata, flush) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
@@ -249,9 +258,9 @@ function EvolvClient(opts) {
    * Marks a consumer as unsuccessfully retrieving and / or applying requested values, making them ineligible for
    * inclusion in optimization statistics.
    *
-   * @param details {Object} Optional. Information on the reason for contamination. If provided, the object should
+   * @param {Object} [details] Information on the reason for contamination. If provided, the object should
    * contain a reason. Optionally, a 'details' value should be included for extra debugging info
-   * @param {boolean} allExperiments If true, the user will be excluded from all optimizations, including optimization
+   * @param {boolean} [allExperiments = false] If true, the user will be excluded from all optimizations, including optimization
    * not applicable to this page
    */
   this.contaminate = function(details, allExperiments) {
@@ -312,8 +321,8 @@ function EvolvClient(opts) {
    * Initializes the client with required context information.
    *
    * @param {String} uid A globally unique identifier for the current participant.
-   * @param {Object} remoteContext A map of data used for evaluating context predicates and analytics.
-   * @param {Object} localContext A map of data used only for evaluating context predicates.
+   * @param {Object} [remoteContext] A map of data used for evaluating context predicates and analytics.
+   * @param {Object} [localContext] A map of data used only for evaluating context predicates.
    */
   this.initialize = function (uid, remoteContext, localContext) {
     if (initialized) {

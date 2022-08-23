@@ -82,9 +82,9 @@ function EvolvContext(store) {
    *
    * Note: This will cause the effective genome to be recomputed.
    *
-   * @param key {String} The key to associate the value to.
-   * @param value {*} The value to associate with the key.
-   * @param local {Boolean} If true, the value will only be added to the localContext.
+   * @param {String} key The key to associate the value to.
+   * @param {*} value  The value to associate with the key.
+   * @param {Boolean} [local = false] If true, the value will only be added to the localContext.
    */
   this.set = function(key, value, local) {
     ensureInitialized();
@@ -112,8 +112,8 @@ function EvolvContext(store) {
    *
    * Note: This will cause the effective genome to be recomputed.
    *
-   * @param update {Object} The values to update the context with.
-   * @param local {Boolean} If true, the values will only be added to the localContext.
+   * @param {Object} update The values to update the context with.
+   * @param {Boolean} [local = false] If true, the values will only be added to the localContext.
    */
   this.update = function(update, local) {
     if (Object.keys(update).length === 0 && update.constructor === Object) {
@@ -175,7 +175,7 @@ function EvolvContext(store) {
   /**
    * Retrieve a value from the context.
    *
-   * @param {String} key The kay associated with the value to retrieve.
+   * @param {String} key The key associated with the value to retrieve.
    * @returns {*} The value associated with the specified key.
    */
   this.get = function(key) {
@@ -202,12 +202,12 @@ function EvolvContext(store) {
   };
 
   /**
-   * Adds value to specified array in context. If array doesnt exist its created and added to.
+   * Adds value to specified array in context. If array doesn't exist its created and added to.
    *
-   * @param key The array to add to.
-   * @param value Value to add to the array.
-   * @param local {Boolean} If true, the value will only be added to the localContext.
-   * @param limit {Number} Max length of array to maintain.
+   * @param {String} key The array to add to.
+   * @param {*} value Value to add to the array.
+   * @param {Boolean} [local = false] If true, the value will only be added to the localContext.
+   * @param {Number} [limit] Max length of array to maintain.
    * @returns {boolean} True if value was successfully added.
    */
   this.pushToArray = function(key, value, local, limit) {
