@@ -156,6 +156,7 @@ function EvolvContext(store) {
    * Note: This will cause the effective genome to be recomputed.
    *
    * @param key {String} The key to remove from the context.
+   * @return boolean
    */
   this.remove = function(key) {
     ensureInitialized();
@@ -187,7 +188,11 @@ function EvolvContext(store) {
        ' and "contaminations" is deprecated. Please use "experiments.confirmations" and "experiments.contaminations" instead.');
     }
 
-    return objects.getValueForKey(key, remoteContext) || objects.getValueForKey(key, localContext);
+    const valueFromRemote = objects.getValueForKey(key, remoteContext);
+
+    return objects.hasKey(key, remoteContext)
+      ? valueFromRemote
+      : objects.getValueForKey(key, localContext);
   };
 
   /**
