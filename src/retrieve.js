@@ -1,8 +1,8 @@
 import MiniPromise from './ponyfills/minipromise.js';
 import base64 from './ponyfills/base64.js';
 import { assign } from './ponyfills/objects.js';
+import request from './helpers/requests/index.js';
 
-const URL_PATTERN = /^([a-z]+):\/\/([^/]+)(.*)/i;
 
 function cryptography() {
   // eslint-disable-next-line no-undef
@@ -80,80 +80,6 @@ function sign(key, payload) {
   });
 }
 
-function createSignatureHeader(signatureKeyId, signature) {
-  return 'keyId="' + signatureKeyId + '",algorithm="hmac-sha384",signature="' + signature + '"';
-}
-
-function xhrRequest(options) {
-  return MiniPromise.createPromise(function(resolve, reject) {
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('load', function () {
-      if (this.status >= 400) {
-        reject(this.statusText || ('Evolv: Request failed ' + this.status));
-        return;
-      }
-
-      if (this.status === 200) {
-        resolve(JSON.parse(this.responseText));
-      } else if (this.status === 202) {
-        resolve();
-      } else {
-        const message = 'Evolv: Invalid status ' + this.status + ' for response ' + this.responseText;
-        console.error(message);
-        reject(message);
-      }
-    });
-    xhr.addEventListener('error', reject);
-    xhr.open(options.method, options.url, !options.sync);
-    if (options.method.toUpperCase() === 'POST' || options.method.toUpperCase() === 'PUT') {
-      xhr.setRequestHeader('Content-Type', options.encoding);
-    }
-    xhr.setRequestHeader('Accept', 'application/json');
-    if (options.signature) {
-      xhr.setRequestHeader('Signature', createSignatureHeader(options.keyId, options.signature));
-    }
-    xhr.send(options.payload);
-  });
-}
-
-function nodeRequest(options) {
-  const self = this;
-
-  return MiniPromise.createPromise(function(resolve, reject) {
-    const parts = URL_PATTERN.exec(options.url);
-    if (!parts) {
-      throw new Error('Evolv: Invalid endpoint URL');
-    }
-
-    const schema = parts[1];
-    self && (schema === 'http' ? self.import('http') : self.import('https')).then(function (http) {
-      const hostname = parts[2];
-      const path = parts[3];
-      const headers = {
-        'Content-Type': options.encoding,
-        'Accept': 'application/json',
-        // eslint-disable-next-line no-undef
-        'Content-Length': Buffer.byteLength(options.payload)
-      };
-
-      if (options.signature) {
-        headers['Signature'] = createSignatureHeader(options.keyId, options.signature);
-      }
-      const req = http.request({
-        hostname: hostname,
-        path: path,
-        method: options.method,
-        headers: headers
-      }, function (res) {
-        res.on('data', resolve);
-      });
-      req.on('error', reject);
-      req.write(options.payload);
-      req.end();
-    });
-  });
-}
-
 /**
  * @typedef RetrieveOptions
  * @property {string} method
@@ -194,15 +120,8 @@ export default function retrieve(opts, hooks) {
     }
     completeOptions.payload = payload;
 
-    let rx;
-    if (typeof XMLHttpRequest !== 'undefined') {
-      rx = xhrRequest;
-    } else {
-      rx = nodeRequest;
-    }
-
     if (!completeOptions.key) {
-      rx(completeOptions)
+      request(completeOptions)
         .then(resolve)
         .catch(reject);
       return;
@@ -210,7 +129,7 @@ export default function retrieve(opts, hooks) {
 
     sign(completeOptions.key, str2ab(completeOptions.payload))
       .then(function (signature) {
-        rx(assign({signature:signature}, completeOptions))
+        request(assign({ signature:signature }, completeOptions))
           .then(resolve)
           .catch(reject);
       })
