@@ -9,7 +9,7 @@ import manifest from './package.json';
 
 const banner = () => {
   const year = new Date().getFullYear();
-  const version = (process?.env?.SEM_VER ?? manifest.version)
+  const version = (process?.env?.SEM_VER ?? manifest.version) // eslint-disable-line no-undef
     .replace(/\*\//gm, ''); // Prevents injection
 
   const comment = outdent`

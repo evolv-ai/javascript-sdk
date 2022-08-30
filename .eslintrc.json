@@ -28,6 +28,8 @@
         "rollup.config.js"
       ],
       "rules": {
+        "object-shorthand": "off",
+        "es/no-arrow-functions": "off",
         "es/no-spread-elements": "off",
         "es/no-template-literals": "off"
       }
