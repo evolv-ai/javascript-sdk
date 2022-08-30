@@ -103,15 +103,9 @@ interface Confirmation {
   timestamp: number;
 }
 
-export interface RemoteContext extends Record<string, any> {
-  confirmations: Confirmation[];
-  keys: { active: string };
-  variants: { active: string[] };
-  experiments: {
-    allocations: Allocation[];
-    confirmations: Confirmation[];
-    exclusions: any[];
-  };
+// TODO: Import types from Participants API
+/* Represents context that comes from Participants API via the /configuration.json endpoint */
+export interface ParticipantsApiContext extends Record<string, any> {
   device: string;
   location: string;
   platform: string;
@@ -124,6 +118,17 @@ export interface RemoteContext extends Record<string, any> {
     postal: string;
     region: string;
     tz: string;
+  };
+}
+
+export interface RemoteContext extends ParticipantsApiContext {
+  confirmations: Confirmation[];
+  keys: { active: string };
+  variants: { active: string[] };
+  experiments: {
+    allocations: Allocation[];
+    confirmations: Confirmation[];
+    exclusions: any[];
   };
 }
 
