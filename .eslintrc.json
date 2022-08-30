@@ -8,7 +8,8 @@
     "eslint:recommended"
   ],
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaVersion": 11
   },
   "rules": {
     "object-shorthand": [ "error", "never" ],
@@ -20,5 +21,16 @@
     "es/no-for-of-loops": [ "error" ],
     "es/no-destructuring": [ "error" ]
   },
-  "ignorePatterns": ["tests/", "docs/"]
+  "ignorePatterns": ["tests/", "docs/"],
+  "overrides": [
+    {
+      "files": [
+        "rollup.config.js"
+      ],
+      "rules": {
+        "es/no-spread-elements": "off",
+        "es/no-template-literals": "off"
+      }
+    }
+  ]
 }

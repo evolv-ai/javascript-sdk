@@ -36,7 +36,7 @@ export function buildOptions(options) {
   }
 
   opts.version = opts.version || 1;
-  opts.endpoint = (opts.endpoint || 'https://participants.evolv.ai/') + 'v' + opts.version;
+  opts.endpoint = (opts.endpoint.replace(/\/$/, '') || 'https://participants.evolv.ai') + '/v' + opts.version;
   opts.analytics = 'analytics' in opts ? opts.analytics : opts.version > 1;
 
   opts.hooks = assign({}, opts.hooks);
