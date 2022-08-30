@@ -1,26 +1,27 @@
 {
   "name": "@evolv/client",
   "version": "2.1.0",
-  "description": "This is the official JavaScript client for the Evolv Technologies optimization platform.",
-  "main": "dist/index.js",
-  "module": "src/index.js",
-  "types": "src/types.d.ts",
-  "exports": {
-    "import": "./src/index.js",
-    "require": "./dist/index.js"
-  },
+  "description": "The official JavaScript client for the Evolv AI optimization platform.",
+  "license": "Apache-2.0",
   "type": "module",
+  "main": "dist/browser/index.cjs",
+  "module": "dist/browser/index.mjs",
+  "types": "dist/types.d.ts",
+  "exports": {
+    "import": "./dist/browser/index.mjs",
+    "require": "./dist/browser/index.cjs",
+    "node": "./dist/node/index.mjs"
+  },
   "homepage": "https://www.evolv.ai",
   "bugs": {
     "url": "https://github.com/evolv-ai/javascript-sdk/issues",
     "email": "support@evolv.ai"
   },
   "files": [
-    "dist/**/*",
-    "src/**/*"
+    "dist/**/*"
   ],
   "directories": {
-    "doc": "./docs"
+    "doc": "./dist/docs"
   },
   "repository": {
     "type": "git",
@@ -30,14 +31,17 @@
     "node": ">=13"
   },
   "scripts": {
-    "prepublishOnly": "webpack --config=webpack.prod.cjs",
     "lint": "eslint src",
     "test": "mocha --experimental-modules",
     "coverage": "npx nyc mocha --experimental-loader=@istanbuljs/esm-loader-hook npm run test",
     "test:debug": "mocha debug --experimental-modules",
-    "prebuild": "npm run docs",
-    "build": "webpack --config=webpack.dev.cjs",
-    "watch": "webpack --config=webpack.dev.cjs --watch",
+    "clean": "del dist",
+    "prebuild": "npm run clean",
+    "build": "rollup --config rollup.config.js",
+    "postbuild": "npm run docs",
+    "prewatch": "npm run clean",
+    "watch": "rollup --config rollup.config.js --watch",
+    "prepack": "npm run build",
     "docs": "jsdoc -c jsdocs.config.json src/index.js src/context.js src/docs/README.md",
     "staging:release": "npm run deploy:version:s3 && npm run deploy:next:s3 && npm run deploy:next:npm",
     "release": "npm run deploy:version:s3 && npm run deploy:latest:s3 && npm run deploy:latest:npm",
@@ -48,11 +52,10 @@
     "deploy:latest:npm": "npm version $SEM_VER --no-git-tag-version && npm publish --access public"
   },
   "author": {
-    "name": "Evolv Technologies",
+    "name": "Evolv Technology Solutions, Inc.",
     "email": "support@evolv.ai"
   },
-  "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "@evolv/hashing": "^1.1.0",
     "base64-arraybuffer": "^0.2.0",
     "deepmerge": "^4.2.2"
@@ -60,18 +63,22 @@
   "devDependencies": {
     "@istanbuljs/esm-loader-hook": "^0.1.2",
     "@peculiar/webcrypto": "^1.4.0",
+    "@rollup/plugin-alias": "^3.1.9",
+    "@rollup/plugin-commonjs": "^22.0.2",
+    "@rollup/plugin-node-resolve": "^13.3.0",
     "chai": "^4.2.0",
     "chai-spies": "^1.0.0",
+    "del-cli": "^5.0.0",
     "eslint": "^8.1.0",
     "eslint-plugin-es": "^4.1.0",
     "jsdoc": "^3.6.10",
     "mocha": "^9.2.0",
     "nyc": "^15.1.0",
+    "outdent": "^0.8.0",
+    "rollup": "^2.78.1",
+    "rollup-plugin-copy": "^3.4.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4",
-    "webpack": "^5.30.0",
-    "webpack-cli": "^4.9.1",
-    "webpack-merge": "^4.2.2",
     "xhr-mock": "^2.5.1",
     "xmlhttprequest": "^1.8.0"
   },
