@@ -8,9 +8,9 @@
   "module": "dist/browser/index.mjs",
   "types": "dist/types.d.ts",
   "exports": {
+    "node": "./dist/node/index.mjs",
     "import": "./dist/browser/index.mjs",
-    "require": "./dist/browser/index.cjs",
-    "node": "./dist/node/index.mjs"
+    "require": "./dist/browser/index.cjs"
   },
   "homepage": "https://www.evolv.ai",
   "bugs": {
