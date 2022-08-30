@@ -8,11 +8,11 @@ import { assign } from './ponyfills/objects.js';
 /**
  * @typedef EvolvClientOptions
  * @property {string} environment
- * @property {number} version
- * @property {string} endpoint
- * @property {boolean} autoConfirm
- * @property {RequestHooks} hooks
- * @property {boolean} analytics
+ * @property {number} [version]
+ * @property {string} [endpoint]
+ * @property {boolean} [autoConfirm]
+ * @property {RequestHooks} [hooks]
+ * @property {boolean} [analytics]
  * @property {*} [store]
  * @property {*} [context]
  * @property {*} [auth]

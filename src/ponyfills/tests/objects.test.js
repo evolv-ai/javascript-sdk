@@ -1,11 +1,13 @@
 import chai from 'chai';
 import * as objects from '../objects.js';
+import { hasKey } from '../objects.js';
+
 
 const { expect } = chai;
 
 describe('objects', () => {
-  describe('isObject', () => {
-    it('Should correctly identify objects and not hit false positives', () => {
+  describe('isObject()', () => {
+    it('should correctly identify objects and not hit false positives', () => {
       expect(objects.isObject(1)).to.be.false;
       expect(objects.isObject(0)).to.be.false;
       expect(objects.isObject(null)).to.be.false;
@@ -20,8 +22,8 @@ describe('objects', () => {
     });
   });
 
-  describe('flatten', () => {
-    it('Should correctly flatten the object', () => {
+  describe('flatten()', () => {
+    it('should correctly flatten the object', () => {
       let testValue = {
         level1: {
           level2: {
@@ -43,8 +45,8 @@ describe('objects', () => {
     });
   });
 
-  describe('expand', () => {
-    it('Should correctly expand a flattened object', () => {
+  describe('expand()', () => {
+    it('should correctly expand a flattened object', () => {
       let testValue = {
         'level1.level2.level3.value0': false,
         'level1.level2.value1': 1,
@@ -60,7 +62,7 @@ describe('objects', () => {
     });
   });
 
-  describe('prune', () => {
+  describe('prune()', () => {
     const obj = {
       gods: {
         zeus: {
@@ -77,7 +79,8 @@ describe('objects', () => {
           strength: 456
         }
       }
-    }
+    };
+
     it('should produce keys and values from object', () => {
       const result = objects.prune(obj, ['gods.zeus', 'gods.apollo', 'goddesses.athena'])
 
@@ -117,7 +120,7 @@ describe('objects', () => {
     });
   });
 
-  describe('filter', () => {
+  describe('filter()', () => {
     const obj = {
       gods: {
         zeus: {
@@ -154,5 +157,32 @@ describe('objects', () => {
         }
       );
     });
-  })
+  });
+
+  describe('hasKey()', () => {
+    let map;
+
+    beforeEach(() => {
+      map = {
+        path: {
+          to: {
+            value: 'value',
+            falseValue: false
+          }
+        }
+      };
+    });
+
+    it('should return true if key is present', () => {
+      expect(hasKey('path.to.value', map)).to.be.true;
+    });
+
+    it('should return false if key is not present', () => {
+      expect(hasKey('path.to.otherValue', map)).to.be.false;
+    });
+
+    it('should return true if key is present even if value is false', () => {
+      expect(hasKey('path.to.falseValue', map)).to.be.true;
+    });
+  });
 });
