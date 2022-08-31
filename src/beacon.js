@@ -4,10 +4,7 @@ import { assign, omitUndefined } from './ponyfills/objects.js';
 const DELAY = 1;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
-export const RETRIES = {
-  max: 3,
-  current: 0
-};
+export const RETRIES = 3;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -70,7 +67,10 @@ export default function Emitter(endpoint, context, options) {
     }
   }
 
-  function transmit() {
+  /**
+   * @param retries
+   */
+  function transmit(retries = RETRIES) {
     let sync = false;
     if (typeof this !== 'undefined' && this !== null) {
       const currentEvent = this.event && this.event.type;
@@ -94,9 +94,8 @@ export default function Emitter(endpoint, context, options) {
         let editedMessage = message;
         editedMessage = message.payload || {};
         editedMessage.type = message.type;
-
-        if (!send(endpoint, JSON.stringify(editedMessage), sync) && RETRIES.current) {
-          --RETRIES.current
+        if (!send(endpoint, JSON.stringify(editedMessage), sync) && retries) {
+          --retries
           messages.push(message);
           console.error('Evolv: Unable to send event beacon');
         }
@@ -109,8 +108,9 @@ export default function Emitter(endpoint, context, options) {
           break;
         }
 
-        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync) && RETRIES.current) {
-          --RETRIES.current
+        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync) && retries) {
+          console.log('retries', retries)
+          --retries
           messages = smallBatch
           console.error('Evolv: Unable to send analytics beacon');
           break;
@@ -121,7 +121,7 @@ export default function Emitter(endpoint, context, options) {
     }
 
     if (messages.length) {
-      timer = setTimeout(transmit, DELAY);
+      timer = setTimeout(function() {transmit(retries)}, DELAY);
     }
   }
 
@@ -136,7 +136,6 @@ export default function Emitter(endpoint, context, options) {
   };
 
   this.emit = function(type, payload, flush) {
-    RETRIES.current = RETRIES.max
     messages.push({
       type: type,
       payload: payload,
