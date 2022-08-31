@@ -95,7 +95,7 @@ export default function Emitter(endpoint, context, options) {
         editedMessage = message.payload || {};
         editedMessage.type = message.type;
         if (!send(endpoint, JSON.stringify(editedMessage), sync) && retries) {
-          --retries
+          retries -= 1;
           messages.push(message);
           console.error('Evolv: Unable to send event beacon');
         }
@@ -109,9 +109,8 @@ export default function Emitter(endpoint, context, options) {
         }
 
         if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync) && retries) {
-          console.log('retries', retries)
-          --retries
-          messages = smallBatch
+          retries -= 1;
+          messages = smallBatch;
           console.error('Evolv: Unable to send analytics beacon');
           break;
         }
