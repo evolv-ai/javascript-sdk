@@ -31,7 +31,7 @@ describe('beacon', () => {
     beacon.emit('error', '{msg', true)
 
     setTimeout(() => {
-      const firstState = 9 + RETRIES.max - 1
+      const firstState = 9 + RETRIES - 1
       expect(spy).to.have.been.called(firstState);
 
       beacon.emit('error', '{msg', true)
@@ -40,7 +40,7 @@ describe('beacon', () => {
       beacon.emit('error', '{msg', true)
 
       setTimeout(() => {
-        const secondState = firstState + 4 + RETRIES.max - 1
+        const secondState = firstState + 4 + RETRIES - 1
         expect(spy).to.have.been.called(secondState);
         done()
       }, 500)
