@@ -8,6 +8,7 @@
   "module": "dist/browser/index.mjs",
   "types": "dist/types.d.ts",
   "exports": {
+    "types": "./dist/types.d.ts",
     "node": "./dist/node/index.mjs",
     "import": "./dist/browser/index.mjs",
     "require": "./dist/browser/index.cjs"
