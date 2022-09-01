@@ -1,4 +1,4 @@
-import base64ab from 'base64-arraybuffer';
+import * as base64ab from 'base64-arraybuffer';
 
 export default {
   encode: function(bytes) {
