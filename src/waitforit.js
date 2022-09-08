@@ -53,6 +53,17 @@ export function waitOnceFor(scope, it, handler) {
   }
 }
 
+export function removeListener(scope, it, handler) {
+  ensureScope(scope);
+
+  const handlers = scopedHandlers.get(scope)[it];
+  const index = handlers.findIndex(function (fn) { return fn === handler; });
+
+  if (index !== -1) {
+    handlers.splice(index, 1);
+  }
+}
+
 export function emit(scope, it) {
   ensureScope(scope);
 

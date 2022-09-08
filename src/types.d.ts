@@ -60,9 +60,11 @@ export class EvolvClient {
 
   get<T = any>(key: string): SubscribablePromise<T | Error>;
 
-  on(key: EventName, listener: Listener): void;
+  on(topic: EventName, listener: Listener): void;
 
   once(topic: EventName, listener: Listener): void;
+
+  off(topic: EventName, listener: Listener): void;
 
   initialize(uid: string, remoteContext?: Record<string, any>, localContext?: Record<string, any>): void;
 

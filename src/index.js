@@ -6,7 +6,7 @@ import Context, {
 } from './context.js';
 
 import Store, { EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED } from './store.js';
-import { waitFor, waitOnceFor, emit, destroyScope } from './waitforit.js';
+import { waitFor, waitOnceFor, emit, destroyScope, removeListener } from './waitforit.js';
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
 import { buildOptions } from './build-options.js';
@@ -105,6 +105,18 @@ function EvolvClient(opts) {
    * @see {@link EvolvClient#on} for listeners that should be invoked on each event.
    */
   this.once = waitOnceFor.bind(undefined, context);
+
+  /**
+   * Remove a listener from a lifecycle event.
+   *
+   * See the "on" function for supported events.
+   *
+   * @param {String} topic The event topic from which the listener should be removed.
+   * @param {Listener} listener The listener to be removed from the specified topic.
+   * @method
+   * @see {@link EvolvClient#on} for listeners that should be invoked on each event.
+   */
+  this.off = removeListener.bind(undefined, context);
 
   /**
    * Preload all keys under the specified prefixes.

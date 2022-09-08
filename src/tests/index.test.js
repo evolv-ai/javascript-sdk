@@ -1161,4 +1161,34 @@ describe('Evolv client unit tests', () => {
     expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     expect(context.remoteContext.contaminations[1].cid).to.be.equal('678910');
   });
+
+  describe('off()', () => {
+    it('should remove listener from topic', async () => {
+      // Arrange
+      context.initialize('1234', { value: 0 });
+      const client = new Evolv({ ...options, context, store });
+
+      const spy1 = chai.spy();
+      const spy2 = chai.spy();
+
+      client.on('context.value.changed', spy1);
+      client.on('context.value.changed', spy2);
+
+      // Preconditions
+      expect(spy1).to.have.been.called.exactly(0);
+      expect(spy2).to.have.been.called.exactly(0);
+
+      context.set('value', 1);
+      expect(spy1).to.have.been.called.exactly(1);
+      expect(spy2).to.have.been.called.exactly(1);
+
+      // Act
+      client.off('context.value.changed', spy2);
+      context.set('value', 2);
+
+      // Assert
+      expect(spy1).to.have.been.called.exactly(2);
+      expect(spy2).to.have.been.called.exactly(1);
+    });
+  });
 });
