@@ -859,7 +859,84 @@ describe('Evolv client unit tests', () => {
     context = new Context(store);
   });
 
-  describe('confirm', () => {
+  describe('initialize()', () => {
+    const uid = '123456';
+
+    beforeEach(() => {
+      xhrMock.setup();
+
+      xhrMock.get(/configuration\.json$/, (req, res) => {
+        const data = {
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows',
+            device: 'desktop'
+          },
+          _experiments: []
+        };
+
+        return res.status(200).body(JSON.stringify(data));
+      });
+
+      xhrMock.get(/allocations$/, (req, res) => {
+        const data = [
+          {
+            uid,
+            eid: "0f39849197",
+            cid: "0cf8ffcedea2:0f39849197",
+            genome: {
+              web: {
+                ctx: ''
+              }
+            }
+          }
+        ];
+
+        return res.status(200).body(JSON.stringify(data));
+      });
+    });
+
+    afterEach(() => {
+      xhrMock.teardown();
+    });
+
+    it('should keep client context values when "omitClientContext" option is false', async () => {
+      // Arrange
+      const client = new Evolv({
+        ...options,
+        omitClientContext: false
+      })
+
+      // Act
+      client.initialize(uid);
+
+      await client.getConfig(''); // Wait until configuration has been loaded
+
+      // Assert
+      expect(client.context.remoteContext).to.have.property('device');
+      expect(client.context.remoteContext).to.have.property('platform');
+    });
+
+    it('should omit client context values when "omitClientContext" option is true', async () => {
+      // Arrange
+      const client = new Evolv({
+        ...options,
+        omitClientContext: true
+      })
+
+      // Act
+      client.initialize(uid);
+
+      await client.getConfig(''); // Wait until configuration has been loaded
+
+      // Assert
+      expect(client.context.remoteContext).not.to.have.property('device');
+      expect(client.context.remoteContext).not.to.have.property('platform');
+    });
+  });
+
+  describe('confirm()', () => {
     it('should properly confirm into allocated experiment once genome is updated', (done) => {
       store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
@@ -913,7 +990,7 @@ describe('Evolv client unit tests', () => {
     });
   });
 
-  describe('contaminate', () => {
+  describe('contaminate()', () => {
     it('should contaminate once', () => {
       store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
@@ -1083,5 +1160,35 @@ describe('Evolv client unit tests', () => {
     expect(context.remoteContext.contaminations).to.be.lengthOf(2);
     expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     expect(context.remoteContext.contaminations[1].cid).to.be.equal('678910');
+  });
+
+  describe('off()', () => {
+    it('should remove listener from topic', async () => {
+      // Arrange
+      context.initialize('1234', { value: 0 });
+      const client = new Evolv({ ...options, context, store });
+
+      const spy1 = chai.spy();
+      const spy2 = chai.spy();
+
+      client.on('context.value.changed', spy1);
+      client.on('context.value.changed', spy2);
+
+      // Preconditions
+      expect(spy1).to.have.been.called.exactly(0);
+      expect(spy2).to.have.been.called.exactly(0);
+
+      context.set('value', 1);
+      expect(spy1).to.have.been.called.exactly(1);
+      expect(spy2).to.have.been.called.exactly(1);
+
+      // Act
+      client.off('context.value.changed', spy2);
+      context.set('value', 2);
+
+      // Assert
+      expect(spy1).to.have.been.called.exactly(2);
+      expect(spy2).to.have.been.called.exactly(1);
+    });
   });
 });

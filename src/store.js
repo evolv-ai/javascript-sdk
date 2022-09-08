@@ -28,7 +28,7 @@ export const EFFECTIVE_GENOME_UPDATED = 'effective.genome.updated';
 export const STORE_DESTROYED = 'store.destroyed';
 
 /**
- * Determines if the the key exists in any of the experiment's key states.
+ * Determines if the key exists in any of the experiment's key states.
  *
  * @param {Object} keyStates The keyStates object containing experiments key states.
  * @param {String} stateName Name of the state to search for the key in.
@@ -535,9 +535,13 @@ function EvolvStore(options) {
   function updateConfig(value) {
     config = value;
     configFailed = false;
-    if ('_client' in config) {
-      clientContext = config._client;
+
+    if (!options.omitClientContext) {
+      if ('_client' in config) {
+        clientContext = config._client;
+      }
     }
+
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
     });
