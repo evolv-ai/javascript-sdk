@@ -47,6 +47,7 @@ export interface EvolvClientOptions {
   useCookies?: boolean;
   timeout?: number;
   hooks?: {};
+  omitClientContext?: boolean;
 }
 
 export class EvolvClient {
