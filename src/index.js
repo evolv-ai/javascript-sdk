@@ -253,11 +253,11 @@ function EvolvClient(opts) {
           });
 
           confirmableAllocations.forEach(function(alloc) {
-            eventBeacon.emit('confirmation', assign({
+            eventBeacon.emit('confirmation', {
               uid: alloc.uid,
               eid: alloc.eid,
               cid: alloc.cid
-            }, context.remoteContext));
+            });
           });
 
           eventBeacon.flush();
@@ -318,12 +318,12 @@ function EvolvClient(opts) {
     });
 
     contaminatableAllocations.forEach(function(alloc) {
-      eventBeacon.emit('contamination', assign({
+      eventBeacon.emit('contamination', {
         uid: alloc.uid,
         eid: alloc.eid,
         cid: alloc.cid,
         contaminationReason: details
-      }, context.remoteContext));
+      });
     });
     eventBeacon.flush();
     emit(context, EvolvClient.CONTAMINATED);
