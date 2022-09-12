@@ -42,12 +42,12 @@ export interface EvolvClientOptions {
   analytics?: boolean;
   bufferEvents?: boolean;
   clientName?: string;
+  clientType?: 'direct' | 'proxied';
   uid?: string;
   sid?: string;
   useCookies?: boolean;
   timeout?: number;
   hooks?: {};
-  omitClientContext?: boolean;
 }
 
 export class EvolvClient {
