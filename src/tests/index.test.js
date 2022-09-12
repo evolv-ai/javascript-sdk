@@ -901,12 +901,9 @@ describe('Evolv client unit tests', () => {
       xhrMock.teardown();
     });
 
-    it('should keep client context values when "omitClientContext" option is false', async () => {
+    it('should keep client context values when "clientType" option is omitted', async () => {
       // Arrange
-      const client = new Evolv({
-        ...options,
-        omitClientContext: false
-      })
+      const client = new Evolv(options);
 
       // Act
       client.initialize(uid);
@@ -918,12 +915,29 @@ describe('Evolv client unit tests', () => {
       expect(client.context.remoteContext).to.have.property('platform');
     });
 
-    it('should omit client context values when "omitClientContext" option is true', async () => {
+    it('should keep client context values when "clientType" option is "direct"', async () => {
       // Arrange
       const client = new Evolv({
         ...options,
-        omitClientContext: true
-      })
+        clientType: 'direct'
+      });
+
+      // Act
+      client.initialize(uid);
+
+      await client.getConfig(''); // Wait until configuration has been loaded
+
+      // Assert
+      expect(client.context.remoteContext).to.have.property('device');
+      expect(client.context.remoteContext).to.have.property('platform');
+    });
+
+    it('should omit client context values when "clientType" option is "proxied"', async () => {
+      // Arrange
+      const client = new Evolv({
+        ...options,
+        clientType: 'proxied'
+      });
 
       // Act
       client.initialize(uid);

@@ -18,7 +18,7 @@ import { assign } from './ponyfills/objects.js';
  * @property {*} [auth]
  * @property {boolean} [bufferEvents]
  * @property {string} [clientName]
- * @property {boolean} [omitClientContext = false]
+ * @property {'direct' | 'proxied'} [clientType = 'direct']
  */
 
 /**
@@ -26,7 +26,11 @@ import { assign } from './ponyfills/objects.js';
  * @returns EvolvClientOptions
  */
 export function buildOptions(options) {
-  const opts = assign({}, options);
+  const defaults = {
+    clientType: 'direct'
+  };
+
+  const opts = assign({}, defaults, options);
 
   if (!opts.environment) {
     throw new Error('"environment" must be specified');

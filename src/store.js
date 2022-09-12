@@ -536,7 +536,7 @@ function EvolvStore(options) {
     config = value;
     configFailed = false;
 
-    if (!options.omitClientContext) {
+    if (options.clientType === 'direct') {
       if ('_client' in config) {
         clientContext = config._client;
       }
