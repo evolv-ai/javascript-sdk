@@ -14,28 +14,28 @@ describe('Set Utils', () => {
 	});
 
 	describe('setCopy()', () => {
-    it('should copy set A into new set', () => {
-      // Act
-      const copy = copySet(A);
+		it('should copy set A into new set', () => {
+			// Act
+			const copy = copySet(A);
 
-      // Assert
-      expect(copy).to.deep.equal(new Set(['a', 'b', 'c', 'd']));
-    });
+			// Assert
+			expect(copy).to.deep.equal(new Set(['a', 'b', 'c', 'd']));
+		});
 
-    it('should copy set A into set B', () => {
-      // Act
-      const copy = copySet(A, B);
+		it('should copy set A into set B', () => {
+			// Act
+			const copy = copySet(A, B);
 
-      // Assert
-      expect(copy).to.deep.equal(new Set(['a', 'b', 'c', 'd', 'e', 'f']));
-    });
+			// Assert
+			expect(copy).to.deep.equal(new Set(['a', 'b', 'c', 'd', 'e', 'f']));
+		});
 
-    it('should array into new set', () => {
-      // Act
-      const copy = copySet(['a', 'b']);
+		it('should array into new set', () => {
+			// Act
+			const copy = copySet(['a', 'b']);
 
-      // Assert
-      expect(copy).to.deep.equal(new Set(['a', 'b']));
-    });
-  });
+			// Assert
+			expect(copy).to.deep.equal(new Set(['a', 'b']));
+		});
+	});
 });

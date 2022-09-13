@@ -26,25 +26,25 @@ import { assign } from './ponyfills/objects.js';
  * @returns EvolvClientOptions
  */
 export function buildOptions(options) {
-  const defaults = {
-    clientType: 'direct'
-  };
+	const defaults = {
+		clientType: 'direct'
+	};
 
-  const opts = assign({}, defaults, options);
+	const opts = assign({}, defaults, options);
 
-  if (!opts.environment) {
-    throw new Error('"environment" must be specified');
-  }
+	if (!opts.environment) {
+		throw new Error('"environment" must be specified');
+	}
 
-  if (!('autoConfirm' in opts)) {
-    opts.autoConfirm = true;
-  }
+	if (!('autoConfirm' in opts)) {
+		opts.autoConfirm = true;
+	}
 
-  opts.version = opts.version || 1;
-  opts.endpoint = ((opts.endpoint && opts.endpoint.replace(/\/$/, '')) || 'https://participants.evolv.ai') + '/v' + opts.version;
-  opts.analytics = 'analytics' in opts ? opts.analytics : opts.version > 1;
+	opts.version = opts.version || 1;
+	opts.endpoint = ((opts.endpoint && opts.endpoint.replace(/\/$/, '')) || 'https://participants.evolv.ai') + '/v' + opts.version;
+	opts.analytics = 'analytics' in opts ? opts.analytics : opts.version > 1;
 
-  opts.hooks = assign({}, opts.hooks);
+	opts.hooks = assign({}, opts.hooks);
 
-  return opts;
+	return opts;
 }

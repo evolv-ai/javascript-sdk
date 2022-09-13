@@ -11,11 +11,11 @@
  * @returns {Set}
  */
 export function copySet(from, into) {
-    const copy = into || new Set();
+	const copy = into || new Set();
 
-    from.forEach(function(item) {
-        copy.add(item);
-    });
+	from.forEach(function(item) {
+		copy.add(item);
+	});
 
-    return copy;
+	return copy;
 }

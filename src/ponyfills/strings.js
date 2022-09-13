@@ -11,7 +11,7 @@ export function startsWith(string, searchString, position) {
 	if (string.startsWith) {
 		return string.startsWith(searchString, position);
 	}
-	const pos = position > 0 ? position|0 : 0;
+	const pos = position > 0 ? position | 0 : 0;
 	return string.substring(pos, pos + searchString.length) === searchString;
 }
 

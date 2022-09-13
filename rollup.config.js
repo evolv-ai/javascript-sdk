@@ -8,11 +8,11 @@ import manifest from './package.json';
 
 
 const banner = () => {
-  const year = new Date().getFullYear();
-  const version = (process?.env?.SEM_VER ?? manifest.version) // eslint-disable-line no-undef
-    .replace(/\*\//gm, ''); // Prevents injection
+	const year = new Date().getFullYear();
+	const version = (process?.env?.SEM_VER ?? manifest.version) // eslint-disable-line no-undef
+		.replace(/\*\//gm, ''); // Prevents injection
 
-  const comment = outdent`
+	const comment = outdent`
       * Evolv Client for JavaScript v${version} <https://github.com/evolv-ai/javascript-sdk>
        *
        * Copyright 2020-${year} Evolv Technology Solutions
@@ -30,57 +30,57 @@ const banner = () => {
        * limitations under the License.
     `;
 
-  return `/*!\n ${comment}\n */\n`;
+	return `/*!\n ${comment}\n */\n`;
 };
 
 function rollupConfig(type, isNodeRuntime = false) {
 
-  const ext = type === 'esm'
-    ? 'mjs'
-    : 'cjs'
+	const ext = type === 'esm'
+		? 'mjs'
+		: 'cjs'
 
-  const dir = isNodeRuntime
-    ? 'node'
-    : 'browser'
+	const dir = isNodeRuntime
+		? 'node'
+		: 'browser'
 
-  return {
-    input: './src/index.js',
-    output: {
-      file: `./dist/${dir}/index.${ext}`,
-      format: type,
-      exports: 'named',
-      sourcemap: true,
-      banner
-    },
-    external: [
-      ...Object.keys(manifest.peerDependencies || {}),
-      'http',
-      'https'
-    ],
-    plugins: [
-      alias({
-        entries: [
-          {
-            find: './helpers/requests/index.js',
-            replacement: isNodeRuntime
-              ? './helpers/requests/node-request'
-              : './helpers/requests/xhr-request'
-          }
-        ]
-      }),
-      copy({
-        targets: [
-          { src: 'src/types.d.ts', dest: 'dist' }
-        ]
-      }),
-      nodeResolve(),
-      commonJs()
-    ]
-  };
+	return {
+		input: './src/index.js',
+		output: {
+			file: `./dist/${dir}/index.${ext}`,
+			format: type,
+			exports: 'named',
+			sourcemap: true,
+			banner
+		},
+		external: [
+			...Object.keys(manifest.peerDependencies || {}),
+			'http',
+			'https'
+		],
+		plugins: [
+			alias({
+				entries: [
+					{
+						find: './helpers/requests/index.js',
+						replacement: isNodeRuntime
+							? './helpers/requests/node-request'
+							: './helpers/requests/xhr-request'
+					}
+				]
+			}),
+			copy({
+				targets: [
+					{ src: 'src/types.d.ts', dest: 'dist' }
+				]
+			}),
+			nodeResolve(),
+			commonJs()
+		]
+	};
 }
 
 export default [
-  rollupConfig('esm', true),
-  rollupConfig('esm', false),
-  rollupConfig('cjs', false)
+	rollupConfig('esm', true),
+	rollupConfig('esm', false),
+	rollupConfig('cjs', false)
 ];
