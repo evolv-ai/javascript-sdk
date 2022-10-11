@@ -122,6 +122,7 @@ export interface ParticipantsApiContext extends Record<string, any> {
     region: string;
     tz: string;
   };
+  timestamp: number;
 }
 
 export interface RemoteContext extends ParticipantsApiContext {
