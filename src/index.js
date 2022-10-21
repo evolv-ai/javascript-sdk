@@ -184,6 +184,17 @@ function EvolvClient(opts) {
   this.getConfig = store.getConfig.bind(store);
 
   /**
+   * Get the configuration for a specified key.//TODO
+   *
+   * @param {String} type The type of entity we're retrieving the display name for. Allow values: 'experiments'
+   * @param {String} key The key/id to retrieve the display name for.
+   * @returns {SubscribablePromise.<*|Error>} A SubscribablePromise that resolves to the configuration of the
+   * specified key.
+   * @method
+   */
+   this.getDisplayName = store.getDisplayName.bind(store);
+
+  /**
    * Send an event to the events endpoint.
    *
    * @param {String} type The type associated with the event.
