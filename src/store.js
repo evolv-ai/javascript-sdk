@@ -812,7 +812,7 @@ function EvolvStore(options) {
 
   this.getDisplayName = function(type, key) {
     return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
-      return objects.getValueForKey(type + '.' + key, displayNames);;
+      return objects.getValueForKey(type + '.' + key, displayNames);
     });
   };
 
