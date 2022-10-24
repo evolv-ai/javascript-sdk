@@ -384,6 +384,7 @@ function EvolvStore(options) {
   let effectiveGenome = {};
   let allocations = null;
   let config = null;
+  let displayNames = {};
   let activeEids = new Set();
   let activeKeys = new Set();
   let previousKeys = new Set();
@@ -416,6 +417,7 @@ function EvolvStore(options) {
     effectiveGenome = undefined;
     allocations = undefined;
     config = undefined;
+    displayNames = undefined;
 
     activeEids = undefined;
     activeKeys = undefined;
@@ -542,6 +544,8 @@ function EvolvStore(options) {
       }
     }
 
+    displayNames = config._display_names || {};
+    
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
     });
@@ -803,6 +807,12 @@ function EvolvStore(options) {
   this.getClientContext = function() {
     return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
       return clientContext;
+    });
+  };
+
+  this.getDisplayName = function(type, key) {
+    return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
+      return objects.getValueForKey(type + '.' + key, displayNames);
     });
   };
 

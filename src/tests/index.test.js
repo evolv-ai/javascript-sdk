@@ -873,7 +873,12 @@ describe('Evolv client unit tests', () => {
             platform: 'windows',
             device: 'desktop'
           },
-          _experiments: []
+          _experiments: [],
+          _display_names: {
+            experiments: {
+              "0f39849197": "Project A"
+            }
+          }
         };
 
         return res.status(200).body(JSON.stringify(data));
@@ -947,6 +952,19 @@ describe('Evolv client unit tests', () => {
       // Assert
       expect(client.context.remoteContext).not.to.have.property('device');
       expect(client.context.remoteContext).not.to.have.property('platform');
+    });
+
+    it('should include the display names', async () => {
+      // Arrange
+      const client = new Evolv(options);
+
+      // Act
+      client.initialize(uid);
+
+      let experiment = await client.getDisplayName('experiments', '0f39849197');
+
+      // Assert
+      expect(experiment).to.be.equal('Project A');
     });
   });
 
