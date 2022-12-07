@@ -694,6 +694,147 @@ describe('predicates.js', () => {
       assert.equal(1, result.passed.size);
       assert.equal(0, result.failed.size);
     });
-    
+    describe('when using "in" operator', () => {
+      it('should pass when value is in list', () => {
+        const predicate = {
+          id: 123,
+          combinator: 'and',
+          rules: [
+            {
+              field: 'web.platform',
+              operator: 'in',
+              value: ["MacOs", "Linux"],
+              index: 0
+            }
+          ]
+        };
+        const context = {
+          web:{
+            platform: "Linux"
+          },
+        };
+        const result = predicates.evaluate(context, predicate);
+        assert(!result.rejected);
+        assert.equal(1, result.passed.size);
+        assert.equal(0, result.failed.size);
+      });
+      it('should fail when value is not in list', () => {
+        const predicate = {
+          id: 123,
+          combinator: 'and',
+          rules: [
+            {
+              field: 'web.platform',
+              operator: 'in',
+              value: ["MacOs", "Linux"],
+              index: 0
+            }
+          ]
+        };
+        const context = {
+          web:{
+            platform: "Android"
+          },
+        };
+        const result = predicates.evaluate(context, predicate);
+        assert(result.rejected);
+        assert.equal(0, result.passed.size);
+        assert.equal(1, result.failed.size);
+      });
+      it('should support number type', () => {
+        const predicate = {
+          id: 123,
+          combinator: 'and',
+          rules: [
+            {
+              field: 'web.platform',
+              operator: 'in',
+              value: [1, 2],
+              index: 0
+            }
+          ]
+        };
+        const context = {
+          web:{
+            platform: 1
+          },
+        };
+        const result = predicates.evaluate(context, predicate);
+        assert(!result.rejected);
+        assert.equal(1, result.passed.size);
+        assert.equal(0, result.failed.size);
+      });
+    });
+    describe('when using "not_in" operator', () => {
+      it('should pass when value is not in list', () => {
+        const predicate = {
+          id: 123,
+          combinator: 'and',
+          rules: [
+            {
+              field: 'web.platform',
+              operator: 'not_in',
+              value: ["MacOs", "Linux"],
+              index: 0
+            }
+          ]
+        };
+        const context = {
+          web:{
+            platform: "Android"
+          },
+        };
+        const result = predicates.evaluate(context, predicate);
+        assert(!result.rejected);
+        assert.equal(1, result.passed.size);
+        assert.equal(0, result.failed.size);
+      });
+    });
+    it('should fail when value is in list', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.platform',
+            operator: 'not_in',
+            value: ["MacOs", "Linux"],
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          platform: "Linux"
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(result.rejected);
+      assert.equal(0, result.passed.size);
+      assert.equal(1, result.failed.size);
+    });
+    it('should support number type', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.platform',
+            operator: 'not_in',
+            value: [1, 2],
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          platform: 1
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(result.rejected);
+      assert.equal(0, result.passed.size);
+      assert.equal(1, result.failed.size);
+    });
   });
 });
