@@ -760,9 +760,9 @@ describe('predicates.js', () => {
           },
         };
         const result = predicates.evaluate(context, predicate);
-        assert(result.rejected);
-        assert.equal(0, result.passed.size);
-        assert.equal(1, result.failed.size);
+        assert(!result.rejected);
+        assert.equal(1, result.passed.size);
+        assert.equal(0, result.failed.size);
       });
     });
     describe('when using "not_in" operator', () => {
@@ -832,9 +832,9 @@ describe('predicates.js', () => {
         },
       };
       const result = predicates.evaluate(context, predicate);
-      assert(!result.rejected);
-      assert.equal(1, result.passed.size);
-      assert.equal(0, result.failed.size);
+      assert(result.rejected);
+      assert.equal(0, result.passed.size);
+      assert.equal(1, result.failed.size);
     });
   });
 });
