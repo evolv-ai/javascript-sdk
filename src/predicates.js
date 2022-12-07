@@ -30,7 +30,9 @@ const FILTER_OPERATORS = {
   loose_not_equal: function(a, b) { return a != b; },
   regex_match: function(value, pattern) { return value && value.match(pattern); },
   regex64_match: regex64Match,
-  starts_with: function(a, b){ return strings.startsWith(a, b); }
+  starts_with: function(a, b){ return strings.startsWith(a, b); },
+  in: function(a, b){ return b.includes(a)},
+  not_in: function(a, b){ return !b.includes(a) },
 };
 
 function regexFromString (string) {

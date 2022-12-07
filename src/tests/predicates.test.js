@@ -694,6 +694,52 @@ describe('predicates.js', () => {
       assert.equal(1, result.passed.size);
       assert.equal(0, result.failed.size);
     });
-    
+    it('should evaluate "in" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.platform',
+            operator: 'in',
+            value: ["MacOs", "Linux"],
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          platform: "Linux"
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+    it('should evaluate "not in" property', () => {
+      const predicate = {
+        id: 123,
+        combinator: 'and',
+        rules: [
+          {
+            field: 'web.platform',
+            operator: 'not_in',
+            value: ["MacOs", "Linux"],
+            index: 0
+          }
+        ]
+      };
+      const context = {
+        web:{
+          platform: "Android"
+        },
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(!result.rejected);
+      assert.equal(1, result.passed.size);
+      assert.equal(0, result.failed.size);
+    });
+
   });
 });
