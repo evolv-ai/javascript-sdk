@@ -489,7 +489,7 @@ describe('predicates.js', () => {
       assert.equal(1, result.failed.size);
     });
 
-    it('should not filter energidirect user with not_contains when value not set', () => {
+it('should not filter user with not_contains when value not set', () => {
 
       const predicate = {
         "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
