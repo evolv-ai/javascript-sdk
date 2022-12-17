@@ -489,6 +489,54 @@ describe('predicates.js', () => {
       assert.equal(1, result.failed.size);
     });
 
+it('should not filter user with not_contains when value not set', () => {
+
+      const predicate = {
+        "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
+        "rules": [{
+          "operator": "not_contains",
+          "id": "r-f2dc0b86-665f-41d7-a142-7dd0658fa9bd",
+          "field": "web.query_parameters.ecmp",
+          "value": "aff:dav",
+          "index": 1
+        }],
+        "combinator": "or"
+      };
+      const context = {
+        web: {
+          "query_parameters": {}
+        }
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(result.rejected);
+      assert.equal(0, result.passed.size);
+      assert.equal(1, result.failed.size);
+    });
+
+    it('should not filter energidirect user with contains when value not set', () => {
+
+      const predicate = {
+        "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
+        "rules": [{
+          "operator": "contains",
+          "id": "r-f2dc0b86-665f-41d7-a142-7dd0658fa9bd",
+          "field": "web.query_parameters.ecmp",
+          "value": "aff:dav",
+          "index": 1
+        }],
+        "combinator": "or"
+      };
+      const context = {
+        web: {
+          "query_parameters": {}
+        }
+      };
+      const result = predicates.evaluate(context, predicate);
+      assert(result.rejected);
+      assert.equal(0, result.passed.size);
+      assert.equal(1, result.failed.size);
+    });
+
     it('should evaluate a flat predicate correctly', () => {
       const predicate = {
         id: 123,
