@@ -5,7 +5,7 @@ const AND = 'and';
 const OR = 'or';
 
 const FILTER_OPERATORS = {
-  contains: function(a, b) { return a.indexOf(b) >= 0; },
+  contains: function(a, b) { return a !== undefined && a.indexOf(b) >= 0; },
   defined: function(a) { return a !== undefined; },
   equal: function(a, b) { return a === b; },
   exists: function(a) { return a !== null && a !== undefined }, // Check that the key exists in the dictionary object
@@ -14,7 +14,7 @@ const FILTER_OPERATORS = {
   is_true: function(a) { return a === true },
   is_false: function(a) { return a === false },
   not_exists: function(a) { return a === null || a === undefined }, // Check that the key does not exists in the dictionary object
-  not_contains: function(a, b) { return !(a.indexOf(b) >= 0); },
+  not_contains: function(a, b) { return a !== undefined && !(a.indexOf(b) >= 0); },
   not_defined: function(a) { return a === undefined; },
   not_equal: function(a, b) { return a !== b; },
   not_regex_match: function(value, pattern) { return value && !value.match(pattern); },
