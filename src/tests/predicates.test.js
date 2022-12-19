@@ -394,7 +394,7 @@ describe('predicates.js', () => {
       assert.equal(1, result.failed.size);
     });
 
-    it('should not filter energidirect user with not_contains', () => {
+    it('should not filter user with not_contains', () => {
       const predicate = {
         "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
         "rules": [{
@@ -442,7 +442,7 @@ describe('predicates.js', () => {
       assert.equal(0, result.failed.size);
     });
 
-    it('should filter energidirect user with not_contains', () => {
+    it('should filter user with not_contains', () => {
 
       const predicate = {
         "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
@@ -513,7 +513,7 @@ it('should not filter user with not_contains when value not set', () => {
       assert.equal(1, result.failed.size);
     });
 
-    it('should not filter energidirect user with contains when value not set', () => {
+    it('should not filter user with contains when value not set', () => {
 
       const predicate = {
         "id": "g-3909d043-f42b-45ba-8f28-17b1da5307e0",
