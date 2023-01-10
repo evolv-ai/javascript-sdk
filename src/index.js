@@ -210,6 +210,18 @@ function EvolvClient(opts) {
     emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
 
+  let getSessionBasedExps = function() {
+    let sessionBasedExps = {};
+
+    ((store.configuration && store.configuration._experiments) || []).forEach(function(experiment) {
+      if (experiment._optimization_metric === 'SESSION') {
+        sessionBasedExps[experiment.id] = true;
+      }
+    });
+
+    return sessionBasedExps;
+  }
+
   /**
    * Confirm that the consumer has successfully received and applied values, making them eligible for inclusion in
    * optimization statistics.
@@ -221,6 +233,8 @@ function EvolvClient(opts) {
       if (!store.configuration || !allocations || !allocations.length) {
         return;
       }
+
+      const sessionBasedExps = getSessionBasedExps();
 
       store.activeEntryPoints()
         .then(function(entryPointEids) {
@@ -263,8 +277,9 @@ function EvolvClient(opts) {
             }
           });
 
-          confirmableAllocations.forEach(function(alloc) {
-            eventBeacon.emit('confirmation', {
+          confirmableAllocations.forEach(function(alloc) {          
+            // Only confirm for non session based experiments -- session based use the analytics data
+            !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
               uid: alloc.uid,
               eid: alloc.eid,
               cid: alloc.cid
