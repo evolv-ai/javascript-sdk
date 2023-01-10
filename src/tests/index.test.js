@@ -503,7 +503,7 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
           _client: {},
-          _experiments: [            
+          _experiments: [
             {
               web: {
                 "ab8numq2j": {
@@ -598,7 +598,7 @@ describe('Evolv client integration tests', () => {
               ]
             },
             excluded: false
-          }          
+          }
         ]));
       });
 
@@ -708,7 +708,7 @@ describe('Evolv client integration tests', () => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
           _client: {},
-          _experiments: [            
+          _experiments: [
             {
               _optimization_metric: "SESSION",
               web: {
@@ -804,7 +804,7 @@ describe('Evolv client integration tests', () => {
               ]
             },
             excluded: false
-          }          
+          }
         ]));
       });
 
@@ -826,7 +826,7 @@ describe('Evolv client integration tests', () => {
 
       const messages = results.analyticsPayloads[0].messages;
       expect(messages.length).to.equal(19)
-      
+
       expect(messages[8].type).to.equal("context.value.added")
       expect(messages[8].payload.key).to.equal("confirmations")
       expect(messages[8].payload.value.length).to.equal(1)
