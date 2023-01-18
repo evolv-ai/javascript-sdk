@@ -10,6 +10,7 @@ import { waitFor, waitOnceFor, emit, destroyScope, removeListener } from './wait
 import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
 import { buildOptions } from './build-options.js';
+import MiniPromise from './ponyfills/minipromise.js';
 
 /**
  * @typedef {Promise} SubscribablePromise
@@ -228,7 +229,7 @@ function EvolvClient(opts) {
    */
   this.confirm = function() {
     // eslint-disable-next-line es/no-promise
-    return new Promise(function(resolve) {
+    return new MiniPromise.createPromise(function(resolve) {
       waitFor(context, EFFECTIVE_GENOME_UPDATED,function() {
         const remoteContext = context.remoteContext;
         const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
