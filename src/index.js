@@ -227,69 +227,78 @@ function EvolvClient(opts) {
    * optimization statistics.
    */
   this.confirm = function() {
-    waitFor(context, EFFECTIVE_GENOME_UPDATED, function() {
-      const remoteContext = context.remoteContext;
-      const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
-      if (!store.configuration || !allocations || !allocations.length) {
-        return;
-      }
+    // eslint-disable-next-line es/no-promise
+    return new Promise(function(resolve) {
+      waitFor(context, EFFECTIVE_GENOME_UPDATED,function() {
+        const remoteContext = context.remoteContext;
+        const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
+        if (!store.configuration || !allocations || !allocations.length) {
+          resolve();
+          return;
+        }
 
-      const sessionBasedExps = getSessionBasedExps();
+        const sessionBasedExps = getSessionBasedExps();
 
-      store.activeEntryPoints()
-        .then(function(entryPointEids) {
-          if (!entryPointEids.length) {
-            return;
-          }
-
-          const confirmations = context.get('experiments.confirmations') || [];
-          const confirmedCids = confirmations.map(function(conf) {
-            return conf.cid;
-          });
-          const contaminations = context.get('experiments.contaminations') || [];
-          const contaminatedCids = contaminations.map(function(cont) {
-            return cont.cid;
-          });
-          const confirmableAllocations = allocations.filter(function(alloc) {
-            return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid) && entryPointEids.indexOf(alloc.eid) >= 0;
-          });
-
-          if (!confirmableAllocations.length) {
-            return;
-          }
-
-          const timestamp = (new Date()).getTime();
-          const contextConfirmations = confirmableAllocations.map(function(alloc) {
-            return {
-              cid: alloc.cid,
-              timestamp: timestamp
+        store.activeEntryPoints()
+          .then(function(entryPointEids) {
+            if (!entryPointEids.length) {
+              resolve();
+              return;
             }
-          });
 
-          // We will deprecate 'confirmations' in favor of 'experiments.confirmations'
-          // When deprecated delete below and uncomment next line
-          // context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
-          const newConfirmations = contextConfirmations.concat(confirmations);
-          context.update({
-            'confirmations': newConfirmations,
-            'experiments': {
-              'confirmations': newConfirmations
-            }
-          });
-
-          confirmableAllocations.forEach(function(alloc) {          
-            // Only confirm for non session based experiments -- session based use the analytics data
-            !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
-              uid: alloc.uid,
-              eid: alloc.eid,
-              cid: alloc.cid
+            const confirmations = context.get('experiments.confirmations') || [];
+            const confirmedCids = confirmations.map(function(conf) {
+              return conf.cid;
             });
-          });
+            const contaminations = context.get('experiments.contaminations') || [];
+            const contaminatedCids = contaminations.map(function(cont) {
+              return cont.cid;
+            });
+            const confirmableAllocations = allocations.filter(function(alloc) {
+              return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid) && entryPointEids.indexOf(alloc.eid) >= 0;
+            });
 
-          eventBeacon.flush();
-          emit(context, EvolvClient.CONFIRMED);
-        });
+            if (!confirmableAllocations.length) {
+            resolve();
+            return;
+          }
+
+            const timestamp = (new Date()).getTime();
+            const contextConfirmations = confirmableAllocations.map(function(alloc) {
+              return {
+                cid: alloc.cid,
+                timestamp: timestamp
+              }
+            });
+
+            // We will deprecate 'confirmations' in favor of 'experiments.confirmations'
+            // When deprecated delete below and uncomment next line
+            // context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
+            const newConfirmations = contextConfirmations.concat(confirmations);
+            context.update({
+              'confirmations': newConfirmations,
+              'experiments': {
+                'confirmations': newConfirmations
+              }
+            });
+
+            confirmableAllocations.forEach(function(alloc) {
+              // Only confirm for non session based experiments -- session based use the analytics data
+              !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
+                uid: alloc.uid,
+                eid: alloc.eid,
+                cid: alloc.cid
+              });
+            });
+
+            eventBeacon.flush();
+            emit(context, EvolvClient.CONFIRMED);
+            resolve();
+            return;
+          });
+      });
     });
+
   };
 
   /**
