@@ -11,8 +11,25 @@ import { buildOptions } from '../build-options.js';
 
 chai.use(spies);
 const expect = chai.expect;
+const Assertion = chai.Assertion;
 const xhrMock = _xhrMock.default;
 
+
+Assertion.addMethod('message', function(type, key, value) {
+  const message = this._obj;
+
+  expect(message.type).to.equal(type);
+  expect(message.payload.key).to.equal(key);
+  expect(message.payload.value).to.eql(value);
+});
+
+Assertion.addMethod('messageWithLength', function(type, key, value) {
+  const message = this._obj;
+
+  expect(message.type).to.equal(type);
+  expect(message.payload.key).to.equal(key);
+  expect(message.payload.value.length).to.equal(value);
+});
 
 const SIGNATURE_PATTERN = /keyId="([^"]+)",algorithm="([^"]+)",signature="([^"]+)"/;
 
@@ -619,12 +636,11 @@ describe('Evolv client integration tests', () => {
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
-      // expect(results.analyticsPayloads[1].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      // const messages1 = results.analyticsPayloads[1].messages;
-      expect(messages.length).to.equal(19)
-      // expect(messages1.length).to.equal(11)
+
+      expect(messages.length).to.equal(20)
+
       expect(messages[0].type).to.equal("context.initialized")
       expect(messages[0].payload).to.eql( {
         "remote": true,
@@ -632,69 +648,36 @@ describe('Evolv client integration tests', () => {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       })
-      expect(messages[1].type).to.equal("context.value.added")
-      expect(messages[1].payload.key).to.equal("keys.active")
-      expect(messages[1].payload.value).to.eql([])
-      expect(messages[2].type).to.equal("context.value.added")
-      expect(messages[2].payload.key).to.equal("variants.active")
-      expect(messages[2].payload.value).to.eql([])
-      expect(messages[3].type).to.equal("context.value.added")
-      expect(messages[3].payload.key).to.equal("experiments.allocations")
-      expect(messages[3].payload.value).to.eql([{
+      expect(messages[1]).to.be.a.message("context.value.added", "keys.active", []);
+      expect(messages[2]).to.be.a.message("context.value.added", "variants.active", []);
+      expect(messages[3]).to.be.a.message("context.value.added", "view", null);
+      expect(messages[4]).to.be.a.message("context.value.added", "experiments.allocations", [{
         "cid": "0cf8ffcedea2:0f39849197",
         "eid": "0f39849197",
         "excluded": false,
         "uid": 123
       }]);
-      expect(messages[4].type).to.equal("context.value.added")
-      expect(messages[4].payload.key).to.equal("experiments.exclusions")
-      expect(messages[4].payload.value).to.eql([])
-      expect(messages[5].type).to.equal("context.value.added")
-      expect(messages[5].payload.key).to.equal("user_attributes.country")
-      expect(messages[5].payload.value).to.equal("usa")
-      expect(messages[6].type).to.equal("context.value.changed")
-      expect(messages[6].payload.key).to.equal("keys.active")
-      expect(messages[6].payload.value).to.eql(["web.ab8numq2j.am94yhwo2"])
-      expect(messages[7].type).to.equal("context.value.changed")
-      expect(messages[7].payload.key).to.equal("variants.active")
-      expect(messages[7].payload.value).to.eql(["web.ab8numq2j.am94yhwo2:1486101989"])
-      expect(messages[8].type).to.equal("context.value.added")
-      expect(messages[8].payload.key).to.equal("confirmations")
-      expect(messages[8].payload.value.length).to.equal(1)
-      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[9].type).to.equal("context.value.added")
-      expect(messages[9].payload.key).to.equal("experiments.confirmations")
-      expect(messages[9].payload.value.length).to.equal(1)
+      expect(messages[5]).to.be.a.message("context.value.added", "experiments.exclusions", []);
+      expect(messages[6]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
+      expect(messages[7]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
+      expect(messages[8]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10].type).to.equal("context.value.added")
-      expect(messages[10].payload.key).to.equal("events")
-      expect(messages[10].payload.value.length).to.equal(1)
-      expect(messages[10].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[11].type).to.equal("context.value.added")
-      expect(messages[11].payload.key).to.equal("contaminations")
-      expect(messages[11].payload.value.length).to.equal(1)
-      expect(messages[11].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[12].type).to.equal("context.value.added")
-      expect(messages[12].payload.key).to.equal("experiments.contaminations")
-      expect(messages[12].payload.value.length).to.equal(1)
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
+      expect(messages[11].payload.value[0].type).to.equal("lunch-time")
+      expect(messages[12]).to.be.a.messageWithLength("context.value.added", "contaminations", 1);
       expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[13].type).to.equal("context.value.changed")
-      expect(messages[13].payload.key).to.equal("web.url")
-      expect(messages[13].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(messages[14].type).to.equal("context.value.changed")
-      expect(messages[14].payload.key).to.equal("keys.active")
-      expect(messages[14].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g"])
-      expect(messages[15].type).to.equal("context.value.changed")
-      expect(messages[15].payload.key).to.equal("variants.active")
-      expect(messages[15].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g:1777529126"])
-      expect(messages[16].type).to.equal("context.value.removed")
-      expect(messages[16].payload.key).to.equal("web.url")
-      expect(messages[17].type).to.equal("context.value.changed")
-      expect(messages[17].payload.key).to.equal("keys.active")
-      expect(messages[17].payload.value).to.eql([])
-      expect(messages[18].type).to.equal("context.value.changed")
-      expect(messages[18].payload.key).to.equal("variants.active")
-      expect(messages[18].payload.value).to.eql([])
+      expect(messages[13]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
+      expect(messages[13].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[14]).to.be.a.message("context.value.changed", "web.url", "https://www.lunch.com/dev1/features.html");
+      expect(messages[15]).to.be.a.message("context.value.changed", "keys.active", ["web.7w3zpgfy9.azevlvf5g"]);
+      expect(messages[16]).to.be.a.message("context.value.changed", "variants.active", ["web.7w3zpgfy9.azevlvf5g:1777529126"]);
+      expect(messages[17].type).to.equal("context.value.removed")
+      expect(messages[17].payload.key).to.equal("web.url")
+      expect(messages[18]).to.be.a.message("context.value.changed", "keys.active", []);
+      expect(messages[19]).to.be.a.message("context.value.changed", "variants.active", []);
     });
 
     it('should not fire confirmation if session based', async () => {
@@ -825,29 +808,19 @@ describe('Evolv client integration tests', () => {
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(19)
+      expect(messages.length).to.equal(20)
 
-      expect(messages[8].type).to.equal("context.value.added")
-      expect(messages[8].payload.key).to.equal("confirmations")
-      expect(messages[8].payload.value.length).to.equal(1)
-      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[9].type).to.equal("context.value.added")
-      expect(messages[9].payload.key).to.equal("experiments.confirmations")
-      expect(messages[9].payload.value.length).to.equal(1)
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10].type).to.equal("context.value.added")
-      expect(messages[10].payload.key).to.equal("events")
-      expect(messages[10].payload.value.length).to.equal(1)
-      expect(messages[10].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[11].type).to.equal("context.value.added")
-      expect(messages[11].payload.key).to.equal("contaminations")
-      expect(messages[11].payload.value.length).to.equal(1)
-      expect(messages[11].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[12].type).to.equal("context.value.added")
-      expect(messages[12].payload.key).to.equal("experiments.contaminations")
-      expect(messages[12].payload.value.length).to.equal(1)
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
+      expect(messages[11].payload.value[0].type).to.equal("lunch-time")
+      expect(messages[12]).to.be.a.messageWithLength("context.value.added", "contaminations", 1);
       expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[13].type).to.equal("context.value.changed")
+      expect(messages[13]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
+      expect(messages[13].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[14].type).to.equal("context.value.changed")
     });
   });
 
@@ -984,7 +957,7 @@ describe('Evolv client integration tests', () => {
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(19);
+      expect(messages.length).to.equal(20);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
