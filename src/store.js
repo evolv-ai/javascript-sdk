@@ -545,7 +545,7 @@ function EvolvStore(options) {
     }
 
     displayNames = config._display_names || {};
-    
+
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
     });
@@ -768,6 +768,42 @@ function EvolvStore(options) {
     return promise;
   }
 
+  /**
+   * @typedef View
+   * @property {string} key
+   * @property {string} display_name
+   * @property {object} predicate
+   */
+
+  /**
+   * Iterates over list of views from environment configuration. The first view whose
+   * predicate matches will be designated the active view. Its key will be assigned to
+   * "view" in the context. If no view matches, "view" will be set to null.
+   *
+   * @param {View[] | null} views
+   */
+  function evaluateViews(views) {
+    if (!views || !Array.isArray(views) || views.length === 0) {
+      context.set('view', null);
+      return;
+    }
+
+    const resolvedContext = context.resolve();
+
+    for (let i = 0; i < views.length; i += 1) {
+      const view = views[i];
+      const result = evaluate(resolvedContext, view.predicate);
+
+      if (!result.rejected) {
+        context.set('view', view.key);
+        return;
+      }
+    }
+
+    // No view predicates have matched
+    context.set('view', null);
+  }
+
   if (version === 1) {
     pull(true);
   } else if (options.version !== 2) {
@@ -802,6 +838,8 @@ function EvolvStore(options) {
     initialized = true;
     pull();
     waitFor(context, CONTEXT_CHANGED, reevaluateContext);
+
+    this.getConfig('_views').listen(evaluateViews);
   };
 
   this.getClientContext = function() {
