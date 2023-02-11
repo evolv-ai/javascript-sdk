@@ -211,7 +211,8 @@ function EvolvClient(opts) {
     emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
 
-  let getSessionBasedExps = function() {
+  // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
+  /*let getSessionBasedExps = function() {
     let sessionBasedExps = {};
 
     ((store.configuration && store.configuration._experiments) || []).forEach(function(experiment) {
@@ -221,7 +222,7 @@ function EvolvClient(opts) {
     });
 
     return sessionBasedExps;
-  }
+  }*/
 
   /**
    * Confirm that the consumer has successfully received and applied values, making them eligible for inclusion in
@@ -238,7 +239,8 @@ function EvolvClient(opts) {
           return;
         }
 
-        const sessionBasedExps = getSessionBasedExps();
+        // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
+        // const sessionBasedExps = getSessionBasedExps();
 
         store.activeEntryPoints()
           .then(function(entryPointEids) {
@@ -285,7 +287,9 @@ function EvolvClient(opts) {
 
             confirmableAllocations.forEach(function(alloc) {
               // Only confirm for non session based experiments -- session based use the analytics data
-              !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
+              // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
+              // !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
+              eventBeacon.emit('confirmation', {
                 uid: alloc.uid,
                 eid: alloc.eid,
                 cid: alloc.cid
