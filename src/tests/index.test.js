@@ -697,7 +697,8 @@ describe('Evolv client integration tests', () => {
       expect(messages[18].payload.value).to.eql([])
     });
 
-    it('should not fire confirmation if session based', async () => {
+    // TODO AP-2318 bring back when confirmations killed again
+    xit('should not fire confirmation if session based', async () => {
       const uid = 123;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
