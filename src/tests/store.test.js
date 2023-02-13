@@ -1,10 +1,12 @@
 import assert from 'assert';
 import chai from 'chai';
+import _xhrMock from 'xhr-mock';
 
 const { expect } = chai;
+const xhrMock = _xhrMock.default;
 
 import Context from '../context.js';
-import { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates, generateEffectiveGenome, setConfigLoadedKeys } from '../store.js';
+import Store, { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates, generateEffectiveGenome, setConfigLoadedKeys } from '../store.js';
 
 
 describe('store.js', () => {
@@ -768,6 +770,176 @@ describe('store.js', () => {
             }
           }
         }
+      });
+    });
+  });
+
+  describe('Views', () => {
+    const url = 'http://localhost';
+
+    function mockConfigurationJson(views) {
+      xhrMock.get(/configuration\.json$/, (req, res) => {
+        const data = {
+          _experiments: [],
+          ...(views ? { _views: views } : {})
+        };
+
+        return res.status(200).body(JSON.stringify(data));
+      });
+    }
+
+    beforeEach(() => {
+      xhrMock.setup();
+
+      xhrMock.get(/allocations$/, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+    });
+
+    afterEach(() => {
+      xhrMock.teardown();
+    });
+
+    describe('when "_views" from /configuration.json is empty', () => {
+      it('should set "view" in context to null', (done) => {
+        // Arrange
+       mockConfigurationJson([]);
+
+        const context = new Context();
+        context.initialize('uid', { web: { url }});
+
+        // Act
+        const store = new Store({ environment: 'env' });
+        store.initialize(context);
+
+        // Assert
+        setImmediate(() => {
+          expect(context.get('view')).to.equal(null);
+          done();
+        });
+      });
+    });
+
+    describe('when "_views" from /configuration.json is undefined', () => {
+      it('should set "view" in context to null', (done) => {
+        // Arrange
+       mockConfigurationJson();
+
+        const context = new Context();
+        context.initialize('uid', { web: { url }});
+
+        // Act
+        const store = new Store({ environment: 'env' });
+        store.initialize(context);
+
+        // Assert
+        setImmediate(() => {
+          expect(context.get('view')).to.equal(null);
+          done();
+        });
+      });
+    });
+
+    it('should set "view" in context to key of view with matching predicate', (done) => {
+      // Arrange
+      const url = 'http://localhost';
+
+      mockConfigurationJson([
+        {
+          key: 'homepage',
+          display_name: 'Homepage',
+          predicate: {
+            combinator: 'and',
+            rules: [
+              { field: 'web.url', operator: 'equal', value: url }
+            ]
+          }
+        }
+      ]);
+
+      const context = new Context();
+      context.initialize('uid', { web: { url }});
+
+      // Act
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      // Assert
+      setImmediate(() => {
+        expect(context.get('view')).to.equal('homepage');
+        done();
+      });
+    });
+
+    it('should set "view" in context to key of first view with matching predicate', (done) => {
+      // Arrange
+      const url = 'http://localhost';
+
+      mockConfigurationJson([
+        {
+          key: 'first',
+          display_name: 'First',
+          predicate: {
+            combinator: 'and',
+            rules: [
+              { field: 'web.url', operator: 'equal', value: url }
+            ]
+          }
+        },
+        {
+          key: 'second',
+          display_name: 'Second',
+          predicate: {
+            combinator: 'and',
+            rules: [
+              { field: 'web.url', operator: 'equal', value: url }
+            ]
+          }
+        }
+      ]);
+
+      const context = new Context();
+      context.initialize('uid', { web: { url }});
+
+      // Act
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      // Assert
+      setImmediate(() => {
+        expect(context.get('view')).to.equal('first');
+        done();
+      });
+    });
+
+    describe('when no predicate from views matches', () => {
+      it('should set "view" in context to null', (done) => {
+        // Arrange
+        mockConfigurationJson([
+          {
+            key: 'homepage',
+            display_name: 'Homepage',
+            predicate: {
+              combinator: 'and',
+              rules: [
+                { field: 'web.url', operator: 'not_equal', value: url }
+              ]
+            }
+          }
+        ]);
+
+        const context = new Context();
+        context.initialize('uid', { web: { url }});
+
+        // Act
+        const store = new Store({ environment: 'env' });
+        store.initialize(context);
+
+        // Assert
+        setImmediate(() => {
+          expect(context.get('view')).to.equal(null);
+          done();
+        });
       });
     });
   });
