@@ -10,6 +10,95 @@ import Store, { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates,
 
 
 describe('store.js', () => {
+  describe('get()', () => {
+    function mockGenome(genome) {
+      const experiment = {
+        web: {},
+        _predicate: {},
+        id: '49afccc9bc',
+        _paused: false,
+        _optimization_metric: 'VISITOR',
+        _include_eid_in_hash: true
+      };
+
+      xhrMock.get(/configuration\.json$/, (req, res) => {
+        const data = {
+          _experiments: [
+            Object.entries(genome)
+              .reduce((acc, [key]) => {
+                acc[key] = {
+                  _is_entry_point: false,
+                  _predicate: null,
+                  _values: true,
+                  _initializers: true
+                };
+
+                return acc;
+              }, experiment)
+          ]
+        };
+
+        return res.status(200).body(JSON.stringify(data));
+      });
+
+      xhrMock.get(/allocations$/, (req, res) => {
+        return res.status(200).body(JSON.stringify([
+          {
+            uid: '1',
+            eid: '49afccc9bc',
+            cid: 'dfe1a698c486:49afccc9bc',
+            genome: genome,
+            audience_query: {},
+            ordinal: 0,
+            group_id: '89e674e7-9c2f-4a7d-b2d2-8c5b3e158c73',
+            excluded: false
+          }
+        ]));
+      });
+    }
+
+    beforeEach(() => {
+      xhrMock.setup();
+    });
+
+    afterEach(() => {
+      xhrMock.teardown();
+    });
+
+    it('should return true for true boolean values in genome', async () => {
+      // Arrange
+      mockGenome({ var1: true });
+
+      const context = new Context();
+      context.initialize('uid', {});
+
+      // Act
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      // Assert
+      const result = await store.get('var1');
+      expect(result).to.equal(true);
+    });
+
+    it('should not return undefined for false boolean values in genome', async () => {
+      // Arrange
+      mockGenome({ var1: false });
+
+      const context = new Context();
+      context.initialize('uid', {});
+
+      // Act
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      // Assert
+      const result = await store.get('var1');
+      expect(result).to.not.undefined;
+      expect(result).to.equal(false);
+    });
+  });
+
   describe('expKeyStatesHas', () => {
     let keyStates;
     beforeEach(() =>{
