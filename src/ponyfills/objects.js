@@ -169,15 +169,16 @@ export function prune(map, active) {
     let current = map;
     for (let i = 0; i < keyParts.length; i++) {
       let now = current[keyParts[i]];
-      if (now) {
-        if (i === keyParts.length - 1) {
-          pruned[key] = now;
-          break;
-        }
-        current = now;
-      } else {
+
+      if (now === null || now === undefined) {
         break;
       }
+
+      if (i === keyParts.length - 1) {
+        pruned[key] = now;
+        break;
+      }
+      current = now;
     }
   })
 
