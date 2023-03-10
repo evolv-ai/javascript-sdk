@@ -274,16 +274,8 @@ function EvolvClient(opts) {
               }
             });
 
-            // We will deprecate 'confirmations' in favor of 'experiments.confirmations'
-            // When deprecated delete below and uncomment next line
-            // context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
-            const newConfirmations = contextConfirmations.concat(confirmations);
-            context.update({
-              'confirmations': newConfirmations,
-              'experiments': {
-                'confirmations': newConfirmations
-              }
-            });
+
+            context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
 
             confirmableAllocations.forEach(function(alloc) {
               // Only confirm for non session based experiments -- session based use the analytics data
@@ -342,20 +334,12 @@ function EvolvClient(opts) {
     const contextContaminations = contaminatableAllocations.map(function(alloc) {
       return {
         cid: alloc.cid,
-        timestamp: timestamp
+        timestamp: timestamp,
+        contaminationReason: details
       }
     });
 
-    // We will deprecate 'contaminations' in favor of 'experiments.contaminations'
-    // When deprecated delete below and uncomment next line
-    // context.set('experiments.contaminations', contextContaminations.concat(contaminations));
-    const newContaminations = contextContaminations.concat(contaminations);
-    context.update({
-      'contaminations': newContaminations,
-      'experiments': {
-        'contaminations': newContaminations
-      }
-    });
+    context.set('experiments.contaminations', contextContaminations.concat(contaminations));
 
     contaminatableAllocations.forEach(function(alloc) {
       eventBeacon.emit('contamination', {

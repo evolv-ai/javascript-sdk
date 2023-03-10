@@ -622,9 +622,9 @@ describe('Evolv client integration tests', () => {
       // expect(results.analyticsPayloads[1].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      // const messages1 = results.analyticsPayloads[1].messages;
-      expect(messages.length).to.equal(19)
-      // expect(messages1.length).to.equal(11)
+
+      expect(messages.length).to.equal(18)
+
       expect(messages[0].type).to.equal("context.initialized")
       expect(messages[0].payload).to.eql( {
         "remote": true,
@@ -646,55 +646,24 @@ describe('Evolv client integration tests', () => {
         "excluded": false,
         "uid": 123
       }]);
-      expect(messages[4].type).to.equal("context.value.added")
-      expect(messages[4].payload.key).to.equal("experiments.exclusions")
-      expect(messages[4].payload.value).to.eql([])
-      expect(messages[5].type).to.equal("context.value.added")
-      expect(messages[5].payload.key).to.equal("user_attributes.country")
-      expect(messages[5].payload.value).to.equal("usa")
-      expect(messages[6].type).to.equal("context.value.changed")
-      expect(messages[6].payload.key).to.equal("keys.active")
-      expect(messages[6].payload.value).to.eql(["web.ab8numq2j.am94yhwo2"])
-      expect(messages[7].type).to.equal("context.value.changed")
-      expect(messages[7].payload.key).to.equal("variants.active")
-      expect(messages[7].payload.value).to.eql(["web.ab8numq2j.am94yhwo2:1486101989"])
-      expect(messages[8].type).to.equal("context.value.added")
-      expect(messages[8].payload.key).to.equal("confirmations")
-      expect(messages[8].payload.value.length).to.equal(1)
-      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[9].type).to.equal("context.value.added")
-      expect(messages[9].payload.key).to.equal("experiments.confirmations")
-      expect(messages[9].payload.value.length).to.equal(1)
+
+      expect(messages[5]).to.be.a.message("context.value.added", "experiments.exclusions", []);
+      expect(messages[6]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
+      expect(messages[7]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
+      expect(messages[8]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10].type).to.equal("context.value.added")
-      expect(messages[10].payload.key).to.equal("events")
-      expect(messages[10].payload.value.length).to.equal(1)
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "events", 1);
       expect(messages[10].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[11].type).to.equal("context.value.added")
-      expect(messages[11].payload.key).to.equal("contaminations")
-      expect(messages[11].payload.value.length).to.equal(1)
+      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
       expect(messages[11].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[12].type).to.equal("context.value.added")
-      expect(messages[12].payload.key).to.equal("experiments.contaminations")
-      expect(messages[12].payload.value.length).to.equal(1)
-      expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[13].type).to.equal("context.value.changed")
-      expect(messages[13].payload.key).to.equal("web.url")
-      expect(messages[13].payload.value).to.equal("https://www.lunch.com/dev1/features.html")
-      expect(messages[14].type).to.equal("context.value.changed")
-      expect(messages[14].payload.key).to.equal("keys.active")
-      expect(messages[14].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g"])
-      expect(messages[15].type).to.equal("context.value.changed")
-      expect(messages[15].payload.key).to.equal("variants.active")
-      expect(messages[15].payload.value).to.eql(["web.7w3zpgfy9.azevlvf5g:1777529126"])
-      expect(messages[16].type).to.equal("context.value.removed")
-      expect(messages[16].payload.key).to.equal("web.url")
-      expect(messages[17].type).to.equal("context.value.changed")
-      expect(messages[17].payload.key).to.equal("keys.active")
-      expect(messages[17].payload.value).to.eql([])
-      expect(messages[18].type).to.equal("context.value.changed")
-      expect(messages[18].payload.key).to.equal("variants.active")
-      expect(messages[18].payload.value).to.eql([])
+      expect(messages[12]).to.be.a.message("context.value.changed", "web.url", "https://www.lunch.com/dev1/features.html");
+      expect(messages[13]).to.be.a.message("context.value.changed", "keys.active", ["web.7w3zpgfy9.azevlvf5g"]);
+      expect(messages[14]).to.be.a.message("context.value.changed", "variants.active", ["web.7w3zpgfy9.azevlvf5g:1777529126"]);
+      expect(messages[15].type).to.equal("context.value.removed")
+      expect(messages[15].payload.key).to.equal("web.url")
+      expect(messages[16]).to.be.a.message("context.value.changed", "keys.active", []);
+      expect(messages[17]).to.be.a.message("context.value.changed", "variants.active", []);
     });
 
     // TODO AP-2318 bring back when confirmations killed again
@@ -826,7 +795,8 @@ describe('Evolv client integration tests', () => {
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(19)
+
+      expect(messages.length).to.equal(18)
 
       expect(messages[8].type).to.equal("context.value.added")
       expect(messages[8].payload.key).to.equal("confirmations")
@@ -985,7 +955,8 @@ describe('Evolv client integration tests', () => {
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(19);
+
+      expect(messages.length).to.equal(18);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
@@ -1140,7 +1111,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('confirmations');
+          const confirmations = context.get('experiments.confirmations');
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
@@ -1166,7 +1137,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('confirmations');
+          const confirmations = context.get('experiments.confirmations');
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
@@ -1195,8 +1166,8 @@ describe('Evolv client unit tests', () => {
       const client = new Evolv(options);
       client.contaminate();
 
-      expect(context.remoteContext.contaminations).to.be.lengthOf(1);
-      expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
+      expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(1);
+      expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
     });
 
     it('should error if details, but no reason are included in the contamination', () => {
@@ -1348,9 +1319,11 @@ describe('Evolv client unit tests', () => {
     const client = new Evolv(options);
     client.contaminate(contaminationDetails, true);
 
-    expect(context.remoteContext.contaminations).to.be.lengthOf(2);
-    expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
-    expect(context.remoteContext.contaminations[1].cid).to.be.equal('678910');
+    expect(context.remoteContext.experiments.contaminations).to.be.lengthOf(2);
+    expect(context.remoteContext.experiments.contaminations[0].cid).to.be.equal('5678');
+    expect(context.remoteContext.experiments.contaminations[1].cid).to.be.equal('678910');
+    expect(context.remoteContext.experiments.contaminations[1].contaminationReason.reason).to.be.equal('broken');
+    expect(context.remoteContext.experiments.contaminations[1].contaminationReason.details).to.be.equal('mistake');
   });
 
   describe('off()', () => {
