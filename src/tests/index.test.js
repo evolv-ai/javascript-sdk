@@ -12,9 +12,26 @@ import { buildOptions } from '../build-options.js';
 chai.use(spies);
 const expect = chai.expect;
 const xhrMock = _xhrMock.default;
+const Assertion = chai.Assertion;
 
 
 const SIGNATURE_PATTERN = /keyId="([^"]+)",algorithm="([^"]+)",signature="([^"]+)"/;
+
+Assertion.addMethod('message', function(type, key, value) {
+  const message = this._obj;
+
+  expect(message.type).to.equal(type);
+  expect(message.payload.key).to.equal(key);
+  expect(message.payload.value).to.eql(value);
+});
+
+Assertion.addMethod('messageWithLength', function(type, key, value) {
+  const message = this._obj;
+
+  expect(message.type).to.equal(type);
+  expect(message.payload.key).to.equal(key);
+  expect(message.payload.value.length).to.equal(value);
+});
 
 async function validateSignature(keys, signature, body) {
   const signatureParts = SIGNATURE_PATTERN.exec(signature);
@@ -623,7 +640,7 @@ describe('Evolv client integration tests', () => {
 
       const messages = results.analyticsPayloads[0].messages;
 
-      expect(messages.length).to.equal(18)
+      expect(messages.length).to.equal(17)
 
       expect(messages[0].type).to.equal("context.initialized")
       expect(messages[0].payload).to.eql( {
@@ -647,23 +664,23 @@ describe('Evolv client integration tests', () => {
         "uid": 123
       }]);
 
-      expect(messages[5]).to.be.a.message("context.value.added", "experiments.exclusions", []);
-      expect(messages[6]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
-      expect(messages[7]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
-      expect(messages[8]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
-      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
-      expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "events", 1);
-      expect(messages[10].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
-      expect(messages[11].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[12]).to.be.a.message("context.value.changed", "web.url", "https://www.lunch.com/dev1/features.html");
-      expect(messages[13]).to.be.a.message("context.value.changed", "keys.active", ["web.7w3zpgfy9.azevlvf5g"]);
-      expect(messages[14]).to.be.a.message("context.value.changed", "variants.active", ["web.7w3zpgfy9.azevlvf5g:1777529126"]);
-      expect(messages[15].type).to.equal("context.value.removed")
-      expect(messages[15].payload.key).to.equal("web.url")
-      expect(messages[16]).to.be.a.message("context.value.changed", "keys.active", []);
-      expect(messages[17]).to.be.a.message("context.value.changed", "variants.active", []);
+      expect(messages[4]).to.be.a.message("context.value.added", "experiments.exclusions", []);
+      expect(messages[5]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
+      expect(messages[6]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
+      expect(messages[7]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
+      expect(messages[8]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[8].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "events", 1);
+      expect(messages[9].payload.value[0].type).to.equal("lunch-time")
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
+      expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
+      expect(messages[11]).to.be.a.message("context.value.changed", "web.url", "https://www.lunch.com/dev1/features.html");
+      expect(messages[12]).to.be.a.message("context.value.changed", "keys.active", ["web.7w3zpgfy9.azevlvf5g"]);
+      expect(messages[13]).to.be.a.message("context.value.changed", "variants.active", ["web.7w3zpgfy9.azevlvf5g:1777529126"]);
+      expect(messages[14].type).to.equal("context.value.removed")
+      expect(messages[14].payload.key).to.equal("web.url")
+      expect(messages[15]).to.be.a.message("context.value.changed", "keys.active", []);
+      expect(messages[16]).to.be.a.message("context.value.changed", "variants.active", []);
     });
 
     // TODO AP-2318 bring back when confirmations killed again
@@ -796,7 +813,7 @@ describe('Evolv client integration tests', () => {
 
       const messages = results.analyticsPayloads[0].messages;
 
-      expect(messages.length).to.equal(18)
+      expect(messages.length).to.equal(17)
 
       expect(messages[8].type).to.equal("context.value.added")
       expect(messages[8].payload.key).to.equal("confirmations")
@@ -956,7 +973,7 @@ describe('Evolv client integration tests', () => {
 
       const messages = results.analyticsPayloads[0].messages;
 
-      expect(messages.length).to.equal(18);
+      expect(messages.length).to.equal(17);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
