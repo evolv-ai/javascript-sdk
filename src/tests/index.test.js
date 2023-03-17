@@ -1007,7 +1007,7 @@ describe('Evolv client unit tests', () => {
               "0f39849197": "Project A"
             }
           },
-          _envConfig: {
+          _env_config: {
             example: {
               nested: 'test'
             },

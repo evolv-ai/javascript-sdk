@@ -548,7 +548,7 @@ function EvolvStore(options) {
 
     displayNames = config._display_names || {};
 
-    envConfig = config._envConfig || {};
+    envConfig = config._env_config || {};
 
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
