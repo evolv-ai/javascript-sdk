@@ -1007,11 +1007,13 @@ describe('Evolv client unit tests', () => {
               "0f39849197": "Project A"
             }
           },
-          _env_config: {
-            example: {
-              nested: 'test'
+          _client_config: {
+            _all: {
+              engaged_session_time: 20000
             },
-            engagedSessionTime: 20000
+            "asset-manager": {
+              something_else: 'test'
+            }
           }
         };
 
@@ -1101,14 +1103,14 @@ describe('Evolv client unit tests', () => {
       expect(experiment).to.be.equal('Project A');
     });
 
-    it('should get the simple environment config property', async () => {
+    it('should get the environment config property', async () => {
       // Arrange
       const client = new Evolv(options);
 
       // Act
       client.initialize(uid);
 
-      let engagedSessionTime = await client.getEnvConfig('engagedSessionTime');
+      let engagedSessionTime = await client.getEnvConfig('_all.engaged_session_time');
 
       // Assert
       expect(engagedSessionTime).to.be.equal(20000);
@@ -1121,7 +1123,7 @@ describe('Evolv client unit tests', () => {
       // Act
       client.initialize(uid);
 
-      let nestedExample = await client.getEnvConfig('example.nested');
+      let nestedExample = await client.getEnvConfig('asset-manager.something_else');
 
       // Assert
       expect(nestedExample).to.be.equal('test');
