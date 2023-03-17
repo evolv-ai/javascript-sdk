@@ -1006,6 +1006,12 @@ describe('Evolv client unit tests', () => {
             experiments: {
               "0f39849197": "Project A"
             }
+          },
+          _envConfig: {
+            example: {
+              nested: 'test'
+            },
+            engagedSessionTime: 20000
           }
         };
 
@@ -1093,6 +1099,45 @@ describe('Evolv client unit tests', () => {
 
       // Assert
       expect(experiment).to.be.equal('Project A');
+    });
+
+    it('should get the simple environment config property', async () => {
+      // Arrange
+      const client = new Evolv(options);
+
+      // Act
+      client.initialize(uid);
+
+      let engagedSessionTime = await client.getEnvConfig('engagedSessionTime');
+
+      // Assert
+      expect(engagedSessionTime).to.be.equal(20000);
+    });
+
+    it('should get the nested environment config property', async () => {
+      // Arrange
+      const client = new Evolv(options);
+
+      // Act
+      client.initialize(uid);
+
+      let nestedExample = await client.getEnvConfig('example.nested');
+
+      // Assert
+      expect(nestedExample).to.be.equal('test');
+    });
+
+    it('should get undefined for a missing config property', async () => {
+      // Arrange
+      const client = new Evolv(options);
+
+      // Act
+      client.initialize(uid);
+
+      let nestedExample = await client.getEnvConfig('not.there');
+
+      // Assert
+      expect(nestedExample).to.be.an('undefined');
     });
   });
 
