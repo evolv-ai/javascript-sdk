@@ -385,7 +385,7 @@ function EvolvStore(options) {
   let allocations = null;
   let config = null;
   let displayNames = {};
-  let envConfigProperties = {};
+  let envConfig = {};
   let activeEids = new Set();
   let activeKeys = new Set();
   let previousKeys = new Set();
@@ -419,7 +419,7 @@ function EvolvStore(options) {
     allocations = undefined;
     config = undefined;
     displayNames = undefined;
-    envConfigProperties = undefined;
+    envConfig = undefined;
 
     activeEids = undefined;
     activeKeys = undefined;
@@ -548,7 +548,7 @@ function EvolvStore(options) {
 
     displayNames = config._display_names || {};
 
-    envConfigProperties = config._envConfigProperties || {};
+    envConfig = config._envConfig || {};
 
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
@@ -858,9 +858,9 @@ function EvolvStore(options) {
     });
   };
 
-  this.getEnvConfigProperty = function(key) {
+  this.getEnvConfig = function(key) {
     return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
-      return objects.getValueForKey(key, envConfigProperties);
+      return objects.getValueForKey(key, envConfig);
     });
   };
 
