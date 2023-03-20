@@ -85,6 +85,10 @@ export class EvolvClient {
 
   getConfig(key: string): SubscribablePromise<any>;
 
+  getDisplayName(): SubscribablePromise<string>;
+
+  getEnvConfig(key: string): SubscribablePromise<any>;
+
   flush(): void;
 
   allowEvents(): void;
