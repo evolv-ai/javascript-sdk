@@ -393,6 +393,8 @@ function EvolvStore(options) {
   let previousVariants = new Set();
   let genomeFailed = false;
   let configFailed = false;
+  let configResolved = false;
+  let genomesResolved = false;
 
   const genomeKeyStates = {
     needed: new Set(),
@@ -420,6 +422,9 @@ function EvolvStore(options) {
     config = undefined;
     displayNames = undefined;
     envConfig = undefined;
+
+    configResolved = false;
+    genomesResolved = false;
 
     activeEids = undefined;
     activeKeys = undefined;
@@ -534,6 +539,7 @@ function EvolvStore(options) {
     });
     context.set('experiments.allocations', allocs);
     context.set('experiments.exclusions', exclusions);
+    genomesResolved = true;
   }
 
   function updateConfig(value) {
@@ -553,6 +559,7 @@ function EvolvStore(options) {
     value._experiments.forEach(function(exp) {
       setConfigLoadedKeys(configKeyStates, exp);
     });
+    configResolved = true;
   }
 
 
@@ -573,8 +580,18 @@ function EvolvStore(options) {
     let removeConfig = [];
     let removeValue = [];
     outstandingValuePromises.concat(outstandingConfigPromises).forEach(function(promise) {
-      if (promise.source === GENOME_SOURCE && (!promise.key || !expKeyStatesHas(genomeKeyStates, 'loaded', promise.key))) {
-        return;
+      if (promise.source === GENOME_SOURCE) {
+        if (!promise.key) {
+          return;
+        }
+
+        if (version === 1) {
+          if (!genomesResolved || !configResolved) {
+            return;
+          }
+        } else if (!expKeyStatesHas(genomeKeyStates, 'loaded', promise.key)) {
+          return;
+        }
       }
 
       let configLoaded = !!config;
@@ -727,20 +744,15 @@ function EvolvStore(options) {
       keyStates = genomeKeyStates;
       failed = genomeFailed;
       outstandingPromises = outstandingValuePromises;
-      loaded = expKeyStatesHas(keyStates, 'loaded', key);
+      loaded = expKeyStatesHas(keyStates, 'loaded', key) || (version === 1 && genomesResolved);
     } else {
       keyStates = configKeyStates;
       failed = configFailed;
       outstandingPromises = outstandingConfigPromises;
-      loaded = expKeyStatesHas(keyStates, 'loaded', key, true);
+      loaded = expKeyStatesHas(keyStates, 'loaded', key, true) || (version === 1 && configResolved);
     }
 
     if (loaded) {
-      resolve(transform(key, effectiveGenome, config));
-      return promise;
-    }
-
-    if (expKeyStatesHas(keyStates, 'loaded', key)) {
       resolve(transform(key, effectiveGenome, config));
       return promise;
     }

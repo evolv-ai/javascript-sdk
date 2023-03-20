@@ -11,7 +11,7 @@ import Store, { expKeyStatesHas, evaluatePredicates, setActiveAndEntryKeyStates,
 
 describe('store.js', () => {
   describe('get()', () => {
-    function mockGenome(genome) {
+    function mockParticipantApi(genome, excludeGenome) {
       const experiment = {
         web: {},
         _predicate: {},
@@ -47,7 +47,7 @@ describe('store.js', () => {
             uid: '1',
             eid: '49afccc9bc',
             cid: 'dfe1a698c486:49afccc9bc',
-            genome: genome,
+            genome: excludeGenome ? {} : genome,
             audience_query: {},
             ordinal: 0,
             group_id: '89e674e7-9c2f-4a7d-b2d2-8c5b3e158c73',
@@ -65,9 +65,9 @@ describe('store.js', () => {
       xhrMock.teardown();
     });
 
-    it('should return true for true boolean values in genome', async () => {
+    it('should return undefined for a key active in config but not present in genome', async () => {
       // Arrange
-      mockGenome({ var1: true });
+      mockParticipantApi({ var1: true }, true);
 
       const context = new Context();
       context.initialize('uid', {});
@@ -77,13 +77,39 @@ describe('store.js', () => {
       store.initialize(context);
 
       // Assert
-      const result = await store.get('var1');
-      expect(result).to.equal(true);
+      // Resolve the delayed promises
+      let result = await store.get('var1');
+      expect(result).to.be.undefined;
+
+      // Resolve the immediate promises
+      result = await store.get('var1');
+      expect(result).to.be.undefined;
+    });
+
+    it('should return true for true boolean values in genome', async () => {
+      // Arrange
+      mockParticipantApi({ var1: true });
+
+      const context = new Context();
+      context.initialize('uid', {});
+
+      // Act
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      // Assert
+      // Resolve the delayed promises
+      let result = await store.get('var1');
+      expect(result).to.be.true;
+
+      // Resolve the immediate promises
+      result = await store.get('var1');
+      expect(result).to.be.true;
     });
 
     it('should not return undefined for false boolean values in genome', async () => {
       // Arrange
-      mockGenome({ var1: false });
+      mockParticipantApi({ var1: false });
 
       const context = new Context();
       context.initialize('uid', {});
@@ -93,9 +119,15 @@ describe('store.js', () => {
       store.initialize(context);
 
       // Assert
-      const result = await store.get('var1');
+      // Resolve the delayed promises
+      let result = await store.get('var1');
       expect(result).to.not.undefined;
-      expect(result).to.equal(false);
+      expect(result).to.be.false;
+
+      // Resolve the immediate promises
+      result = await store.get('var1');
+      expect(result).to.not.undefined;
+      expect(result).to.be.false;
     });
   });
 
