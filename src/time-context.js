@@ -60,8 +60,10 @@ export function addDateTimeToContext(context, continueTimeUpdate) {
         // Set any values that need to be updated in the updateValue object
         const contextualSetValue = setValue.bind(null, updateValue, currentDate, 0);
         UNITS.some(function(v) {
-            let vFn = v[0].value;
-            if (lastDate && lastDate[vFn]() === currentDate[vFn]()) {
+            let vFnLocal = v[0].value;
+            let vFnUTC = v[1].value;
+
+            if (lastDate && lastDate[vFnLocal]() === currentDate[vFnLocal]() && lastDate[vFnUTC]() === currentDate[vFnUTC]()) {
                 return true;
             }
 
