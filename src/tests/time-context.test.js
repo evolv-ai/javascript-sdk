@@ -65,6 +65,13 @@ describe('updateTimeContext', () => {
             expect(context.get('time.minute')).to.equal(12);
         });
 
+        it('should update the time context every minute if no value passed in - default is true', () => {
+            addDateTimeToContext(context);
+            expect(context.get('time.minute')).to.equal(12);
+            clock.tick(60000);
+            expect(context.get('time.minute')).to.equal(13);
+        });
+
         it('should update the time context every minute', () => {
             addDateTimeToContext(context, true);
             expect(context.get('time.minute')).to.equal(12);

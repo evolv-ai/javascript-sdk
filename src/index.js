@@ -372,7 +372,7 @@ function EvolvClient(opts) {
    * @param {Object} [remoteContext] A map of data used for evaluating context predicates and analytics.
    * @param {Object} [localContext] A map of data used only for evaluating context predicates.
    */
-  this.initialize = function (uid, remoteContext, localContext, pollForTimeUpdates) {
+  this.initialize = function (uid, remoteContext, localContext) {
     if (initialized) {
       throw new Error('Evolv: Client is already initialized');
     }
@@ -383,7 +383,7 @@ function EvolvClient(opts) {
 
     context.initialize(uid, remoteContext, localContext);
     store.initialize(context);
-    addDateTimeToContext(context, pollForTimeUpdates);
+    addDateTimeToContext(context, options.pollForTimeUpdates);
 
     store.getClientContext()
       .then(function(c) {

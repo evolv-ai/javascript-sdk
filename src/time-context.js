@@ -44,7 +44,16 @@ function setValue(obj, date, depth, unit) {
     setValue(v, date, depth+1, unit);
 }
 
+/**
+ * Adds the current date and time to the context.
+ * @param {Context} context The context to add the date and time to.
+ * @param {boolean} continueTimeUpdate If true, the context will be updated every minute. Defaults to true.
+**/
 export function addDateTimeToContext(context, continueTimeUpdate) {
+    if (typeof continueTimeUpdate === 'undefined') {
+      continueTimeUpdate = true;
+    }
+
     let lastDate;
     function updateDate(currentDate) {
         const updateValue = {};
