@@ -78,16 +78,16 @@ describe('updateTimeContext', () => {
             expect(context.get('date.month')).to.equal(12);
             expect(context.get('date.year')).to.equal(2017);*/
 
-            clock.tick(60000);
+            clock.tick(120000);
 
-            expect(context.get('utc.time.minute')).to.equal(0);
+            expect(context.get('utc.time.minute')).to.equal(1);
             expect(context.get('utc.time.hour')).to.equal(0);
             expect(context.get('utc.date.day')).to.equal(1);
             expect(context.get('utc.date.month')).to.equal(1);
             expect(context.get('utc.date.year')).to.equal(2018);
 
             // Cannot override the timezone, so we can't test the local time
-            /*expect(context.get('time.minute')).to.equal(0);
+            /*expect(context.get('time.minute')).to.equal(1);
             expect(context.get('time.hour')).to.equal(16);
             expect(context.get('date.day')).to.equal(31);
             expect(context.get('date.month')).to.equal(12);
