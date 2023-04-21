@@ -55,7 +55,8 @@ export function addDateTimeToContext(context, continueTimeUpdate) {
     }
 
     let lastDate;
-    function updateDate(currentDate) {
+    function updateDate() {
+        let currentDate = new Date();
         const updateValue = {};
         // Set any values that need to be updated in the updateValue object
         const contextualSetValue = setValue.bind(null, updateValue, currentDate, 0);
@@ -78,15 +79,14 @@ export function addDateTimeToContext(context, continueTimeUpdate) {
     let initialDate = new Date();
     // delay the start to aline to the next minute + 1 millisecond
     const delayStart = Math.ceil(initialDate.getTime()/MINUTE_IN_MILLIS)*MINUTE_IN_MILLIS - initialDate.getTime() + 1;
-    updateDate(initialDate);
+    updateDate();
 
     if (!continueTimeUpdate) {
       return;
     }
 
     setTimeout(function() {
-        let currentDate = new Date();
-        updateDate(currentDate);
+        updateDate();
         setInterval(updateDate, MINUTE_IN_MILLIS);
     }, delayStart);
 }
