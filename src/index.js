@@ -11,6 +11,7 @@ import Beacon from './beacon.js';
 import { assign } from './ponyfills/objects.js';
 import { buildOptions } from './build-options.js';
 import MiniPromise from './ponyfills/minipromise.js';
+import { addDateTimeToContext } from './time-context.js';
 
 /**
  * @typedef {Promise} SubscribablePromise
@@ -382,6 +383,7 @@ function EvolvClient(opts) {
 
     context.initialize(uid, remoteContext, localContext);
     store.initialize(context);
+    addDateTimeToContext(context, options.pollForTimeUpdates);
 
     store.getClientContext()
       .then(function(c) {
