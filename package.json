@@ -33,7 +33,7 @@
   },
   "scripts": {
     "lint": "eslint src",
-    "test": "mocha --experimental-modules",
+    "test": "mocha --experimental-modules --exit",
     "coverage": "npx nyc mocha --experimental-loader=@istanbuljs/esm-loader-hook npm run test",
     "test:debug": "mocha debug --experimental-modules",
     "clean": "del dist",

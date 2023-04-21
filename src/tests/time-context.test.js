@@ -9,14 +9,12 @@ chai.use(spies);
 const expect = chai.expect;
 
 describe('updateTimeContext', () => {
-    // mock EvolvContext with jest
     let context = null;
     let sandbox = null;
     let clock = null;
     const testDate = new Date('2017-06-14T11:12:13.145Z');
 
     beforeEach(() => {
-        register('US/Eastern', this);
         sandbox = createSandbox();
         clock = useFakeTimers(testDate.getTime());
 
