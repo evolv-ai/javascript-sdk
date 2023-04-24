@@ -48,6 +48,7 @@ export interface EvolvClientOptions {
   useCookies?: boolean;
   timeout?: number;
   hooks?: {};
+  pollForTimeUpdates? : boolean;
 }
 
 export class EvolvClient {
