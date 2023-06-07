@@ -1,28 +1,28 @@
 const MINUTE_IN_MILLIS = 60 * 1000;
 
 const MINUTES = [
-    {key: ['time', 'minute'], value: 'getMinutes'},
-    {key: ['utc', 'time', 'minute'], value: 'getUTCMinutes'}
+    {key: ['dateTime', 'local', 'time', 'minute'], value: 'getMinutes'},
+    {key: ['dateTime', 'utc', 'time', 'minute'], value: 'getUTCMinutes'}
 ];
 const HOURS = [
-    {key: ['time', 'hour'], value: 'getHours'},
-    {key: ['utc', 'time', 'hour'], value: 'getUTCHours'},
-    {key: ['hourOfDay'], value: 'getHours'},
-    {key: ['utc', 'hourOfDay'], value: 'getUTCHours'}
+    {key: ['dateTime', 'local', 'time', 'hour'], value: 'getHours'},
+    {key: ['dateTime', 'utc', 'time', 'hour'], value: 'getUTCHours'},
+    {key: ['dateTime', 'local', 'hourOfDay'], value: 'getHours'},
+    {key: ['dateTime', 'utc', 'hourOfDay'], value: 'getUTCHours'}
 ];
 const DAYS = [
-    {key: ['date', 'day'], value: 'getDate'},
-    {key: ['utc', 'date', 'day'], value: 'getUTCDate'},
-    {key: ['dayOfWeek'], value: 'getDay'},
-    {key: ['utc', 'dayOfWeek'], value: 'getUTCDay'}
+    {key: ['dateTime', 'local', 'date', 'day'], value: 'getDate'},
+    {key: ['dateTime', 'utc', 'date', 'day'], value: 'getUTCDate'},
+    {key: ['dateTime', 'local', 'dayOfWeek'], value: 'getDay'},
+    {key: ['dateTime', 'utc', 'dayOfWeek'], value: 'getUTCDay'}
 ];
 const MONTHS = [
-    {key: ['date', 'month'], value: 'getMonth', transform: function(v) { return v+1; }},
-    {key: ['utc', 'date', 'month'], value: 'getUTCMonth', transform: function(v) { return v+1; }}
+    {key: ['dateTime', 'local', 'date', 'month'], value: 'getMonth', transform: function(v) { return v+1; }},
+    {key: ['dateTime', 'utc', 'date', 'month'], value: 'getUTCMonth', transform: function(v) { return v+1; }}
 ];
 const YEARS = [
-    {key: ['date', 'year'], value: 'getFullYear'},
-    {key: ['utc', 'date', 'year'], value: 'getUTCFullYear'}
+    {key: ['dateTime', 'local', 'date', 'year'], value: 'getFullYear'},
+    {key: ['dateTime', 'utc', 'date', 'year'], value: 'getUTCFullYear'}
 ];
 
 const UNITS = [MINUTES, HOURS, DAYS, MONTHS, YEARS];
