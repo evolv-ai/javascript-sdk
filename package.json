@@ -1,6 +1,6 @@
 {
   "name": "@evolv/client",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "The official JavaScript client for the Evolv AI optimization platform.",
   "license": "Apache-2.0",
   "type": "module",
