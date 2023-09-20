@@ -1,7 +1,7 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
-const DELAY = 1;
+export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
 export const RETRIES = 3;
@@ -138,7 +138,7 @@ export default function Emitter(endpoint, context, options) {
     messages.push({
       type: type,
       payload: payload,
-      timestamp: (new Date()).getTime()
+      timestamp: Date.now()
     });
 
     if (flush) {
@@ -152,4 +152,9 @@ export default function Emitter(endpoint, context, options) {
   };
 
   this.flush = transmit;
+
+  // This exists to clear messages in tests. There is no reason to call it in normal usage.
+  this.clearMessages = function() {
+    messages = [];
+  }
 }
