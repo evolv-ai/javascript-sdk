@@ -63,7 +63,7 @@ function rollupConfig(type, isNodeRuntime = false) {
           {
             find: './helpers/requests/index.js',
             replacement: isNodeRuntime
-              ? './helpers/requests/node-request'
+              ? './helpers/requests/fetch-request'
               : './helpers/requests/xhr-request'
           }
         ]
