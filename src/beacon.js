@@ -5,7 +5,6 @@ const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
-export const RETRIES = 3;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -49,26 +48,23 @@ export default function Emitter(endpoint, context, options) {
   let messages = [];
   let timer;
 
-  function send(url, data, sync, forceFallback = false) {
-    if (typeof window !== 'undefined' && window.fetch && !forceFallback) {
-      // Chrome does not yet support this
-      // const encoded = new Blob([data], { type: 'application/json; charset=UTF-8' });
-      // return window.navigator.sendBeacon(url, encoded);
-      const prepData = function(data) {
-        // iterate through data keys and uri encode any objects
-        const preppedData = {};
-        let parsedData = JSON.parse(data);
-        for (let key in parsedData) {
-          if (typeof parsedData[key] === 'object') {
-            preppedData[key] = JSON.stringify(parsedData[key]);
-          } else {
-            preppedData[key] = parsedData[key];
-          }
-        }
-
-        return preppedData;
+  const prepData = function(data) {
+    // iterate through data keys and uri encode any objects
+    const preppedData = {};
+    let parsedData = JSON.parse(data);
+    for (let key in parsedData) {
+      if (typeof parsedData[key] === 'object') {
+        preppedData[key] = JSON.stringify(parsedData[key]);
+      } else {
+        preppedData[key] = parsedData[key];
       }
+    }
 
+    return preppedData;
+  }
+
+  function send(url, data, sync) {
+    if (typeof window !== 'undefined' && window.fetch) {
       let preppedData = prepData(data);
       let params = new URLSearchParams(preppedData).toString();
 
@@ -79,12 +75,17 @@ export default function Emitter(endpoint, context, options) {
       })
         .then(function(response) {
           if (!response.ok) {
-            console.error('HTTP error! Status: ' + response.status);
+            console.error('Evolv: Unable to send event beacon - HTTP error! Status: ' + response.status);
+            fallbackBeacon(url, data, sync);
           }
         })
-      return true
+        .catch(function(err) {
+          console.error('Evolv: Unable to send event beacon');
+          console.error(err);
+          fallbackBeacon(url, data, sync);
+        });
     } else {
-      return fallbackBeacon(url, data, sync);
+      fallbackBeacon(url, data, sync);
     }
   }
 
@@ -97,9 +98,9 @@ export default function Emitter(endpoint, context, options) {
   }
 
   /**
-   * @param retries
+   *
    */
-  function transmit(retries = RETRIES) {
+  function transmit() {
     let sync = false;
     if (typeof this !== 'undefined' && this !== null) {
       const currentEvent = this.event && this.event.type;
@@ -123,16 +124,11 @@ export default function Emitter(endpoint, context, options) {
         let editedMessage = message;
         editedMessage = message.payload || {};
         editedMessage.type = message.type;
-        if (!send(endpoint, JSON.stringify(editedMessage), sync) && retries) {
-          retries -= 1;
-          messages.push(message);
-          console.error('Evolv: Unable to send event beacon');
-        }
+        send(endpoint, JSON.stringify(editedMessage), sync);
       });
     } else {
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        // TODO if we have a message that is too big, we should ensure we use the fallback beacon
         let reducedBatchSize = 0;
         let charCount = 0;
         for (let i = 0; i < (batch.length && BATCH_SIZE); i++) {
@@ -150,19 +146,13 @@ export default function Emitter(endpoint, context, options) {
           break;
         }
 
-        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync) && retries) {
-          retries -= 1;
-          messages = smallBatch;
-          console.error('Evolv: Unable to send analytics beacon');
-          break;
-        }
-
+        send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync);
         batch = batch.slice(reducedBatchSize);
       }
     }
 
     if (messages.length) {
-      timer = setTimeout(function() {transmit(retries)}, DELAY);
+      timer = setTimeout(function() {transmit()}, DELAY);
     }
   }
 
