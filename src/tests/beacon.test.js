@@ -1,7 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 
-import Beacon, {DELAY, RETRIES} from '../beacon.js';
+import Beacon, {DELAY} from '../beacon.js';
 
 chai.use(spies);
 const expect = chai.expect;
@@ -16,7 +16,8 @@ describe('beacon', () => {
 
   it('emit without infinite loop', (done) => {
     console.log('test start')
-    global.window = { addEventListener: () => null , navigator: { sendBeacon: () => false } };
+    const fetch = chai.spy(() => new Promise( resolve => resolve({ response: { ok: false }})));
+    global.window = { addEventListener: () => null , fetch: fetch };
     const beacon = new Beacon(endpointV2, { uid: '' }, '');
     let spy = chai.spy.on(console, 'error')
 
@@ -31,7 +32,7 @@ describe('beacon', () => {
     beacon.emit('error', '{msg', true)
 
     setTimeout(() => {
-      const firstState = 9 + RETRIES - 1
+      const firstState = 9;
       expect(spy).to.have.been.called(firstState);
 
       beacon.emit('error', '{msg', true)
@@ -40,7 +41,7 @@ describe('beacon', () => {
       beacon.emit('error', '{msg', true)
 
       setTimeout(() => {
-        const secondState = firstState + 4 + RETRIES - 1
+        const secondState = firstState + 4;
         expect(spy).to.have.been.called(secondState);
         beacon.clearMessages();
         done()
@@ -51,8 +52,22 @@ describe('beacon', () => {
   describe('test batching', () => {
     let fakedEventTime1 = 1695166791533;
     let fakedEventTime2 = fakedEventTime1 + DELAY + 50;
-    let sendBeacon;
+    let fetch;
     let originalDateNow;
+
+    const requestParams = {
+      cache: 'no-cache',
+      keepalive: true,
+      method: 'GET'
+    };
+
+    function getMockParams(messages) {
+      return new URLSearchParams(({
+        "uid": "",
+        "client": "javascript-sdk",
+        "messages": JSON.stringify(messages)
+      })).toString();
+    }
 
     beforeEach(() => {
       originalDateNow = Date.now;
@@ -60,7 +75,7 @@ describe('beacon', () => {
       const dateNowSpy = chai.spy(() => fakedEventTime1);
       Date.now = dateNowSpy;
 
-      sendBeacon = chai.spy(() => true);
+      fetch = chai.spy(() => new Promise(resolve => resolve({ response: { ok: true }})));
     });
 
     afterEach(() => {
@@ -68,7 +83,7 @@ describe('beacon', () => {
     });
 
     it('should fire each message individual with flush true, sending all messages', () => {
-      global.window = {addEventListener: () => null, navigator: {sendBeacon: sendBeacon}};
+      global.window = {addEventListener: () => null, fetch: fetch};
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 3;
@@ -78,37 +93,24 @@ describe('beacon', () => {
         }, true);
       }
 
-      expect(sendBeacon).to.have.been.called(numberOfCalls);
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
-          "type":"test","payload":{"test":"test0"},
-          "timestamp":fakedEventTime1
-        }]
-      }));
+      expect(fetch).to.have.been.called(numberOfCalls);
 
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
-          "type":"test","payload":{"test":"test1"},
-          "timestamp":fakedEventTime1
-        }]
-      }));
-
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
-          "type":"test","payload":{"test":"test2"},
-          "timestamp":fakedEventTime1
-        }]
-      }));
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        type: 'test', payload: {test: 'test0'},
+        timestamp: fakedEventTime1
+      }]), requestParams);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        type: 'test', payload: {test: 'test1'},
+        timestamp: fakedEventTime1
+      }]), requestParams);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        type: 'test', payload: {test: 'test2'},
+        timestamp: fakedEventTime1
+      }]), requestParams);
     });
 
     it('should batch the messages with flush false, sending all messages', async() => {
-      global.window = {addEventListener: () => null, navigator: {sendBeacon: sendBeacon}};
+      global.window = {addEventListener: () => null, fetch: fetch};
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 3
@@ -120,34 +122,30 @@ describe('beacon', () => {
 
       await new Promise(resolve => setTimeout(resolve, DELAY + 100));
 
-      expect(sendBeacon).to.have.been.called(1);
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
-          "type": "test",
-          "payload": {
-            "test": "test0"
-          },
-          "timestamp":fakedEventTime1
-        }, {
-          "type":"test",
-          "payload":{
-            "test": "test1"
-          },
-          "timestamp":fakedEventTime1
-        }, {
-          "type": "test",
-          "payload":{
-            "test": "test2"
-          },
-          "timestamp":fakedEventTime1
-        }]
-      }));
+      expect(fetch).to.have.been.called(1);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        "type": "test",
+        "payload": {
+          "test": "test0"
+        },
+        "timestamp":fakedEventTime1
+      }, {
+        "type":"test",
+        "payload":{
+          "test": "test1"
+        },
+        "timestamp":fakedEventTime1
+      }, {
+        "type": "test",
+        "payload":{
+          "test": "test2"
+        },
+        "timestamp":fakedEventTime1
+      }]), requestParams);
     });
 
-    it('should batch the messages into 2 blocks with flush false, sending all messages', async() => {
-      global.window = {addEventListener: () => null, navigator: {sendBeacon: sendBeacon}};
+    it('should batch the messages into 2 blocks with flush false, sending all messages - because of time', async() => {
+      global.window = {addEventListener: () => null, fetch: fetch};
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 2
@@ -171,42 +169,104 @@ describe('beacon', () => {
 
       await new Promise(resolve => setTimeout(resolve, DELAY + 100));
 
-      expect(sendBeacon).to.have.been.called(2);
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
+      expect(fetch).to.have.been.called(2);
+
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        "type": "test",
+        "payload": {
+          "test": "test0"
+        },
+        "timestamp": fakedEventTime1
+      }, {
+        "type": "test",
+        "payload": {
+          "test": "test1"
+        },
+        "timestamp": fakedEventTime1
+      }]), requestParams);
+
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams([{
+        "type": "test",
+        "payload": {
+          "test": "test2"
+        },
+        "timestamp": fakedEventTime2
+      }, {
+        "type": "test",
+        "payload": {
+          "test": "test3"
+        },
+        "timestamp": fakedEventTime2
+      }]), requestParams);
+    });
+
+    it('should batch the messages into 2 blocks with flush false, sending all messages - because of message size', async() => {
+      global.window = {addEventListener: () => null, fetch: fetch};
+      const beacon = new Beacon(endpointV2, {uid: ''}, '');
+
+      const numberOfCalls = 50;
+      let i;
+      for (i = 0; i < numberOfCalls; i++) {
+        beacon.emit('test', {
+          test: 'test' + i
+        }, false);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, DELAY + 100));
+
+      expect(fetch).to.have.been.called(4);
+
+      const firstCall = [];
+      const secondCall = [];
+      const thirdCall = [];
+      const fourthCall = [];
+      let j, k, l, m;
+      for (j = 0; j < 16; j++) {
+        firstCall.push({
+            "type": "test",
+            "payload": {
+            "test": "test" + j
+          },
+          "timestamp": fakedEventTime1
+        });
+      }
+
+      for (k = 0; k < 16; k++) {
+        secondCall.push({
           "type": "test",
           "payload": {
-            "test": "test0"
+            "test": "test" + (j + k)
           },
-          "timestamp":fakedEventTime1
-        }, {
-          "type":"test",
-          "payload":{
-            "test": "test1"
-          },
-          "timestamp":fakedEventTime1
-        }]
-      }));
+          "timestamp": fakedEventTime1
+        });
+      }
 
-      expect(sendBeacon).to.have.been.called.with(endpointV2, JSON.stringify({
-        "uid":"",
-        "client":"javascript-sdk",
-        "messages":[{
+      for (l = 0; l < 16; l++) {
+        thirdCall.push({
           "type": "test",
-          "payload":{
-            "test": "test2"
+          "payload": {
+            "test": "test" + (j + k + l)
           },
-          "timestamp":fakedEventTime2
-        }, {
+          "timestamp": fakedEventTime1
+        });
+      }
+
+      for (m = 0; m < 2; m++) {
+        fourthCall.push({
           "type": "test",
-          "payload":{
-            "test": "test3"
+          "payload": {
+            "test": "test" + (j + k + l + m)
           },
-          "timestamp":fakedEventTime2
-        }]
-      }));
+          "timestamp": fakedEventTime1
+        });
+      }
+
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(firstCall), requestParams);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(secondCall), requestParams);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(thirdCall), requestParams);
+      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(fourthCall), requestParams);
+
+      expect(numberOfCalls).to.equal(j + k + l + m);
     });
   });
 });

@@ -634,15 +634,18 @@ describe('Evolv client integration tests', () => {
       expect(results.eventPayloads[0].messages[0].payload.eid).to.equal("0f39849197")
       expect(results.eventPayloads[1].messages[0].type).to.equal("lunch-time")
 
-      expect(results.analyticsPayloads.length).to.equal(1);
+      expect(results.analyticsPayloads.length).to.equal(2);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
-      const messages = results.analyticsPayloads[0].messages;
+      const messages1 = results.analyticsPayloads[0].messages;
+      const messages2 = results.analyticsPayloads[1].messages;
+      const messages = messages1.concat(messages2);
 
-      expect(messages.length).to.equal(18)
+      expect(messages1.length).to.equal(9)
+      expect(messages2.length).to.equal(9)
 
       expect(messages[0].type).to.equal("context.initialized")
-      expect(messages[0].payload).to.eql( {
+      expect(messages1[0].payload).to.eql( {
         "remote": true,
         "web": {
           "url": "https://www.lunch.com/dev1/index.html"
@@ -950,11 +953,11 @@ describe('Evolv client integration tests', () => {
 
       await new Promise(resolve => setTimeout(resolve, 1));
 
-      expect(results.analyticsPayloads.length).to.equal(1);
+      expect(results.analyticsPayloads.length).to.equal(2);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(18);
+      expect(messages.length).to.equal(9);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
