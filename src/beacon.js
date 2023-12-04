@@ -1,6 +1,7 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
+const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
@@ -48,12 +49,40 @@ export default function Emitter(endpoint, context, options) {
   let messages = [];
   let timer;
 
-  function send(url, data, sync) {
-    if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
+  function send(url, data, sync, forceFallback = false) {
+    if (typeof window !== 'undefined' && window.fetch && !forceFallback) {
       // Chrome does not yet support this
       // const encoded = new Blob([data], { type: 'application/json; charset=UTF-8' });
       // return window.navigator.sendBeacon(url, encoded);
-      return window.navigator.sendBeacon(url, data);
+      const prepData = function(data) {
+        // iterate through data keys and uri encode any objects
+        const preppedData = {};
+        let parsedData = JSON.parse(data);
+        for (let key in parsedData) {
+          if (typeof parsedData[key] === 'object') {
+            preppedData[key] = JSON.stringify(parsedData[key]);
+          } else {
+            preppedData[key] = parsedData[key];
+          }
+        }
+
+        return preppedData;
+      }
+
+      let preppedData = prepData(data);
+      let params = new URLSearchParams(preppedData).toString();
+
+      window.fetch(url + '?' + params, {
+        method: 'GET',
+        keepalive: true,
+        cache: 'no-cache'
+      })
+        .then(function(response) {
+          if (!response.ok) {
+            console.error('HTTP error! Status: ' + response.status);
+          }
+        })
+      return true
     } else {
       return fallbackBeacon(url, data, sync);
     }
@@ -103,7 +132,20 @@ export default function Emitter(endpoint, context, options) {
     } else {
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const smallBatch = batch.slice(0, BATCH_SIZE);
+        // TODO if we have a message that is too big, we should ensure we use the fallback beacon
+        let reducedBatchSize = 0;
+        let charCount = 0;
+        for (let i = 0; i < (batch.length && BATCH_SIZE); i++) {
+          charCount += encodeURIComponent(JSON.stringify(batch[i])).length;
+
+          if (charCount > MAX_MESSAGE_SIZE) {
+            break;
+          }
+
+          reducedBatchSize = i;
+        }
+
+        const smallBatch = batch.slice(0, reducedBatchSize);
         if (smallBatch.length === 0) {
           break;
         }
@@ -115,7 +157,7 @@ export default function Emitter(endpoint, context, options) {
           break;
         }
 
-        batch = batch.slice(BATCH_SIZE)
+        batch = batch.slice(reducedBatchSize);
       }
     }
 
@@ -125,8 +167,11 @@ export default function Emitter(endpoint, context, options) {
   }
 
   if (typeof window !== 'undefined') {
-    window.addEventListener('unload', transmit);
-    window.addEventListener('beforeunload', transmit);
+    window.addEventListener("visibilitychange", function transmitData() {
+      if (window.visibilityState === "hidden") {
+        transmit();
+      }
+    });
   }
 
   this.unblockAndFlush = function() {
