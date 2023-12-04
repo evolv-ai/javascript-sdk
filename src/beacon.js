@@ -1,7 +1,7 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
-const MAX_MESSAGE_SIZE = 2000;
+export const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
@@ -63,8 +63,8 @@ export default function Emitter(endpoint, context, options) {
     return preppedData;
   }
 
-  function send(url, data, sync) {
-    if (typeof window !== 'undefined' && window.fetch) {
+  function send(url, data, sync, forceFailover = false) {
+    if (typeof window !== 'undefined' && window.fetch && !forceFailover) {
       let preppedData = prepData(data);
       let params = new URLSearchParams(preppedData).toString();
 
@@ -129,6 +129,10 @@ export default function Emitter(endpoint, context, options) {
     } else {
       // eslint-disable-next-line no-constant-condition
       while (true) {
+        if (batch.length === 0) {
+          break;
+        }
+
         let reducedBatchSize = 0;
         let charCount = 0;
         for (let i = 0; i < (batch.length && BATCH_SIZE); i++) {
@@ -138,12 +142,17 @@ export default function Emitter(endpoint, context, options) {
             break;
           }
 
-          reducedBatchSize = i;
+          reducedBatchSize = i + 1;
         }
 
         const smallBatch = batch.slice(0, reducedBatchSize);
+
+        // smallBatch would be 0 if the first message was too big
+        // just grab the first message, and force send it with failover
         if (smallBatch.length === 0) {
-          break;
+          send(endpoint, JSON.stringify(wrapMessages([batch[0]])), sync, true);
+          batch = batch.slice(1);
+          continue;
         }
 
         send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync);

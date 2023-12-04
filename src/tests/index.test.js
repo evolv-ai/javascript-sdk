@@ -641,8 +641,8 @@ describe('Evolv client integration tests', () => {
       const messages2 = results.analyticsPayloads[1].messages;
       const messages = messages1.concat(messages2);
 
-      expect(messages1.length).to.equal(9)
-      expect(messages2.length).to.equal(9)
+      expect(messages1.length).to.equal(10)
+      expect(messages2.length).to.equal(8)
 
       expect(messages[0].type).to.equal("context.initialized")
       expect(messages1[0].payload).to.eql( {
@@ -957,7 +957,7 @@ describe('Evolv client integration tests', () => {
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(9);
+      expect(messages.length).to.equal(10);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
