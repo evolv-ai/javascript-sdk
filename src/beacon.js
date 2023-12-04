@@ -171,6 +171,11 @@ export default function Emitter(endpoint, context, options) {
         transmit();
       }
     });
+
+    // This event is less reliable in when it is fired than visibilitychange - visibilitychange is not always present
+    // in old browsers.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon#sending_analytics_at_the_end_of_a_session
+    window.addEventListener('pagehide', transmit);
   }
 
   this.unblockAndFlush = function() {
