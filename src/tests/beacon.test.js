@@ -1,7 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 
-import Beacon, {DELAY} from '../beacon.js';
+import Beacon, {DELAY, MAX_MESSAGE_SIZE} from '../beacon.js';
 import sinon from "sinon";
 
 chai.use(spies);
@@ -215,14 +215,13 @@ describe('beacon', () => {
 
       await new Promise(resolve => setTimeout(resolve, DELAY + 100));
 
-      expect(fetch).to.have.been.called(4);
+      expect(fetch).to.have.been.called(3);
 
       const firstCall = [];
       const secondCall = [];
       const thirdCall = [];
-      const fourthCall = [];
-      let j, k, l, m;
-      for (j = 0; j < 16; j++) {
+      let j, k, l;
+      for (j = 0; j < 17; j++) {
         firstCall.push({
             "type": "test",
             "payload": {
@@ -232,7 +231,7 @@ describe('beacon', () => {
         });
       }
 
-      for (k = 0; k < 16; k++) {
+      for (k = 0; k < 17; k++) {
         secondCall.push({
           "type": "test",
           "payload": {
@@ -252,26 +251,15 @@ describe('beacon', () => {
         });
       }
 
-      for (m = 0; m < 2; m++) {
-        fourthCall.push({
-          "type": "test",
-          "payload": {
-            "test": "test" + (j + k + l + m)
-          },
-          "timestamp": fakedEventTime1
-        });
-      }
-
       expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(firstCall), requestParams);
       expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(secondCall), requestParams);
       expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(thirdCall), requestParams);
-      expect(fetch).to.have.been.called.with(endpointV2 + '?' + getMockParams(fourthCall), requestParams);
 
-      expect(numberOfCalls).to.equal(j + k + l + m);
+      expect(numberOfCalls).to.equal(j + k + l);
     });
   });
 
-  describe('test failover for unsuccessful fetch', () => {
+  describe('test failover', () => {
     let xhrRequests;
     beforeEach(() => {
       global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
@@ -286,52 +274,98 @@ describe('beacon', () => {
       global.XMLHttpRequest.restore();
     });
 
-    it('should not failover to XHRPost if the fetch request returns ok', async() => {
-      const fetch = chai.spy(() => new Promise( resolve => resolve( { ok: true })));
-      global.window = {addEventListener: () => null, fetch: fetch};
-      const beacon = new Beacon(endpointV2, {uid: ''}, '');
+    describe('test failover for unsuccessful fetch', () => {
+      it('should not failover to XHRPost if the fetch request returns ok', async () => {
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
+        global.window = {addEventListener: () => null, fetch: fetch};
+        const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
-      beacon.emit('test', {
-        test: 'test'
-      }, true);
+        beacon.emit('test', {
+          test: 'test'
+        }, true);
 
-      expect(fetch).to.have.been.called(1);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(xhrRequests.length).to.equal(0);
+        expect(fetch).to.have.been.called(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(xhrRequests.length).to.equal(0);
+      });
+
+      it('should failover to XHRPost if the fetch request returns not ok', async () => {
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: false})));
+        global.window = {addEventListener: () => null, fetch: fetch};
+        const beacon = new Beacon(endpointV2, {uid: ''}, '');
+
+        beacon.emit('test', {
+          test: 'test'
+        }, true);
+
+        expect(fetch).to.have.been.called(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(xhrRequests.length).to.equal(1);
+        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+      });
+
+      it('should failover to XHRPost if the fetch request rejects', async () => {
+        const fetch = chai.spy(() => new Promise(reject => reject()));
+        global.window = {addEventListener: () => null, fetch: fetch};
+        const beacon = new Beacon(endpointV2, {uid: ''}, '');
+
+        beacon.emit('test', {
+          test: 'test'
+        }, true);
+
+        expect(fetch).to.have.been.called(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(xhrRequests.length).to.equal(1);
+        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+      });
     });
 
-    it('should failover to XHRPost if the fetch request returns not ok', async() => {
-      const fetch = chai.spy(() => new Promise( resolve => resolve( { ok: false })));
-      global.window = {addEventListener: () => null, fetch: fetch};
-      const beacon = new Beacon(endpointV2, {uid: ''}, '');
+    describe('test individual too large message', () => {
+      it('should send the message directly to the failover XHRPost if too big', async() => {
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
+        global.window = {addEventListener: () => null, fetch: fetch};
+        const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
-      beacon.emit('test', {
-        test: 'test'
-      }, true);
+        let longMessage = '';
+        for (let i = 0; i < MAX_MESSAGE_SIZE + 1; i++) {
+          longMessage += 'a';
+        }
 
-      expect(fetch).to.have.been.called(1);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(xhrRequests.length).to.equal(1);
-      expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+        beacon.emit('test', {
+          test: longMessage
+        }, false);
+
+        await new Promise(resolve => setTimeout(resolve, DELAY + 100));
+
+        expect(fetch).not.to.have.been.called();
+        expect(xhrRequests.length).to.equal(1);
+        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+      });
+
+      it('should send the message directly to the failover XHRPost if too big - when it is the second message', async() => {
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
+        global.window = {addEventListener: () => null, fetch: fetch};
+        const beacon = new Beacon(endpointV2, {uid: ''}, '');
+
+        beacon.emit('test', {
+          test: 'test'
+        }, false);
+
+        let longMessage = '';
+        for (let i = 0; i < MAX_MESSAGE_SIZE + 1; i++) {
+          longMessage += 'a';
+        }
+
+        beacon.emit('test', {
+          test: longMessage
+        }, false);
+
+        await new Promise(resolve => setTimeout(resolve, DELAY + 100));
+
+        expect(fetch).to.have.been. called(1);
+        expect(xhrRequests.length).to.equal(1);
+        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+      });
     });
-
-    it('should failover to XHRPost if the fetch request rejects', async() => {
-      const fetch = chai.spy(() => new Promise( reject => reject()));
-      global.window = {addEventListener: () => null, fetch: fetch};
-      const beacon = new Beacon(endpointV2, {uid: ''}, '');
-
-      beacon.emit('test', {
-        test: 'test'
-      }, true);
-
-      expect(fetch).to.have.been.called(1);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(xhrRequests.length).to.equal(1);
-      expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
-    });
-  });
-
-  describe('test individual too large message', () => {
-    // TODO -- worth trying to test ahead of time?
   });
 });
