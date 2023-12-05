@@ -2,7 +2,7 @@ import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
 export const MAX_MESSAGE_SIZE = 2000;
-export const DELAY = 100;
+export const DELAY = 5000;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
 
@@ -166,6 +166,7 @@ export default function Emitter(endpoint, context, options) {
   }
 
   if (typeof window !== 'undefined') {
+    /** @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event#sending_end-of-session_analytics_on_transitioning_to_hidden} */
     window.addEventListener("visibilitychange", function transmitData() {
       if (window.visibilityState === "hidden") {
         transmit();
