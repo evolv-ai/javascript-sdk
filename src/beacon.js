@@ -2,7 +2,7 @@ import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
 export const MAX_MESSAGE_SIZE = 2000;
-export const DELAY = 5000;
+export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
 
