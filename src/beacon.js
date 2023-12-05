@@ -54,6 +54,7 @@ export default function Emitter(endpoint, context, options) {
     let parsedData = JSON.parse(data);
     for (let key in parsedData) {
       if (typeof parsedData[key] === 'object') {
+        // Need to stringify as URLSearchParams will just print Object
         preppedData[key] = JSON.stringify(parsedData[key]);
       } else {
         preppedData[key] = parsedData[key];
@@ -64,7 +65,7 @@ export default function Emitter(endpoint, context, options) {
   }
 
   function send(url, data, sync, forceFailover = false) {
-    if (typeof window !== 'undefined' && window.fetch && !forceFailover) {
+    if (typeof window !== 'undefined' && window.fetch && !!URLSearchParams && !forceFailover) {
       let preppedData = prepData(data);
       let params = new URLSearchParams(preppedData).toString();
 
