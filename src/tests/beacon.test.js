@@ -6,14 +6,35 @@ import sinon from "sinon";
 
 chai.use(spies);
 const expect = chai.expect;
+
+function getMockParams(messages) {
+  return new URLSearchParams(({
+    "uid": "",
+    "client": "javascript-sdk",
+    "messages": JSON.stringify(messages)
+  })).toString();
+}
+
 describe('beacon', () => {
+  let fakedEventTime1 = 1695166791533;
   const endpointV2 = 'https://participants-frazer.evolv.ai/v2';
+
+  let xhrRequests;
   beforeEach(() => {
+    global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+    xhrRequests = [];
+
+    global.XMLHttpRequest.onCreate = function (xhr) {
+      xhrRequests.push(xhr);
+    };
+
     global.windowRef = global.window
-  })
+  });
+
   afterEach(() => {
+    global.XMLHttpRequest.restore();
     global.window = global.windowRef
-  })
+  });
 
   it('emit without infinite loop', (done) => {
     console.log('test start')
@@ -33,7 +54,7 @@ describe('beacon', () => {
     beacon.emit('error', '{msg', true)
 
     setTimeout(() => {
-      const firstState = 9;
+      const firstState = 9 * 2; // this should fail twice for each requests as we failover from get to post
       expect(spy).to.have.been.called(firstState);
 
       beacon.emit('error', '{msg', true)
@@ -42,7 +63,7 @@ describe('beacon', () => {
       beacon.emit('error', '{msg', true)
 
       setTimeout(() => {
-        const secondState = firstState + 4;
+        const secondState = firstState + (4 * 2);
         expect(spy).to.have.been.called(secondState);
         beacon.clearMessages();
         done()
@@ -51,7 +72,6 @@ describe('beacon', () => {
   });
 
   describe('test batching', () => {
-    let fakedEventTime1 = 1695166791533;
     let fakedEventTime2 = fakedEventTime1 + DELAY + 50;
     let fetch;
     let originalDateNow;
@@ -61,14 +81,6 @@ describe('beacon', () => {
       keepalive: true,
       method: 'GET'
     };
-
-    function getMockParams(messages) {
-      return new URLSearchParams(({
-        "uid": "",
-        "client": "javascript-sdk",
-        "messages": JSON.stringify(messages)
-      })).toString();
-    }
 
     beforeEach(() => {
       originalDateNow = Date.now;
@@ -260,20 +272,6 @@ describe('beacon', () => {
   });
 
   describe('test failover', () => {
-    let xhrRequests;
-    beforeEach(() => {
-      global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
-      xhrRequests = [];
-
-      global.XMLHttpRequest.onCreate = function (xhr) {
-        xhrRequests.push(xhr);
-      };
-    });
-
-    afterEach(() => {
-      global.XMLHttpRequest.restore();
-    });
-
     describe('test failover for unsuccessful fetch', () => {
       it('should not failover to XHRPost if the fetch request returns ok', async () => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
@@ -298,13 +296,14 @@ describe('beacon', () => {
           test: 'test'
         }, true);
 
-        expect(fetch).to.have.been.called(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(fetch).to.have.been.called(2);
         await new Promise(resolve => setTimeout(resolve, 100));
         expect(xhrRequests.length).to.equal(1);
         expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
       });
 
-      it('should failover to XHRPost if the fetch request rejects', async () => {
+      it('should failover to fetch post, then XHRPost if the fetch request rejects', async () => {
         const fetch = chai.spy(() => new Promise(reject => reject()));
         global.window = {addEventListener: () => null, fetch: fetch};
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
@@ -313,7 +312,8 @@ describe('beacon', () => {
           test: 'test'
         }, true);
 
-        expect(fetch).to.have.been.called(1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(fetch).to.have.been.called(2);
         await new Promise(resolve => setTimeout(resolve, 100));
         expect(xhrRequests.length).to.equal(1);
         expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
@@ -321,6 +321,11 @@ describe('beacon', () => {
     });
 
     describe('test individual too large message', () => {
+      beforeEach(() => {
+        const dateNowSpy = chai.spy(() => fakedEventTime1);
+        Date.now = dateNowSpy;
+      });
+
       it('should send the message directly to the failover XHRPost if too big', async() => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         global.window = {addEventListener: () => null, fetch: fetch};
@@ -337,9 +342,24 @@ describe('beacon', () => {
 
         await new Promise(resolve => setTimeout(resolve, DELAY + 100));
 
-        expect(fetch).not.to.have.been.called();
-        expect(xhrRequests.length).to.equal(1);
-        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+        expect(fetch).to.have.been.called(1);
+        expect(xhrRequests.length).to.equal(0);
+        expect(fetch).to.have.been.called.with(endpointV2 , {
+          body: JSON.stringify({
+            uid:'',
+            client: 'javascript-sdk',
+            messages:[{
+              type: 'test',
+              payload: {
+                test: longMessage
+              },
+              timestamp: fakedEventTime1
+            }]
+          }),
+          cache: 'no-cache',
+          keepalive: true,
+          method: 'POST'
+        });
       });
 
       it('should send the message directly to the failover XHRPost if too big - when it is the second message', async() => {
@@ -362,9 +382,40 @@ describe('beacon', () => {
 
         await new Promise(resolve => setTimeout(resolve, DELAY + 100));
 
-        expect(fetch).to.have.been. called(1);
-        expect(xhrRequests.length).to.equal(1);
-        expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
+        expect(fetch).to.have.been.called(2);
+        expect(fetch).to.have.been.called.with(endpointV2 , {
+          body: JSON.stringify({
+            uid:'',
+            client: 'javascript-sdk',
+            messages:[{
+              type: 'test',
+              payload: {
+                test: longMessage
+              },
+              timestamp: fakedEventTime1
+            }]
+          }),
+          cache: 'no-cache',
+          keepalive: true,
+          method: 'POST'
+        });
+
+        const params = getMockParams([{
+          type: 'test',
+          payload: {
+            test: 'test'
+          },
+          timestamp: fakedEventTime1
+        }]);
+
+        expect(fetch).to.have.been.called.with(endpointV2 + '?' + params , {
+          cache: 'no-cache',
+          keepalive: true,
+          method: 'GET'
+        });
+
+        expect(xhrRequests.length).to.equal(0);
+        // expect(JSON.parse(xhrRequests[0].requestBody).messages.length).to.equal(1);
       });
     });
   });

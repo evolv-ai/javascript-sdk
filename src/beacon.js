@@ -1,6 +1,8 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
+
+// TODO check char count in prod --
 export const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
@@ -64,26 +66,34 @@ export default function Emitter(endpoint, context, options) {
     return preppedData;
   }
 
-  function send(url, data, sync, forceFailover = false) {
-    if (typeof window !== 'undefined' && window.fetch && !!URLSearchParams && !forceFailover) {
-      let preppedData = prepData(data);
-      let params = new URLSearchParams(preppedData).toString();
-
-      window.fetch(url + '?' + params, {
+  function send(url, data, sync, usePost = false) {
+    if (typeof window !== 'undefined' && window.fetch && !!URLSearchParams) {
+      let options = {
         method: 'GET',
         keepalive: true,
         cache: 'no-cache'
-      })
+      };
+
+      if (usePost) {
+        options.method = 'POST';
+        options.body = data;
+      } else {
+        let preppedData = prepData(data);
+        let params = new URLSearchParams(preppedData).toString();
+        url = url + '?' + params;
+      }
+
+      window.fetch(url, options)
         .then(function(response) {
           if (!response.ok) {
             console.error('Evolv: Unable to send event beacon - HTTP error! Status: ' + response.status);
-            fallbackBeacon(url, data, sync);
+            usePost ? fallbackBeacon(url, data, sync) : send(url, data, sync, true);
           }
         })
         .catch(function(err) {
           console.error('Evolv: Unable to send event beacon');
           console.error(err);
-          fallbackBeacon(url, data, sync);
+          usePost ? fallbackBeacon(url, data, sync) : send(url, data, sync, true);
         });
     } else {
       fallbackBeacon(url, data, sync);
