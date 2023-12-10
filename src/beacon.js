@@ -1,8 +1,6 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
-
-// TODO check char count in prod --
 export const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
@@ -74,16 +72,17 @@ export default function Emitter(endpoint, context, options) {
         cache: 'no-cache'
       };
 
+      let fetchUrl = url;
       if (usePost) {
         options.method = 'POST';
         options.body = data;
       } else {
         let preppedData = prepData(data);
         let params = new URLSearchParams(preppedData).toString();
-        url = url + '?' + params;
+        fetchUrl = url + '?' + params;
       }
 
-      window.fetch(url, options)
+      window.fetch(fetchUrl, options)
         .then(function(response) {
           if (!response.ok) {
             console.error('Evolv: Unable to send event beacon - HTTP error! Status: ' + response.status);
