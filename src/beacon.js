@@ -1,10 +1,10 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
+export const MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
-export const RETRIES = 3;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -48,14 +48,54 @@ export default function Emitter(endpoint, context, options) {
   let messages = [];
   let timer;
 
-  function send(url, data, sync) {
-    if (typeof window !== 'undefined' && window.navigator.sendBeacon) {
-      // Chrome does not yet support this
-      // const encoded = new Blob([data], { type: 'application/json; charset=UTF-8' });
-      // return window.navigator.sendBeacon(url, encoded);
-      return window.navigator.sendBeacon(url, data);
+  const prepData = function(data) {
+    // iterate through data keys and uri encode any objects
+    const preppedData = {};
+    let parsedData = JSON.parse(data);
+    for (let key in parsedData) {
+      if (typeof parsedData[key] === 'object') {
+        // Need to stringify as URLSearchParams will just print Object
+        preppedData[key] = JSON.stringify(parsedData[key]);
+      } else {
+        preppedData[key] = parsedData[key];
+      }
+    }
+
+    return preppedData;
+  }
+
+  function send(url, data, sync, usePost = false) {
+    if (typeof window !== 'undefined' && window.fetch && !!URLSearchParams) {
+      let options = {
+        method: 'GET',
+        keepalive: true,
+        cache: 'no-cache'
+      };
+
+      let fetchUrl = url;
+      if (usePost) {
+        options.method = 'POST';
+        options.body = data;
+      } else {
+        let preppedData = prepData(data);
+        let params = new URLSearchParams(preppedData).toString();
+        fetchUrl = url + '?' + params;
+      }
+
+      window.fetch(fetchUrl, options)
+        .then(function(response) {
+          if (!response.ok) {
+            console.error('Evolv: Unable to send event beacon - HTTP error! Status: ' + response.status);
+            usePost ? fallbackBeacon(url, data, sync) : send(url, data, sync, true);
+          }
+        })
+        .catch(function(err) {
+          console.error('Evolv: Unable to send event beacon');
+          console.error(err);
+          usePost ? fallbackBeacon(url, data, sync) : send(url, data, sync, true);
+        });
     } else {
-      return fallbackBeacon(url, data, sync);
+      fallbackBeacon(url, data, sync);
     }
   }
 
@@ -68,9 +108,9 @@ export default function Emitter(endpoint, context, options) {
   }
 
   /**
-   * @param retries
+   *
    */
-  function transmit(retries = RETRIES) {
+  function transmit() {
     let sync = false;
     if (typeof this !== 'undefined' && this !== null) {
       const currentEvent = this.event && this.event.type;
@@ -94,39 +134,59 @@ export default function Emitter(endpoint, context, options) {
         let editedMessage = message;
         editedMessage = message.payload || {};
         editedMessage.type = message.type;
-        if (!send(endpoint, JSON.stringify(editedMessage), sync) && retries) {
-          retries -= 1;
-          messages.push(message);
-          console.error('Evolv: Unable to send event beacon');
-        }
+        send(endpoint, JSON.stringify(editedMessage), sync);
       });
     } else {
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const smallBatch = batch.slice(0, BATCH_SIZE);
+        if (batch.length === 0) {
+          break;
+        }
+
+        let reducedBatchSize = 0;
+        let charCount = 0;
+        for (let i = 0; i < (batch.length && BATCH_SIZE); i++) {
+          charCount += encodeURIComponent(JSON.stringify(batch[i])).length;
+
+          if (charCount > MAX_MESSAGE_SIZE) {
+            break;
+          }
+
+          reducedBatchSize = i + 1;
+        }
+
+        const smallBatch = batch.slice(0, reducedBatchSize);
+
+        // smallBatch would be 0 if the first message was too big
+        // just grab the first message, and force send it with failover
         if (smallBatch.length === 0) {
-          break;
+          send(endpoint, JSON.stringify(wrapMessages([batch[0]])), sync, true);
+          batch = batch.slice(1);
+          continue;
         }
 
-        if (!send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync) && retries) {
-          retries -= 1;
-          messages = smallBatch;
-          console.error('Evolv: Unable to send analytics beacon');
-          break;
-        }
-
-        batch = batch.slice(BATCH_SIZE)
+        send(endpoint, JSON.stringify(wrapMessages(smallBatch)), sync);
+        batch = batch.slice(reducedBatchSize);
       }
     }
 
     if (messages.length) {
-      timer = setTimeout(function() {transmit(retries)}, DELAY);
+      timer = setTimeout(function() {transmit()}, DELAY);
     }
   }
 
   if (typeof window !== 'undefined') {
-    window.addEventListener('unload', transmit);
-    window.addEventListener('beforeunload', transmit);
+    /** @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event#sending_end-of-session_analytics_on_transitioning_to_hidden} */
+    window.addEventListener("visibilitychange", function transmitData() {
+      if (window.visibilityState === "hidden") {
+        transmit();
+      }
+    });
+
+    // This event is less reliable in when it is fired than visibilitychange - visibilitychange is not always present
+    // in old browsers.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon#sending_analytics_at_the_end_of_a_session
+    window.addEventListener('pagehide', transmit);
   }
 
   this.unblockAndFlush = function() {
