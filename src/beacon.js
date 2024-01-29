@@ -131,10 +131,10 @@ export default function Emitter(endpoint, context, options) {
     if (v1Events) {
       // change needed to support v1 of the participants api
       batch.forEach(function(message) {
-        let editedMessage = message;
-        editedMessage = message.payload || {};
+        let editedMessage = message.payload || {};
         editedMessage.type = message.type;
-        send(endpoint, JSON.stringify(editedMessage), sync);
+        const usePost = encodeURIComponent(JSON.stringify(editedMessage)).length > MAX_MESSAGE_SIZE;
+        send(endpoint, JSON.stringify(editedMessage), sync, usePost);
       });
     } else {
       // eslint-disable-next-line no-constant-condition
