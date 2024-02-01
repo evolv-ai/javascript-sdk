@@ -1,7 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 
-import Beacon, {DELAY, MAX_MESSAGE_SIZE} from '../beacon.js';
+import Beacon, {DEFAULT_MAX_MESSAGE_SIZE, DELAY, MICROSOFT_MAX_MESSAGE_SIZE} from '../beacon.js';
 import sinon from "sinon";
 
 chai.use(spies);
@@ -14,6 +14,9 @@ function getMockParams(messages) {
     "messages": JSON.stringify(messages)
   })).toString();
 }
+
+const edgeAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/14.14300';
+const chromeAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 describe('beacon', () => {
   let fakedEventTime1 = 1695166791533;
@@ -98,7 +101,13 @@ describe('beacon', () => {
 
     it('should fire each message individual with flush true, sending all messages', () => {
       // noinspection JSConstantReassignment
-      global.window = {addEventListener: () => null, fetch: fetch};
+      global.window = {
+        addEventListener: () => null,
+        fetch: fetch,
+        navigator: {
+          userAgent: edgeAgent
+        }
+      };
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 3;
@@ -126,7 +135,13 @@ describe('beacon', () => {
 
     it('should batch the messages with flush false, sending all messages', async() => {
       // noinspection JSConstantReassignment
-      global.window = {addEventListener: () => null, fetch: fetch};
+      global.window = {
+        addEventListener: () => null,
+        fetch: fetch,
+        navigator: {
+          userAgent: edgeAgent
+        }
+      };
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 3
@@ -162,7 +177,13 @@ describe('beacon', () => {
 
     it('should batch the messages into 2 blocks with flush false, sending all messages - because of time', async() => {
       // noinspection JSConstantReassignment
-      global.window = {addEventListener: () => null, fetch: fetch};
+      global.window = {
+        addEventListener: () => null,
+        fetch: fetch,
+        navigator: {
+          userAgent: edgeAgent
+        }
+      };
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 2
@@ -218,7 +239,13 @@ describe('beacon', () => {
 
     it('should batch the messages into 2 blocks with flush false, sending all messages - because of message size', async() => {
       // noinspection JSConstantReassignment
-      global.window = {addEventListener: () => null, fetch: fetch};
+      global.window = {
+        addEventListener: () => null,
+        fetch: fetch,
+        navigator: {
+          userAgent: edgeAgent
+        }
+      };
       const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
       const numberOfCalls = 50;
@@ -280,7 +307,13 @@ describe('beacon', () => {
       it('should not failover to XHRPost if the fetch request returns ok', async () => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
         beacon.emit('test', {
@@ -295,7 +328,13 @@ describe('beacon', () => {
       it('should failover to XHRPost if the fetch request returns not ok', async () => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: false})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
         beacon.emit('test', {
@@ -312,7 +351,13 @@ describe('beacon', () => {
       it('should failover to fetch post, then XHRPost if the fetch request rejects', async () => {
         const fetch = chai.spy(() => new Promise(reject => reject()));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
         beacon.emit('test', {
@@ -335,11 +380,17 @@ describe('beacon', () => {
       it('should send the message directly to the failover XHRPost if too big', async () => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
         let longMessage = '';
-        for (let i = 0; i < MAX_MESSAGE_SIZE + 1; i++) {
+        for (let i = 0; i < DEFAULT_MAX_MESSAGE_SIZE + 1; i++) {
           longMessage += 'a';
         }
 
@@ -372,7 +423,13 @@ describe('beacon', () => {
       it('should send the message directly to the failover XHRPost if too big - when it is the second message', async () => {
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(endpointV2, {uid: ''}, '');
 
         beacon.emit('test', {
@@ -380,7 +437,7 @@ describe('beacon', () => {
         }, false);
 
         let longMessage = '';
-        for (let i = 0; i < MAX_MESSAGE_SIZE + 1; i++) {
+        for (let i = 0; i < DEFAULT_MAX_MESSAGE_SIZE + 1; i++) {
           longMessage += 'a';
         }
 
@@ -428,11 +485,17 @@ describe('beacon', () => {
     });
 
     describe('test events v1', () => {
-      it('should use get is the message is short enough', async() => {
+      it('should use get is the message is short enough - Edge', async() => {
         const v1EventEndpoint = 'https://participants.evolv.ai/v1/MYUID/events'
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
         const beacon = new Beacon(v1EventEndpoint, {uid: ''}, '');
 
         let longMessage = 'abc';
@@ -452,15 +515,91 @@ describe('beacon', () => {
         });
       });
 
-      it('should send the message directly to the failover XHRPost if too big', async() => {
+      it('should use get is the message is short enough - Chrome', async() => {
         const v1EventEndpoint = 'https://participants.evolv.ai/v1/MYUID/events'
         const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
         // noinspection JSConstantReassignment
-        global.window = {addEventListener: () => null, fetch: fetch};
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: chromeAgent
+          }
+        };
         const beacon = new Beacon(v1EventEndpoint, {uid: ''}, '');
 
         let longMessage = '';
-        for (let i = 0; i < MAX_MESSAGE_SIZE + 1; i++) {
+        for (let i = 0; i < MICROSOFT_MAX_MESSAGE_SIZE + 1; i++) {
+          longMessage += 'a';
+        }
+
+        beacon.emit('test', {
+          test: longMessage
+        }, false);
+
+        await new Promise(resolve => setTimeout(resolve, DELAY + 100));
+
+        expect(fetch).to.have.been.called(1);
+        expect(xhrRequests.length).to.equal(0);
+        expect(fetch).to.have.been.called.with(v1EventEndpoint +'?test=' + longMessage + '&type=test' , {
+          cache: 'no-cache',
+          keepalive: true,
+          method: 'GET'
+        });
+      });
+
+      it('should send the message directly to the failover XHRPost if too big - Edge', async() => {
+        const v1EventEndpoint = 'https://participants.evolv.ai/v1/MYUID/events'
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
+        // noinspection JSConstantReassignment
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: edgeAgent
+          }
+        };
+        const beacon = new Beacon(v1EventEndpoint, {uid: ''}, '');
+
+        let longMessage = '';
+        for (let i = 0; i < MICROSOFT_MAX_MESSAGE_SIZE + 1; i++) {
+          longMessage += 'a';
+        }
+
+        beacon.emit('test', {
+          test: longMessage
+        }, false);
+
+        await new Promise(resolve => setTimeout(resolve, DELAY + 100));
+
+        expect(fetch).to.have.been.called(1);
+        expect(xhrRequests.length).to.equal(0);
+        expect(fetch).to.have.been.called.with(v1EventEndpoint , {
+          body: JSON.stringify({
+            test: longMessage,
+            type: 'test'
+          }),
+          cache: 'no-cache',
+          keepalive: true,
+          method: 'POST'
+        });
+      });
+
+      it('should send the message directly to the failover XHRPost if too big - Chrome', async() => {
+        const v1EventEndpoint = 'https://participants.evolv.ai/v1/MYUID/events'
+        const fetch = chai.spy(() => new Promise(resolve => resolve({ok: true})));
+        // noinspection JSConstantReassignment
+        global.window = {
+          addEventListener: () => null,
+          fetch: fetch,
+          navigator: {
+            userAgent: chromeAgent
+          }
+        };
+        const beacon = new Beacon(v1EventEndpoint, {uid: ''}, '');
+
+        let longMessage = '';
+        for (let i = 0; i < DEFAULT_MAX_MESSAGE_SIZE + 1; i++) {
           longMessage += 'a';
         }
 

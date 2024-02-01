@@ -1,10 +1,12 @@
 import retrieve from './retrieve.js';
 import { assign, omitUndefined } from './ponyfills/objects.js';
 
-export const MAX_MESSAGE_SIZE = 2000;
+export const DEFAULT_MAX_MESSAGE_SIZE = 8000;
+export const MICROSOFT_MAX_MESSAGE_SIZE = 2000;
 export const DELAY = 100;
 const ENDPOINT_PATTERN = /\/(v\d+)\/\w+\/([a-z]+)$/i;
 const BATCH_SIZE = 25;
+let MAX_MESSAGE_SIZE;
 
 function fallbackBeacon(url, data, sync) {
   retrieve({
@@ -17,6 +19,18 @@ function fallbackBeacon(url, data, sync) {
       console.log(err);
     });
   return true;
+}
+
+const getMaxLength = function() {
+  if (typeof window === 'undefined') {
+    return DEFAULT_MAX_MESSAGE_SIZE;
+  }
+
+  if (window.navigator && window.navigator.userAgent && window.navigator.userAgent.indexOf("Edg") > -1) {
+    return MICROSOFT_MAX_MESSAGE_SIZE;
+  }
+
+  return DEFAULT_MAX_MESSAGE_SIZE;
 }
 
 /**
@@ -47,6 +61,8 @@ export default function Emitter(endpoint, context, options) {
   let blockTransmit = opts.blockTransmit;
   let messages = [];
   let timer;
+
+  MAX_MESSAGE_SIZE = getMaxLength();
 
   const prepData = function(data) {
     // iterate through data keys and uri encode any objects
