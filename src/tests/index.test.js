@@ -373,7 +373,6 @@ describe('Evolv client integration tests', () => {
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const id = 'mine';
       const secret = 'yep, lunch';
-      const algorithm = { name: 'HMAC', hash: 'SHA-384' };
       const version = 1;
 
       let configSignature = undefined;
@@ -634,18 +633,15 @@ describe('Evolv client integration tests', () => {
       expect(results.eventPayloads[0].messages[0].payload.eid).to.equal("0f39849197")
       expect(results.eventPayloads[1].messages[0].type).to.equal("lunch-time")
 
-      expect(results.analyticsPayloads.length).to.equal(2);
+      expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
-      const messages1 = results.analyticsPayloads[0].messages;
-      const messages2 = results.analyticsPayloads[1].messages;
-      const messages = messages1.concat(messages2);
+      const messages = results.analyticsPayloads[0].messages;
 
-      expect(messages1.length).to.equal(10)
-      expect(messages2.length).to.equal(8)
+      expect(messages.length).to.equal(18);
 
       expect(messages[0].type).to.equal("context.initialized")
-      expect(messages1[0].payload).to.eql( {
+      expect(messages[0].payload).to.eql( {
         "remote": true,
         "web": {
           "url": "https://www.lunch.com/dev1/index.html"
@@ -953,11 +949,11 @@ describe('Evolv client integration tests', () => {
 
       await new Promise(resolve => setTimeout(resolve, 1));
 
-      expect(results.analyticsPayloads.length).to.equal(2);
+      expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
       const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(10);
+      expect(messages.length).to.equal(18);
       expect(messages[0].type).to.equal("context.initialized");
       expect(messages[0].payload).to.eql( {
         "remote": true,
@@ -1148,7 +1144,7 @@ describe('Evolv client unit tests', () => {
 
   describe('confirm()', () => {
     it('should properly confirm into allocated experiment once genome is updated', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
@@ -1174,7 +1170,7 @@ describe('Evolv client unit tests', () => {
     });
 
     it('should properly confirm into allocated experiment once genome is updated and entry point is true', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234','6666']); } });
       options.store = store;
@@ -1202,7 +1198,7 @@ describe('Evolv client unit tests', () => {
 
   describe('contaminate()', () => {
     it('should contaminate once', () => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
@@ -1219,7 +1215,7 @@ describe('Evolv client unit tests', () => {
     });
 
     it('should error if details, but no reason are included in the contamination', () => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
@@ -1240,7 +1236,7 @@ describe('Evolv client unit tests', () => {
     });
 
     it('should should send the contamination details to the events endpoint', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
@@ -1269,7 +1265,7 @@ describe('Evolv client unit tests', () => {
     });
 
     it('should not confirm into allocated experiments that have been contaminated', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
       options.store = store;
@@ -1310,7 +1306,7 @@ describe('Evolv client unit tests', () => {
 
     it('should confirm into allocated experiments that have been contaminated after another contamination', (done) => {
       var activeEntryPoint = '1234';
-      store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve([activeEntryPoint]) });
+      store.activeEntryPoints = () => new Promise((resolve) => { resolve([activeEntryPoint]) });
       Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
       Object.defineProperty(store, 'activeEids', { get: function() { return new Set([activeEntryPoint]); } });
       options.store = store;
@@ -1350,7 +1346,7 @@ describe('Evolv client unit tests', () => {
   });
 
   it('should contaminate inactive eids when allExperiments is set to true', () => {
-    store.activeEntryPoints = () => new Promise((resolve, reject) => { resolve(['1234']) });
+    store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
     Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
     Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
     options.store = store;
