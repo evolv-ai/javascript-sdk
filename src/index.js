@@ -236,78 +236,82 @@ function EvolvClient(opts) {
     return sessionBasedExps;
   }*/
 
+  this.hasPreviewCid = !!window.sessionStorage.getItem('evolv:previewCid');
+
   /**
    * Confirm that the consumer has successfully received and applied values, making them eligible for inclusion in
    * optimization statistics.
+   * There is no confirmation if you use the evolv:previewCid session storage item.
    */
   this.confirm = function() {
-    // eslint-disable-next-line es/no-promise
-    return new MiniPromise.createPromise(function(resolve) {
-      waitFor(context, EFFECTIVE_GENOME_UPDATED,function() {
-        const remoteContext = context.remoteContext;
-        const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
-        if (!store.configuration || !allocations || !allocations.length) {
-          resolve();
-          return;
-        }
-
-        // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
-        // const sessionBasedExps = getSessionBasedExps();
-
-        store.activeEntryPoints()
-          .then(function(entryPointEids) {
-            if (!entryPointEids.length) {
-              resolve();
-              return;
-            }
-
-            const confirmations = context.get('experiments.confirmations') || [];
-            const confirmedCids = confirmations.map(function(conf) {
-              return conf.cid;
-            });
-            const contaminations = context.get('experiments.contaminations') || [];
-            const contaminatedCids = contaminations.map(function(cont) {
-              return cont.cid;
-            });
-            const confirmableAllocations = allocations.filter(function(alloc) {
-              return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid) && entryPointEids.indexOf(alloc.eid) >= 0;
-            });
-
-            if (!confirmableAllocations.length) {
+    if (!this.hasPreviewCid) {
+      // eslint-disable-next-line es/no-promise
+      return new MiniPromise.createPromise(function (resolve) {
+        waitFor(context, EFFECTIVE_GENOME_UPDATED, function () {
+          const remoteContext = context.remoteContext;
+          const allocations = (remoteContext.experiments || {}).allocations // undefined is a valid state, we want to know if its undefined
+          if (!store.configuration || !allocations || !allocations.length) {
             resolve();
             return;
           }
 
-            const timestamp = (new Date()).getTime();
-            const contextConfirmations = confirmableAllocations.map(function(alloc) {
-              return {
-                cid: alloc.cid,
-                timestamp: timestamp
+          // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
+          // const sessionBasedExps = getSessionBasedExps();
+
+          store.activeEntryPoints()
+            .then(function (entryPointEids) {
+              if (!entryPointEids.length) {
+                resolve();
+                return;
               }
-            });
 
-
-            context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
-
-            confirmableAllocations.forEach(function(alloc) {
-              // Only confirm for non session based experiments -- session based use the analytics data
-              // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
-              // !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
-              eventBeacon.emit('confirmation', {
-                uid: alloc.uid,
-                eid: alloc.eid,
-                cid: alloc.cid
+              const confirmations = context.get('experiments.confirmations') || [];
+              const confirmedCids = confirmations.map(function (conf) {
+                return conf.cid;
               });
+              const contaminations = context.get('experiments.contaminations') || [];
+              const contaminatedCids = contaminations.map(function (cont) {
+                return cont.cid;
+              });
+              const confirmableAllocations = allocations.filter(function (alloc) {
+                return confirmedCids.indexOf(alloc.cid) < 0 && contaminatedCids.indexOf(alloc.cid) < 0 && store.activeEids.has(alloc.eid) && entryPointEids.indexOf(alloc.eid) >= 0;
+              });
+
+              if (!confirmableAllocations.length) {
+                resolve();
+                return;
+              }
+
+              const timestamp = (new Date()).getTime();
+              const contextConfirmations = confirmableAllocations.map(function (alloc) {
+                return {
+                  cid: alloc.cid,
+                  timestamp: timestamp
+                }
+              });
+
+
+              context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
+
+              confirmableAllocations.forEach(function (alloc) {
+                // Only confirm for non session based experiments -- session based use the analytics data
+                // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
+                // !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
+                eventBeacon.emit('confirmation', {
+                  uid: alloc.uid,
+                  eid: alloc.eid,
+                  cid: alloc.cid
+                });
+              });
+
+              eventBeacon.flush();
+              emit(context, EvolvClient.CONFIRMED);
+              resolve();
+              return;
             });
-
-            eventBeacon.flush();
-            emit(context, EvolvClient.CONFIRMED);
-            resolve();
-            return;
-          });
+        });
       });
-    });
-
+    }
   };
 
   /**
