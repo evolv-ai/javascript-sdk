@@ -191,10 +191,10 @@ export default function Emitter(endpoint, context, options) {
     }
   }
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     /** @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event#sending_end-of-session_analytics_on_transitioning_to_hidden} */
-    window.addEventListener("visibilitychange", function transmitData() {
-      if (window.visibilityState === "hidden") {
+    window.addEventListener('visibilitychange', function transmitData() {
+      if (document.visibilityState === 'hidden') {
         transmit();
       }
     });
