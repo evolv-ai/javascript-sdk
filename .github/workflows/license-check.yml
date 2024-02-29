@@ -26,12 +26,15 @@ jobs:
           external: 'npm-license-checker.csv'
           external-format: 'csv'
           external-options: '{:skip-header true}'
-          fail: 'StrongCopyleft,NetworkCopyleft,Other,Error'
+          fail: 'StrongCopyleft,NetworkCopyleft,Other,Error,MIT'
           fails-only: true
           exclude: 'evolv-ai*,SentientTechnologies*'
           exclude-license: '(?i)copyright'
           totals: true
           verbose: 1
           github-token: ${{ secrets.GH_TOKEN }}
+      - name: Print incorrect dependencies (failure)
+        if: failure()
+        run: license-checker --start --production
 
 
