@@ -21,7 +21,7 @@ jobs:
           exclude: 'evolv.*'
           exclude-license: '(?i)copyright'
           totals: true
-          verbose: 1
+          verbose: 3
           github-token: ${{ secrets.GH_TOKEN }}
 
 
