@@ -73,7 +73,6 @@
     "eslint": "^8.1.0",
     "eslint-plugin-es": "^4.1.0",
     "jsdoc": "^3.6.10",
-    "license-checker": "^25.0.1",
     "mocha": "^10.1.0",
     "nyc": "^15.1.0",
     "outdent": "^0.8.0",
