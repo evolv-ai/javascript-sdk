@@ -35,6 +35,6 @@ jobs:
           github-token: ${{ secrets.GH_TOKEN }}
       - name: Print incorrect dependencies (failure)
         if: failure()
-        run: license-checker --start --production
+        run: license-checker --start --production --exclude 'BSD, MIT, Apache'
 
 
