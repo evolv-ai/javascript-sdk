@@ -78,11 +78,11 @@
     "outdent": "^0.8.0",
     "rollup": "^2.78.1",
     "rollup-plugin-copy": "^3.4.0",
+    "sinon": "^15.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4",
     "xhr-mock": "^2.5.1",
-    "xmlhttprequest": "^1.8.0",
-    "sinon": "^15.0.3"
+    "xmlhttprequest": "^1.8.0"
   },
   "mocha": {
     "extension": [
@@ -99,5 +99,8 @@
     "exclude": [
       "**/*.test.js"
     ]
+  },
+  "dependencies": {
+    "yui-lint": "^0.2.0"
   }
 }
