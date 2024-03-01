@@ -9,16 +9,21 @@ jobs:
   license_check:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '16.14.2'
       - name: Checkout Ref
         uses: actions/checkout@v1
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: https://npm.pkg.github.com/
+
       - name: Install dependencies
         run: npm install && npm install -g license-checker
+
       - name: Generate license-checker CSV file
         run: license-checker --start --production --csv --out npm-license-checker.csv
+
       - name: Check license-checker CSV file without headers
         id: license_check_report
         uses: pilosus/action-pip-license-checker@v2
@@ -28,13 +33,13 @@ jobs:
           external-options: '{:skip-header true}'
           fail: 'StrongCopyleft,NetworkCopyleft,Other,Error'
           fails-only: true
-          exclude: 'evolv-ai*,SentientTechnologies*'
           exclude-license: '(?i)copyright'
           totals: true
           verbose: 1
           github-token: ${{ secrets.GH_TOKEN }}
-      - name: Print incorrect dependencies (failure)
-        if: failure()
-        run: license-checker --start --production --exclude 'BSD, MIT, Apache-2.0'
+
+      - name: Print report
+        if: ${{ always() }}
+        run: echo "${{ steps.license_check_report.outputs.report }}"
 
 
