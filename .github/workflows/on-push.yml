@@ -28,7 +28,7 @@ jobs:
          NPM_TOKEN: ""
       - name: Bump n Tag
         if: github.event.ref == 'refs/heads/master'
-        uses: evolv-ai/github-actions/semver-bump-tag@v4
+        uses: evolv-ai/github-actions/semver-bump-tag@v11
         id: semver_bump
         with:
           token: "${{ github.token }}"
