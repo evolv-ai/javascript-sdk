@@ -374,6 +374,7 @@ function EvolvStore(options) {
   const prefix = options.endpoint + '/' + options.environment;
   const keyId = options.auth && options.auth.id;
   const key = options.auth && options.auth.secret;
+  const profileId = options.profileId;
 
   let context;
   let clientContext = null;
@@ -689,7 +690,7 @@ function EvolvStore(options) {
       configKeyStates.needed.clear();
       retrieve({
         method: 'get',
-        url: prefix + '/' + context.uid + '/configuration.json',
+        url: prefix + '/' + context.uid + '/configuration.json' + (profileId ? '?profileId=' + profileId : ''),
         keyId: keyId,
         key: key
       }, options.hooks)

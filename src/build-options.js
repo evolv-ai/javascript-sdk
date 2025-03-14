@@ -20,6 +20,7 @@ import { assign } from './ponyfills/objects.js';
  * @property {string} [clientName]
  * @property {'direct' | 'proxied'} [clientType = 'direct']
  * @property {boolean} [pollForTimeUpdates]
+ * @property {string} [profileId]
  */
 
 /**

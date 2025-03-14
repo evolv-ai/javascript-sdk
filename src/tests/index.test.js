@@ -221,8 +221,103 @@ describe('Evolv client integration tests', () => {
   });
 
   describe('API v1', () => {
+    const uid = 123;
+    const allocations = [
+      {
+        uid: uid,
+        eid: "0f39849197",
+        cid: "0cf8ffcedea2:0f39849197",
+        genome: {
+          web: {
+            "ab8numq2j": {
+              am94yhwo2: {
+                id: "2fxe5dy5j",
+                type: "compound",
+                _metadata: { },
+                script: "console.log('62px');",
+                styles: "#ReactLogo { font-size: 62px; }"
+              }
+            },
+            "7w3zpgfy9": {
+              azevlvf5g: {
+                type: "noop"
+              }
+            }
+          }
+        },
+        audience_query: {
+          id: 1,
+          name: "USA Users",
+          combinator: "and",
+          rules: [
+            {
+              field: "user_attributes",
+              operator: "kv_equal",
+              value: [
+                "country",
+                "usa"
+              ]
+            }
+          ]
+        },
+        excluded: false
+      }
+    ];
+
+    const experiments = [
+      {
+        web: {
+          "ab8numq2j": {
+            _is_entry_point: true,
+            _predicate: {
+              combinator: "and",
+              rules: [
+                {
+                  field: "web.url",
+                  operator: "regex64_match",
+                  value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
+                }
+              ]
+            },
+            am94yhwo2: {
+              _values: true
+            }
+          },
+          "7w3zpgfy9": {
+            _is_entry_point: false,
+            _predicate: {
+              combinator: "and",
+              rules: [
+                {
+                  field: "web.url",
+                  operator: "regex64_match",
+                  value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2ZlYXR1cmVzXC5odG1sKD86JHxcP3wjKS9p"
+                }
+              ]
+            },
+            azevlvf5g: {
+              _values: true
+            }
+          }
+        },
+        id: "0f39849197",
+        _predicate: {
+          combinator: "and",
+          rules: [
+            {
+              field: "user_attributes",
+              operator: "kv_equal",
+              value: [
+                "country",
+                "usa"
+              ]
+            }
+          ]
+        }
+      }
+    ];
+
     it('should load variants and reevaluate context correctly', async () => {
-      const uid = 123;
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 1
@@ -246,58 +341,7 @@ describe('Evolv client integration tests', () => {
             browser: 'chrome',
             platform: 'windows'
           },
-          _experiments: [
-            {
-              web: {
-                "ab8numq2j": {
-                  _is_entry_point: true,
-                  _predicate: {
-                    combinator: "and",
-                    rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  am94yhwo2: {
-                    _values: true
-                  }
-                },
-                "7w3zpgfy9": {
-                  _is_entry_point: false,
-                    _predicate: {
-                    combinator: "and",
-                      rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2ZlYXR1cmVzXC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  azevlvf5g: {
-                    _values: true
-                  }
-                }
-              },
-                id: "0f39849197",
-                _predicate: {
-                  combinator: "and",
-                    rules: [
-                    {
-                      field: "user_attributes",
-                      operator: "kv_equal",
-                      value: [
-                        "country",
-                        "usa"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
+          _experiments: experiments
           }));
       });
 
@@ -307,48 +351,7 @@ describe('Evolv client integration tests', () => {
         if (req.method() !== 'GET') {
           return res.status(405);
         }
-
-        return res.status(200).body(JSON.stringify([
-          {
-            uid: uid,
-            eid: "0f39849197",
-            cid: "0cf8ffcedea2:0f39849197",
-            genome: {
-              web: {
-                "ab8numq2j": {
-                  am94yhwo2: {
-                    id: "2fxe5dy5j",
-                    type: "compound",
-                    _metadata: { },
-                    script: "console.log('62px');",
-                    styles: "#ReactLogo { font-size: 62px; }"
-                  }
-                },
-                "7w3zpgfy9": {
-                  azevlvf5g: {
-                    type: "noop"
-                  }
-                }
-              }
-            },
-            audience_query: {
-              id: 1,
-                name: "USA Users",
-                combinator: "and",
-                rules: [
-                {
-                  field: "user_attributes",
-                  operator: "kv_equal",
-                  value: [
-                    "country",
-                    "usa"
-                  ]
-                }
-              ]
-            },
-            excluded: false
-          }
-        ]));
+        return res.status(200).body(JSON.stringify(allocations));
       });
 
       const options = {
@@ -365,6 +368,61 @@ describe('Evolv client integration tests', () => {
 
       expect(configSignature).to.equal(null);
       expect(allocSignature).to.equal(null);
+    });
+
+    it('should add the profileId to the configuration call if present', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
+      const version = 1
+
+      let configSignature = null;
+      let allocSignature = null;
+      const profileId = 'PROFILEID';
+
+      // IMPORTANT PIECE OF THE TEST - MOCKING THE CONFIGURATION CALL WITH THE PROFILEID
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json?profileId=${profileId}`, (req, res) => {
+        configSignature = req.header('Signature');
+        if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
+          return res.status(415);
+        }
+
+        if (req.method() !== 'GET') {
+          return res.status(405);
+        }
+
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows',
+            newProfileInfo: 'this'
+          },
+          _experiments: experiments
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        allocSignature = req.header('Signature');
+
+        if (req.method() !== 'GET') {
+          return res.status(405);
+        }
+
+        return res.status(200).body(JSON.stringify(allocations));
+      });
+
+      const options = {
+        environment,
+        endpoint,
+        version,
+        profileId
+      };
+      const evolv = new Evolv(options);
+
+      await validateClient(evolv, options, uid);
+      // This is just testing that the profileId is passed to the configuration call
+      expect(evolv.context.get('newProfileInfo')).equals('this');
     });
 
     it('should load variants and reevaluate context correctly with authentication', async () => {
