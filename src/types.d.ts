@@ -49,6 +49,7 @@ export interface EvolvClientOptions {
   timeout?: number;
   hooks?: {};
   pollForTimeUpdates? : boolean;
+  profileId?: string;
 }
 
 export class EvolvClient {
