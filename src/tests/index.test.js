@@ -381,7 +381,7 @@ describe('Evolv client integration tests', () => {
       const profileId = 'PROFILEID';
 
       // IMPORTANT PIECE OF THE TEST - MOCKING THE CONFIGURATION CALL WITH THE PROFILEID
-      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json?profileId=${profileId}`, (req, res) => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json?user%5BprofileId%5D=${profileId}`, (req, res) => {
         configSignature = req.header('Signature');
         if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
           return res.status(415);

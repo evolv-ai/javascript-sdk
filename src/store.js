@@ -690,7 +690,7 @@ function EvolvStore(options) {
       configKeyStates.needed.clear();
       retrieve({
         method: 'get',
-        url: prefix + '/' + context.uid + '/configuration.json' + (profileId ? '?profileId=' + profileId : ''),
+        url: prefix + '/' + context.uid + '/configuration.json' + (profileId ? '?user[profileId]=' + profileId : ''),
         keyId: keyId,
         key: key
       }, options.hooks)
