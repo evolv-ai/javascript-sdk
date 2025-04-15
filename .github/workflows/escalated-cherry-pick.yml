@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cherry Picker
-        uses: evolv-ai/github-actions/cherry-picker@v11
+        uses: evolv-ai/github-actions/cherry-picker@latest
         id: cherry-picker
         with:
           token: "${{ secrets.GH_TOKEN }}"
