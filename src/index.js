@@ -286,7 +286,7 @@ function EvolvClient(opts) {
               }
             });
 
-            const contextConfirmationsKey = store.isInternalUser() ? 'experiments.confirmationsinternal' : 'experiments.confirmations';
+            const contextConfirmationsKey = store.isInternalUser() ? 'experiments.confirmationsInternal' : 'experiments.confirmations';
             context.set(contextConfirmationsKey, contextConfirmations.concat(confirmations));
 
             confirmableAllocations.forEach(function(alloc) {

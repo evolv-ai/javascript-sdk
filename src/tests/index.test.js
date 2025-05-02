@@ -222,6 +222,9 @@ describe('Evolv client integration tests', () => {
 
   describe('API v1', () => {
     const uid = 123;
+    const environment = '579b106c73';
+    const endpoint = 'https://participants.evolv.ai/';
+    const version = 1
     const allocations = [
       {
         uid: uid,
@@ -318,10 +321,6 @@ describe('Evolv client integration tests', () => {
     ];
 
     it('should load variants and reevaluate context correctly', async () => {
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 1
-
       let configSignature = null;
       let allocSignature = null;
 
@@ -371,18 +370,10 @@ describe('Evolv client integration tests', () => {
     });
 
     it('should add the profileId to the configuration call if present', async () => {
-      const uid = 123;
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 1
-
-      let configSignature = null;
-      let allocSignature = null;
       const profileId = 'PROFILEID';
 
       // IMPORTANT PIECE OF THE TEST - MOCKING THE CONFIGURATION CALL WITH THE PROFILEID
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json?user%5BprofileId%5D=${profileId}`, (req, res) => {
-        configSignature = req.header('Signature');
         if (req.header('Content-Type') && req.header('Content-Type') !== 'text/plain; charset=UTF-8') {
           return res.status(415);
         }
@@ -403,8 +394,6 @@ describe('Evolv client integration tests', () => {
       });
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
-        allocSignature = req.header('Signature');
-
         if (req.method() !== 'GET') {
           return res.status(405);
         }
@@ -426,10 +415,6 @@ describe('Evolv client integration tests', () => {
     });
 
     it('should put in appropriate confirmations', async () => {
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 1
-
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
         return res.status(200).body(JSON.stringify({
           _published: 1584475383.3865728,
@@ -461,10 +446,6 @@ describe('Evolv client integration tests', () => {
 
 
     it('should put in internal confirmations if the user is internal', async () => {
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 1
-
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
         return res.status(200).body(JSON.stringify({
           _internal_user: true,
@@ -491,17 +472,14 @@ describe('Evolv client integration tests', () => {
       await validateClient(evolv, options, uid);
 
       expect(evolv.context.get('experiments.confirmations')).to.be.undefined;
-      const internalConfirmations = evolv.context.get('experiments.confirmationsinternal');
+      const internalConfirmations = evolv.context.get('experiments.confirmationsInternal');
       expect(internalConfirmations.length).to.equal(1);
       expect(internalConfirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
     });
 
     it('should load variants and reevaluate context correctly with authentication', async () => {
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
       const id = 'mine';
       const secret = 'yep, lunch';
-      const version = 1;
 
       let configSignature = undefined;
       let configBody = undefined;
