@@ -396,6 +396,7 @@ function EvolvStore(options) {
   let configFailed = false;
   let configResolved = false;
   let genomesResolved = false;
+  let internalUser = false;
 
   const genomeKeyStates = {
     needed: new Set(),
@@ -552,6 +553,8 @@ function EvolvStore(options) {
         clientContext = config._client;
       }
     }
+
+    internalUser = config._internal_user || false;
 
     displayNames = config._display_names || {};
 
@@ -875,6 +878,10 @@ function EvolvStore(options) {
     return createRequestSubscribablePromise.call(this, CONFIG_SOURCE, function() {
       return objects.getValueForKey(key, envConfig);
     });
+  };
+
+  this.isInternalUser = function() {
+    return internalUser;
   };
 
   this.subscribe = subscriptions.add.bind(subscriptions);
