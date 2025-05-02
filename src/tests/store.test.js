@@ -895,6 +895,104 @@ describe('store.js', () => {
     });
   });
 
+  describe('isInternalUser', () => {
+    const url = 'http://localhost';
+
+    function mockConfigurationJson(options = {}) {
+      xhrMock.get(/configuration\.json$/, (req, res) => {
+        const data = {
+          ...options,
+          _experiments: [
+            {
+              web: {},
+              _predicate: {},
+              id: '49afccc9bc',
+              _paused: false,
+              _optimization_metric: 'VISITOR',
+              _include_eid_in_hash: true,
+              var1: {
+                _is_entry_point: false,
+                _predicate: null,
+                _values: true,
+                _initializers: true
+              }
+            }
+          ],
+        };
+
+        return res.status(200).body(JSON.stringify(data));
+      });
+    }
+
+    beforeEach(() => {
+      xhrMock.setup();
+
+      xhrMock.get(/allocations$/, (req, res) => {
+        return res.status(200).body(JSON.stringify([
+          {
+            uid: '1',
+            eid: '49afccc9bc',
+            cid: 'dfe1a698c486:49afccc9bc',
+            genome: {},
+            audience_query: {},
+            ordinal: 0,
+            group_id: '89e674e7-9c2f-4a7d-b2d2-8c5b3e158c73',
+            excluded: false
+          }
+        ]));
+      });
+    });
+
+    afterEach(() => {
+      xhrMock.teardown();
+    });
+
+    it('should mark users as internal if "_internal_user" is true', (done) => {
+      mockConfigurationJson({ _internal_user: true });
+
+      const context = new Context();
+      context.initialize('uid', { web: { url }});
+
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      setImmediate(() => {
+        expect(store.isInternalUser()).to.be.true;
+        done();
+      });
+    });
+
+    it('should not mark users as internal if "_internal_user" is false', (done) => {
+      mockConfigurationJson({ _internal_user: false });
+
+      const context = new Context();
+      context.initialize('uid', { web: { url }});
+
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      setImmediate(() => {
+        expect(store.isInternalUser()).to.be.false;
+        done();
+      });
+    });
+
+    it('should not mark users as internal by default', (done) => {
+      mockConfigurationJson({});
+
+      const context = new Context();
+      context.initialize('uid', { web: { url }});
+
+      const store = new Store({ environment: 'env' });
+      store.initialize(context);
+
+      setImmediate(() => {
+        expect(store.isInternalUser()).to.be.false;
+        done();
+      });
+    });
+  });
+
   describe('Views', () => {
     const url = 'http://localhost';
 

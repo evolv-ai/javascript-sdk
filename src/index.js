@@ -286,8 +286,8 @@ function EvolvClient(opts) {
               }
             });
 
-
-            context.set('experiments.confirmations', contextConfirmations.concat(confirmations));
+            const contextConfirmationsKey = store.isInternalUser() ? 'experiments.confirmationsinternal' : 'experiments.confirmations';
+            context.set(contextConfirmationsKey, contextConfirmations.concat(confirmations));
 
             confirmableAllocations.forEach(function(alloc) {
               // Only confirm for non session based experiments -- session based use the analytics data
