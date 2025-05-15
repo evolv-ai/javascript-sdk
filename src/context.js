@@ -9,6 +9,9 @@ export const CONTEXT_VALUE_ADDED = 'context.value.added';
 export const CONTEXT_VALUE_CHANGED = 'context.value.changed';
 export const CONTEXT_DESTROYED = 'context.destroyed';
 
+export const CONFIRMATIONS_KEY = 'experiments.confirmations';
+export const INTERNAL_CONFIRMATIONS_KEY = 'experiments.confirmationsInternal';
+
 export const DEFAULT_QUEUE_LIMIT = 50;
 
 /**

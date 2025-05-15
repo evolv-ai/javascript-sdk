@@ -2,7 +2,9 @@ import Context, {
   CONTEXT_INITIALIZED,
   CONTEXT_VALUE_ADDED,
   CONTEXT_VALUE_CHANGED,
-  CONTEXT_VALUE_REMOVED
+  CONTEXT_VALUE_REMOVED,
+  CONFIRMATIONS_KEY,
+  INTERNAL_CONFIRMATIONS_KEY,
 } from './context.js';
 
 import Store, { EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED } from './store.js';
@@ -261,8 +263,10 @@ function EvolvClient(opts) {
               return;
             }
 
-            const confirmations = context.get('experiments.confirmations') || [];
-            const confirmedCids = confirmations.map(function(conf) {
+            const existingConfirmations = context.get(CONFIRMATIONS_KEY) || [];
+            const existingInternalConfirmations = context.get(INTERNAL_CONFIRMATIONS_KEY) || [];
+            const combinedExistingConfirmations = existingConfirmations.concat(existingInternalConfirmations);
+            const confirmedCids = combinedExistingConfirmations.map(function(conf) {
               return conf.cid;
             });
             const contaminations = context.get('experiments.contaminations') || [];
@@ -279,15 +283,17 @@ function EvolvClient(opts) {
           }
 
             const timestamp = (new Date()).getTime();
-            const contextConfirmations = confirmableAllocations.map(function(alloc) {
+            const newConfirmations = confirmableAllocations.map(function(alloc) {
               return {
                 cid: alloc.cid,
                 timestamp: timestamp
               }
             });
 
-            const contextConfirmationsKey = store.isInternalUser() ? 'experiments.confirmationsInternal' : 'experiments.confirmations';
-            context.set(contextConfirmationsKey, contextConfirmations.concat(confirmations));
+            const isInternalUser = store.isInternalUser();
+            const confirmationsKey = isInternalUser ? INTERNAL_CONFIRMATIONS_KEY : CONFIRMATIONS_KEY;
+            const existingValues = isInternalUser ? existingInternalConfirmations : existingConfirmations;
+            context.set(confirmationsKey, newConfirmations.concat(existingValues));
 
             confirmableAllocations.forEach(function(alloc) {
               // Only confirm for non session based experiments -- session based use the analytics data

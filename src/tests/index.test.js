@@ -4,7 +4,7 @@ import _xhrMock from 'xhr-mock';
 import { Crypto }  from "@peculiar/webcrypto";
 import Evolv from '../index.js';
 import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
-import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from '../context.js';
+import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED, CONFIRMATIONS_KEY, INTERNAL_CONFIRMATIONS_KEY } from '../context.js';
 import { waitFor, emit } from '../waitforit.js';
 import base64 from '../ponyfills/base64.js';
 import { buildOptions } from '../build-options.js';
@@ -439,11 +439,41 @@ describe('Evolv client integration tests', () => {
 
       await validateClient(evolv, options, uid);
 
-      const confirmations = evolv.context.get('experiments.confirmations');
+      const confirmations = evolv.context.get(CONFIRMATIONS_KEY);
       expect(confirmations.length).to.equal(1);
       expect(confirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
     });
 
+
+    it('should only confirm once when evaluating a context for confirmations', async () => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows'
+          },
+          _experiments: experiments
+          }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (_req, res) => {
+        return res.status(200).body(JSON.stringify(allocations));
+      });
+
+      const options = {
+        environment,
+        endpoint,
+        version
+      };
+      const evolv = new Evolv(options);
+      const confirmedSpy = chai.spy();
+      evolv.on(Evolv.CONFIRMED, confirmedSpy);
+  
+      await validateClient(evolv, options, uid);
+
+      expect(confirmedSpy).to.have.been.called.exactly(1);
+    });
 
     it('should put in internal confirmations if the user is internal', async () => {
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
@@ -471,10 +501,41 @@ describe('Evolv client integration tests', () => {
 
       await validateClient(evolv, options, uid);
 
-      expect(evolv.context.get('experiments.confirmations')).to.be.undefined;
-      const internalConfirmations = evolv.context.get('experiments.confirmationsInternal');
+      expect(evolv.context.get(CONFIRMATIONS_KEY)).to.be.undefined;
+      const internalConfirmations = evolv.context.get(INTERNAL_CONFIRMATIONS_KEY);
       expect(internalConfirmations.length).to.equal(1);
       expect(internalConfirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
+    });
+
+    it('should only confirm once when evaluating a context for internal confirmations', async () => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _internal_user: true,
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows'
+          },
+          _experiments: experiments
+          }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (_req, res) => {
+        return res.status(200).body(JSON.stringify(allocations));
+      });
+
+      const options = {
+        environment,
+        endpoint,
+        version
+      };
+      const evolv = new Evolv(options);
+      const confirmedSpy = chai.spy();
+      evolv.on(Evolv.CONFIRMED, confirmedSpy);
+  
+      await validateClient(evolv, options, uid);
+
+      expect(confirmedSpy).to.have.been.called.exactly(1);
     });
 
     it('should load variants and reevaluate context correctly with authentication', async () => {
@@ -675,7 +736,7 @@ describe('Evolv client integration tests', () => {
       expect(messages[6]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
       expect(messages[7]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
       expect(messages[8]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
-      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[10]).to.be.a.messageWithLength("context.value.added", "events", 1);
       expect(messages[10].payload.value[0].type).to.equal("lunch-time")
@@ -823,7 +884,7 @@ describe('Evolv client integration tests', () => {
 
       expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
       expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
       expect(messages[11].payload.value[0].type).to.equal("lunch-time")
@@ -1170,7 +1231,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('experiments.confirmations');
+          const confirmations = context.get(CONFIRMATIONS_KEY);
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
@@ -1196,7 +1257,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('experiments.confirmations');
+          const confirmations = context.get(CONFIRMATIONS_KEY);
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
