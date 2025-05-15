@@ -261,8 +261,8 @@ function EvolvClient(opts) {
               return;
             }
 
-            const existingConfirmations = context.get('experiments.confirmations') || [];
-            const existingInternalConfirmations = context.get('experiments.confirmationsInternal') || [];
+            const existingConfirmations = context.get(CONFIRMATIONS_KEY) || [];
+            const existingInternalConfirmations = context.get(INTERNAL_CONFIRMATIONS_KEY) || [];
             const combinedExistingConfirmations = existingConfirmations.concat(existingInternalConfirmations);
             const confirmedCids = combinedExistingConfirmations.map(function(conf) {
               return conf.cid;
@@ -289,7 +289,7 @@ function EvolvClient(opts) {
             });
 
             const isInternalUser = store.isInternalUser();
-            const confirmationsKey = isInternalUser ? 'experiments.confirmationsInternal' : 'experiments.confirmations';
+            const confirmationsKey = isInternalUser ? INTERNAL_CONFIRMATIONS_KEY : CONFIRMATIONS_KEY;
             const existingValues = isInternalUser ? existingInternalConfirmations : existingConfirmations;
             context.set(confirmationsKey, newConfirmations.concat(existingValues));
 
@@ -480,6 +480,9 @@ function EvolvClient(opts) {
     destroyScope(context);
   };
 }
+
+export const CONFIRMATIONS_KEY = 'experiments.confirmations';
+export const INTERNAL_CONFIRMATIONS_KEY = 'experiments.confirmationsInternal';
 
 EvolvClient.INITIALIZED = 'initialized';
 EvolvClient.CONFIRMED = 'confirmed';

@@ -2,7 +2,7 @@ import chai from 'chai';
 import spies from 'chai-spies';
 import _xhrMock from 'xhr-mock';
 import { Crypto }  from "@peculiar/webcrypto";
-import Evolv from '../index.js';
+import Evolv, { CONFIRMATIONS_KEY, INTERNAL_CONFIRMATIONS_KEY } from '../index.js';
 import Store, { EFFECTIVE_GENOME_UPDATED } from '../store.js';
 import Context, { CONTEXT_INITIALIZED, CONTEXT_CHANGED } from '../context.js';
 import { waitFor, emit } from '../waitforit.js';
@@ -439,7 +439,7 @@ describe('Evolv client integration tests', () => {
 
       await validateClient(evolv, options, uid);
 
-      const confirmations = evolv.context.get('experiments.confirmations');
+      const confirmations = evolv.context.get(CONFIRMATIONS_KEY);
       expect(confirmations.length).to.equal(1);
       expect(confirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
     });
@@ -501,8 +501,8 @@ describe('Evolv client integration tests', () => {
 
       await validateClient(evolv, options, uid);
 
-      expect(evolv.context.get('experiments.confirmations')).to.be.undefined;
-      const internalConfirmations = evolv.context.get('experiments.confirmationsInternal');
+      expect(evolv.context.get(CONFIRMATIONS_KEY)).to.be.undefined;
+      const internalConfirmations = evolv.context.get(INTERNAL_CONFIRMATIONS_KEY);
       expect(internalConfirmations.length).to.equal(1);
       expect(internalConfirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
     });
@@ -736,7 +736,7 @@ describe('Evolv client integration tests', () => {
       expect(messages[6]).to.be.a.message("context.value.added", "user_attributes.country", "usa");
       expect(messages[7]).to.be.a.message("context.value.changed", "keys.active", ["web.ab8numq2j.am94yhwo2"]);
       expect(messages[8]).to.be.a.message("context.value.changed", "variants.active", ["web.ab8numq2j.am94yhwo2:1486101989"]);
-      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[9]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[10]).to.be.a.messageWithLength("context.value.added", "events", 1);
       expect(messages[10].payload.value[0].type).to.equal("lunch-time")
@@ -884,7 +884,7 @@ describe('Evolv client integration tests', () => {
 
       expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
       expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10]).to.be.a.messageWithLength("context.value.added", "experiments.confirmations", 1);
+      expect(messages[10]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
       expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
       expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
       expect(messages[11].payload.value[0].type).to.equal("lunch-time")
@@ -1231,7 +1231,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('experiments.confirmations');
+          const confirmations = context.get(CONFIRMATIONS_KEY);
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
@@ -1257,7 +1257,7 @@ describe('Evolv client unit tests', () => {
 
       waitFor(context, Evolv.CONFIRMED, () => {
         try {
-          const confirmations = context.get('experiments.confirmations');
+          const confirmations = context.get(CONFIRMATIONS_KEY);
           expect(confirmations.length).to.be.equal(1);
           expect(confirmations[0].cid).to.be.equal('5678');
           done();
