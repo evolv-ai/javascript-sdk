@@ -445,6 +445,36 @@ describe('Evolv client integration tests', () => {
     });
 
 
+    it('should only confirm once when evaluating a context for confirmations', async () => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows'
+          },
+          _experiments: experiments
+          }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (_req, res) => {
+        return res.status(200).body(JSON.stringify(allocations));
+      });
+
+      const options = {
+        environment,
+        endpoint,
+        version
+      };
+      const evolv = new Evolv(options);
+      const confirmedSpy = chai.spy();
+      evolv.on(Evolv.CONFIRMED, confirmedSpy);
+  
+      await validateClient(evolv, options, uid);
+
+      expect(confirmedSpy).to.have.been.called.exactly(1);
+    });
+
     it('should put in internal confirmations if the user is internal', async () => {
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -475,6 +505,37 @@ describe('Evolv client integration tests', () => {
       const internalConfirmations = evolv.context.get('experiments.confirmationsInternal');
       expect(internalConfirmations.length).to.equal(1);
       expect(internalConfirmations[0].cid).to.equal('0cf8ffcedea2:0f39849197');
+    });
+
+    it('should only confirm once when evaluating a context for internal confirmations', async () => {
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (_req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _internal_user: true,
+          _published: 1584475383.3865728,
+          _client: {
+            browser: 'chrome',
+            platform: 'windows'
+          },
+          _experiments: experiments
+          }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (_req, res) => {
+        return res.status(200).body(JSON.stringify(allocations));
+      });
+
+      const options = {
+        environment,
+        endpoint,
+        version
+      };
+      const evolv = new Evolv(options);
+      const confirmedSpy = chai.spy();
+      evolv.on(Evolv.CONFIRMED, confirmedSpy);
+  
+      await validateClient(evolv, options, uid);
+
+      expect(confirmedSpy).to.have.been.called.exactly(1);
     });
 
     it('should load variants and reevaluate context correctly with authentication', async () => {
