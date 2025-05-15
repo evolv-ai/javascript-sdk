@@ -261,8 +261,10 @@ function EvolvClient(opts) {
               return;
             }
 
-            const confirmations = context.get('experiments.confirmations') || [];
-            const confirmedCids = confirmations.map(function(conf) {
+            const existingConfirmations = context.get('experiments.confirmations') || [];
+            const existingInternalConfirmations = context.get('experiments.confirmationsInternal') || [];
+            const combinedExistingConfirmations = existingConfirmations.concat(existingInternalConfirmations);
+            const confirmedCids = combinedExistingConfirmations.map(function(conf) {
               return conf.cid;
             });
             const contaminations = context.get('experiments.contaminations') || [];
@@ -279,15 +281,15 @@ function EvolvClient(opts) {
           }
 
             const timestamp = (new Date()).getTime();
-            const contextConfirmations = confirmableAllocations.map(function(alloc) {
+            const newConfirmations = confirmableAllocations.map(function(alloc) {
               return {
                 cid: alloc.cid,
                 timestamp: timestamp
               }
             });
 
-            const contextConfirmationsKey = store.isInternalUser() ? 'experiments.confirmationsInternal' : 'experiments.confirmations';
-            context.set(contextConfirmationsKey, contextConfirmations.concat(confirmations));
+            const confirmationsKey = store.isInternalUser() ? 'experiments.confirmationsInternal' : 'experiments.confirmations';
+            context.set(confirmationsKey, newConfirmations.concat(combinedExistingConfirmations));
 
             confirmableAllocations.forEach(function(alloc) {
               // Only confirm for non session based experiments -- session based use the analytics data
