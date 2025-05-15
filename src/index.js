@@ -2,7 +2,9 @@ import Context, {
   CONTEXT_INITIALIZED,
   CONTEXT_VALUE_ADDED,
   CONTEXT_VALUE_CHANGED,
-  CONTEXT_VALUE_REMOVED
+  CONTEXT_VALUE_REMOVED,
+  CONFIRMATIONS_KEY,
+  INTERNAL_CONFIRMATIONS_KEY,
 } from './context.js';
 
 import Store, { EFFECTIVE_GENOME_UPDATED, REQUEST_FAILED } from './store.js';
@@ -480,9 +482,6 @@ function EvolvClient(opts) {
     destroyScope(context);
   };
 }
-
-export const CONFIRMATIONS_KEY = 'experiments.confirmations';
-export const INTERNAL_CONFIRMATIONS_KEY = 'experiments.confirmationsInternal';
 
 EvolvClient.INITIALIZED = 'initialized';
 EvolvClient.CONFIRMED = 'confirmed';
