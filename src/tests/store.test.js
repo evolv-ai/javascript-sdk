@@ -754,7 +754,47 @@ describe('store.js', () => {
           },
           "id": "64928df20a",
           "_paused": false
-        }]
+        },
+          {
+            "web": {
+              "jo41drmyb": {
+                "_is_entry_point": true,
+                "_predicate": {
+                  "combinator": "and",
+                  "rules": [
+                    {
+                      "field": "web.url",
+                      "operator": "regex64_match",
+                      "value": "L2h0dHBzPzpcL1wvbmUyY3QuY3NiLmFwcFwvXC8/KD86JHxcP3wjKS9p"
+                    }
+                  ]
+                },
+                "_initializers": true
+              },
+              "zl0f2e2e7": {
+                "_is_entry_point": false,
+                "_predicate": {
+                  "combinator": "and",
+                  "rules": [
+                    {
+                      "field": "web.url",
+                      "operator": "regex64_match",
+                      "value": "L2h0dHBzPzpcL1wvbmUyY3QuY3NiLmFwcFwvcGFnZTFcLmh0bWxcLz8oPzokfFw/fCMpL2k="
+                    }
+                  ]
+                },
+                "7ulgknqr5": {
+                  "_values": true
+                },
+                "_initializers": true
+              }
+            },
+            "_predicate": {},
+            "id": "c4154ac833",
+            "_paused": false,
+            "_optimization_metric": "SESSION",
+            "_include_eid_in_hash": true
+          }]
       }
       genomes = {
         "60f67d8648": {
@@ -836,7 +876,6 @@ describe('store.js', () => {
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
-      expect(Array.from(result.activeEids)).to.be.eql(["60f67d8648"]);
       expect(result.effectiveGenome).to.be.eql({
         "web": {
           "2nsqubits": {
@@ -865,7 +904,6 @@ describe('store.js', () => {
 
       const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
 
-      expect(Array.from(result.activeEids)).to.be.eql(["60f67d8648", "64928df20a"]);
       expect(result.effectiveGenome).to.be.eql({
         "web": {
           "2nsqubits": {
@@ -892,6 +930,19 @@ describe('store.js', () => {
           }
         }
       });
+    });
+
+    it('should include eid in activeEids even if there is no genome for it', () => {
+      context.initialize(123, 321, {
+        web: {
+          url: 'https://test.site.com/index.html'
+        }
+      });
+      setActiveAndEntryKeyStates(1, context, config, allocations, configKeyStates);
+
+      const result = generateEffectiveGenome(configKeyStates.experiments, genomes);
+
+      expect(Array.from(result.activeEids)).to.be.eql(["60f67d8648", "64928df20a", "c4154ac833"]);
     });
   });
 
