@@ -53,8 +53,7 @@ function EvolvClient(opts) {
     clientName: options.clientName
   };
 
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions) : null;
-  const eventBeacon = options.beacon || new Beacon(options.endpoint + '/' + options.environment + '/events', context, beaconOptions);
+  const contextBeacon = new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions);
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -214,29 +213,12 @@ function EvolvClient(opts) {
    *
    * @param {String} type The type associated with the event.
    * @param {Object} [metadata] Any metadata to attach to the event.
-   * @param {Boolean} [flush = false] If true, the event will be sent immediately.
    */
-  this.emit = function(type, metadata, flush) {
+  this.emit = function(type, metadata) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
-    eventBeacon.emit(type, assign({
-      uid: context.uid,
-      metadata: metadata
-    }), flush);
     emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
 
-  // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
-  /*let getSessionBasedExps = function() {
-    let sessionBasedExps = {};
-
-    ((store.configuration && store.configuration._experiments) || []).forEach(function(experiment) {
-      if (experiment._optimization_metric === 'SESSION') {
-        sessionBasedExps[experiment.id] = true;
-      }
-    });
-
-    return sessionBasedExps;
-  }*/
 
   /**
    * Confirm that the consumer has successfully received and applied values, making them eligible for inclusion in
@@ -295,18 +277,6 @@ function EvolvClient(opts) {
             const existingValues = isInternalUser ? existingInternalConfirmations : existingConfirmations;
             context.set(confirmationsKey, newConfirmations.concat(existingValues));
 
-            confirmableAllocations.forEach(function(alloc) {
-              // Only confirm for non session based experiments -- session based use the analytics data
-              // TODO AP-2318 prevent sending confirmations when every stat comes from analytics. Prior to that, these are still needed
-              // !sessionBasedExps[alloc.eid] && eventBeacon.emit('confirmation', {
-              eventBeacon.emit('confirmation', {
-                uid: alloc.uid,
-                eid: alloc.eid,
-                cid: alloc.cid
-              });
-            });
-
-            eventBeacon.flush();
             emit(context, EvolvClient.CONFIRMED);
             resolve();
             return;
@@ -359,15 +329,6 @@ function EvolvClient(opts) {
 
     context.set('experiments.contaminations', contextContaminations.concat(contaminations));
 
-    contaminatableAllocations.forEach(function(alloc) {
-      eventBeacon.emit('contamination', {
-        uid: alloc.uid,
-        eid: alloc.eid,
-        cid: alloc.cid,
-        contaminationReason: details
-      });
-    });
-    eventBeacon.flush();
     emit(context, EvolvClient.CONTAMINATED);
   };
 
@@ -413,33 +374,31 @@ function EvolvClient(opts) {
         console.log('Evolv: Failed to retrieve client context');
       });
 
-    if (options.analytics) {
-      /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
-      waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
-        contextBeacon.emit(type, context.remoteContext);
-      });
-      waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
-        if (local) {
-          return;
-        }
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
+    waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
+      contextBeacon.emit(type, context.remoteContext);
+    });
+    waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key, value: value});
-      });
-      waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
-        if (local) {
-          return;
-        }
+      contextBeacon.emit(type, {key: key, value: value});
+    });
+    waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key, value: value});
-      });
-      waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
-        if (local) {
-          return;
-        }
+      contextBeacon.emit(type, {key: key, value: value});
+    });
+    waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key});
-      });
-    }
+      contextBeacon.emit(type, {key: key});
+    });
 
     if (options.autoConfirm) {
       this.confirm();
@@ -454,10 +413,7 @@ function EvolvClient(opts) {
    * Force all beacons to transmit.
    */
   this.flush = function() {
-    eventBeacon.flush();
-    if (options.analytics) {
-      contextBeacon.flush();
-    }
+    contextBeacon.flush();
   };
 
   /**
@@ -466,10 +422,7 @@ function EvolvClient(opts) {
    * then calling this will allow data to be sent back to Evolv
    */
   this.allowEvents = function() {
-    eventBeacon.unblockAndFlush();
-    if (options.analytics) {
-      contextBeacon.unblockAndFlush();
-    }
+    contextBeacon.unblockAndFlush();
   };
 
   /**

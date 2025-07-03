@@ -12,7 +12,6 @@ import { assign } from './ponyfills/objects.js';
  * @property {string} [endpoint]
  * @property {boolean} [autoConfirm]
  * @property {RequestHooks} [hooks]
- * @property {boolean} [analytics]
  * @property {*} [store]
  * @property {*} [context]
  * @property {*} [auth]
@@ -44,7 +43,6 @@ export function buildOptions(options) {
 
   opts.version = opts.version || 1;
   opts.endpoint = ((opts.endpoint && opts.endpoint.replace(/\/$/, '')) || 'https://participants.evolv.ai') + '/v' + opts.version;
-  opts.analytics = 'analytics' in opts ? opts.analytics : opts.version > 1;
 
   opts.hooks = assign({}, opts.hooks);
 

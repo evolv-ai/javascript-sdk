@@ -59,7 +59,7 @@ async function validateClient(evolv, opts, uid) {
   expect(contextInitializedSpy).to.not.have.been.called;
 
   let analyticsPayloads = [];
-  let eventPayloads = [];
+
   const beaconHandler = (req, res) => {
     expect(req.method()).to.equal('POST');
     expect(req.header('Content-Type')).to.equal('application/json; charset=UTF-8');
@@ -69,8 +69,6 @@ async function validateClient(evolv, opts, uid) {
 
     if (req.url().path.endsWith('data')) {
       analyticsPayloads.push(data);
-    } else if (req.url().path.endsWith('events')) {
-      eventPayloads.push(data);
     } else {
       res.status(500);
     }
@@ -79,7 +77,6 @@ async function validateClient(evolv, opts, uid) {
 
   xhrMock.post(`${options.endpoint}/${options.environment}/data`, beaconHandler);
 
-  xhrMock.post(`${options.endpoint}/${options.environment}/events`, beaconHandler);
 
   evolv.initialize(uid, {
       remote: true,
@@ -199,7 +196,7 @@ async function validateClient(evolv, opts, uid) {
   return new Promise((resolve, reject) => {
     setTimeout(function() {
       try {
-        resolve({analyticsPayloads, eventPayloads});
+        resolve({analyticsPayloads});
       } catch (ex) {
         reject(ex);
       }
@@ -589,7 +586,6 @@ describe('Evolv client integration tests', () => {
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
-      const analytics = true;
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -697,17 +693,11 @@ describe('Evolv client integration tests', () => {
       const options = {
         environment,
         endpoint,
-        version,
-        analytics
+        version
       };
       const evolv = new Evolv(options);
 
       const results = await validateClient(evolv, options, uid);
-
-      expect(results.eventPayloads.length).to.equal(2)
-      expect(results.eventPayloads[0].messages[0].type).to.equal("confirmation")
-      expect(results.eventPayloads[0].messages[0].payload.eid).to.equal("0f39849197")
-      expect(results.eventPayloads[1].messages[0].type).to.equal("lunch-time")
 
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
@@ -750,150 +740,6 @@ describe('Evolv client integration tests', () => {
       expect(messages[16]).to.be.a.message("context.value.changed", "keys.active", []);
       expect(messages[17]).to.be.a.message("context.value.changed", "variants.active", []);
     });
-
-    // TODO AP-2318 bring back when confirmations killed again
-    xit('should not fire confirmation if session based', async () => {
-      const uid = 123;
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 2;
-      const analytics = true;
-
-      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
-        return res.status(200).body(JSON.stringify({
-          _published: 1584475383.3865728,
-          _client: {},
-          _experiments: [
-            {
-              _optimization_metric: "SESSION",
-              web: {
-                "ab8numq2j": {
-                  _is_entry_point: true,
-                  _predicate: {
-                    combinator: "and",
-                    rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  am94yhwo2: {
-                    _values: true
-                  }
-                },
-                "7w3zpgfy9": {
-                  _is_entry_point: false,
-                  _predicate: {
-                    combinator: "and",
-                    rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2ZlYXR1cmVzXC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  azevlvf5g: {
-                    _values: true
-                  }
-                }
-              },
-              id: "0f39849197",
-              _predicate: {
-                combinator: "and",
-                rules: [
-                  {
-                    field: "user_attributes",
-                    operator: "kv_equal",
-                    value: [
-                      "country",
-                      "usa"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }));
-      });
-
-      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
-        return res.status(200).body(JSON.stringify([
-          {
-            uid: uid,
-            eid: "0f39849197",
-            cid: "0cf8ffcedea2:0f39849197",
-            genome: {
-              web: {
-                "ab8numq2j": {
-                  am94yhwo2: {
-                    id: "2fxe5dy5j",
-                    type: "compound",
-                    _metadata: { },
-                    script: "console.log('62px');",
-                    styles: "#ReactLogo { font-size: 62px; }"
-                  }
-                },
-                "7w3zpgfy9": {
-                  azevlvf5g: {
-                    type: "noop"
-                  }
-                }
-              }
-            },
-            audience_query: {
-              id: 1,
-              name: "USA Users",
-              combinator: "and",
-              rules: [
-                {
-                  field: "user_attributes",
-                  operator: "kv_equal",
-                  value: [
-                    "country",
-                    "usa"
-                  ]
-                }
-              ]
-            },
-            excluded: false
-          }
-        ]));
-      });
-
-      const options = {
-        environment,
-        endpoint,
-        version,
-        analytics
-      };
-      const evolv = new Evolv(options);
-
-      const results = await validateClient(evolv, options, uid);
-
-      expect(results.eventPayloads.length).to.equal(1)
-      expect(results.eventPayloads[0].messages[0].type).to.equal("lunch-time")
-
-      expect(results.analyticsPayloads.length).to.equal(1);
-      expect(results.analyticsPayloads[0].uid).to.equal(uid);
-
-      const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(18)
-
-      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
-      expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
-      expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
-      expect(messages[11].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[12]).to.be.a.messageWithLength("context.value.added", "contaminations", 1);
-      expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[13]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
-      expect(messages[13].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[14].type).to.equal("context.value.changed")
-    });
   });
 
   describe('prevent beacon', () => {
@@ -902,7 +748,6 @@ describe('Evolv client integration tests', () => {
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
-      const analytics = true;
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -1011,7 +856,6 @@ describe('Evolv client integration tests', () => {
         environment,
         endpoint,
         version,
-        analytics,
         bufferEvents: true
       };
       const evolv = new Evolv(options);
@@ -1019,7 +863,6 @@ describe('Evolv client integration tests', () => {
       const results = await validateClient(evolv, options, uid);
 
       expect(results.analyticsPayloads.length).to.equal(0);
-      expect(results.eventPayloads.length).to.equal(0);
 
       evolv.allowEvents();
 
@@ -1037,11 +880,6 @@ describe('Evolv client integration tests', () => {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       });
-
-      expect(results.eventPayloads.length).to.equal(1);
-      const eventsMessages = results.eventPayloads[0].messages;
-      expect(eventsMessages.length).to.equal(3);
-      expect(eventsMessages[0].type).to.equal("confirmation");
     });
   });
 });
@@ -1309,35 +1147,6 @@ describe('Evolv client unit tests', () => {
       }
 
       expect(correctlyErrored).to.be.equal(true);
-    });
-
-    it('should should send the contamination details to the events endpoint', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
-      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
-      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
-      options.store = store;
-
-      let contaminationDetails = {
-        reason: 'broken',
-        details: 'mistake'
-      };
-
-      context.initialize();
-      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
-      options.context = context;
-      options.beacon = {
-        emit: function(type, details) {
-          expect(details.contaminationReason).to.equal(contaminationDetails);
-          done();
-        }
-      };
-
-      const client = new Evolv(options);
-
-      client.contaminate(contaminationDetails);
-
-      expect(context.remoteContext.contaminations).to.be.lengthOf(1);
-      expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     });
 
     it('should not confirm into allocated experiments that have been contaminated', (done) => {
