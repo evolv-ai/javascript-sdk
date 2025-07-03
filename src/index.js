@@ -213,9 +213,8 @@ function EvolvClient(opts) {
    *
    * @param {String} type The type associated with the event.
    * @param {Object} [metadata] Any metadata to attach to the event.
-   * @param {Boolean} [flush = false] If true, the event will be sent immediately.
    */
-  this.emit = function(type, metadata, flush) {
+  this.emit = function(type, metadata) {
     context.pushToArray('events', {type: type,  timestamp: (new Date()).getTime()});
     emit(context, EvolvClient.EVENT_EMITTED, type, metadata);
   };
