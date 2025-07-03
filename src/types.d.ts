@@ -39,7 +39,6 @@ export interface EvolvClientOptions {
   pushstate?: boolean;
   version?: number;
   autoConfirm?: boolean;
-  analytics?: boolean;
   bufferEvents?: boolean;
   clientName?: string;
   clientType?: 'direct' | 'proxied';

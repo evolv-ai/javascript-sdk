@@ -586,7 +586,6 @@ describe('Evolv client integration tests', () => {
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
-      const analytics = true;
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -694,8 +693,7 @@ describe('Evolv client integration tests', () => {
       const options = {
         environment,
         endpoint,
-        version,
-        analytics
+        version
       };
       const evolv = new Evolv(options);
 
@@ -742,147 +740,6 @@ describe('Evolv client integration tests', () => {
       expect(messages[16]).to.be.a.message("context.value.changed", "keys.active", []);
       expect(messages[17]).to.be.a.message("context.value.changed", "variants.active", []);
     });
-
-    // TODO AP-2318 bring back when confirmations killed again
-    xit('should not fire confirmation if session based', async () => {
-      const uid = 123;
-      const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const version = 2;
-      const analytics = true;
-
-      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
-        return res.status(200).body(JSON.stringify({
-          _published: 1584475383.3865728,
-          _client: {},
-          _experiments: [
-            {
-              _optimization_metric: "SESSION",
-              web: {
-                "ab8numq2j": {
-                  _is_entry_point: true,
-                  _predicate: {
-                    combinator: "and",
-                    rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2luZGV4XC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  am94yhwo2: {
-                    _values: true
-                  }
-                },
-                "7w3zpgfy9": {
-                  _is_entry_point: false,
-                  _predicate: {
-                    combinator: "and",
-                    rules: [
-                      {
-                        field: "web.url",
-                        operator: "regex64_match",
-                        value: "L2h0dHBzPzpcL1wvW14vXStcL2RldjFcL2ZlYXR1cmVzXC5odG1sKD86JHxcP3wjKS9p"
-                      }
-                    ]
-                  },
-                  azevlvf5g: {
-                    _values: true
-                  }
-                }
-              },
-              id: "0f39849197",
-              _predicate: {
-                combinator: "and",
-                rules: [
-                  {
-                    field: "user_attributes",
-                    operator: "kv_equal",
-                    value: [
-                      "country",
-                      "usa"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }));
-      });
-
-      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
-        return res.status(200).body(JSON.stringify([
-          {
-            uid: uid,
-            eid: "0f39849197",
-            cid: "0cf8ffcedea2:0f39849197",
-            genome: {
-              web: {
-                "ab8numq2j": {
-                  am94yhwo2: {
-                    id: "2fxe5dy5j",
-                    type: "compound",
-                    _metadata: { },
-                    script: "console.log('62px');",
-                    styles: "#ReactLogo { font-size: 62px; }"
-                  }
-                },
-                "7w3zpgfy9": {
-                  azevlvf5g: {
-                    type: "noop"
-                  }
-                }
-              }
-            },
-            audience_query: {
-              id: 1,
-              name: "USA Users",
-              combinator: "and",
-              rules: [
-                {
-                  field: "user_attributes",
-                  operator: "kv_equal",
-                  value: [
-                    "country",
-                    "usa"
-                  ]
-                }
-              ]
-            },
-            excluded: false
-          }
-        ]));
-      });
-
-      const options = {
-        environment,
-        endpoint,
-        version,
-        analytics
-      };
-      const evolv = new Evolv(options);
-
-      const results = await validateClient(evolv, options, uid);
-
-      expect(results.analyticsPayloads.length).to.equal(1);
-      expect(results.analyticsPayloads[0].uid).to.equal(uid);
-
-      const messages = results.analyticsPayloads[0].messages;
-      expect(messages.length).to.equal(18)
-
-      expect(messages[9]).to.be.a.messageWithLength("context.value.added", "confirmations", 1);
-      expect(messages[9].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[10]).to.be.a.messageWithLength("context.value.added", CONFIRMATIONS_KEY, 1);
-      expect(messages[10].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[11]).to.be.a.messageWithLength("context.value.added", "events", 1);
-      expect(messages[11].payload.value[0].type).to.equal("lunch-time")
-      expect(messages[12]).to.be.a.messageWithLength("context.value.added", "contaminations", 1);
-      expect(messages[12].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[13]).to.be.a.messageWithLength("context.value.added", "experiments.contaminations", 1);
-      expect(messages[13].payload.value[0].cid).to.equal("0cf8ffcedea2:0f39849197")
-      expect(messages[14].type).to.equal("context.value.changed")
-    });
   });
 
   describe('prevent beacon', () => {
@@ -891,7 +748,6 @@ describe('Evolv client integration tests', () => {
       const environment = '579b106c73';
       const endpoint = 'https://participants-frazer.evolv.ai/';
       const version = 2;
-      const analytics = true;
 
       xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
         return res.status(200).body(JSON.stringify({
@@ -1000,7 +856,6 @@ describe('Evolv client integration tests', () => {
         environment,
         endpoint,
         version,
-        analytics,
         bufferEvents: true
       };
       const evolv = new Evolv(options);

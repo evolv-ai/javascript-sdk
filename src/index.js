@@ -53,7 +53,7 @@ function EvolvClient(opts) {
     clientName: options.clientName
   };
 
-  const contextBeacon = options.analytics ? new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions) : null;
+  const contextBeacon = new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions);
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -375,33 +375,31 @@ function EvolvClient(opts) {
         console.log('Evolv: Failed to retrieve client context');
       });
 
-    if (options.analytics) {
-      /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
-      waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
-        contextBeacon.emit(type, context.remoteContext);
-      });
-      waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
-        if (local) {
-          return;
-        }
+    /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
+    waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
+      contextBeacon.emit(type, context.remoteContext);
+    });
+    waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key, value: value});
-      });
-      waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
-        if (local) {
-          return;
-        }
+      contextBeacon.emit(type, {key: key, value: value});
+    });
+    waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key, value: value});
-      });
-      waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
-        if (local) {
-          return;
-        }
+      contextBeacon.emit(type, {key: key, value: value});
+    });
+    waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
+      if (local) {
+        return;
+      }
 
-        contextBeacon.emit(type, {key: key});
-      });
-    }
+      contextBeacon.emit(type, {key: key});
+    });
 
     if (options.autoConfirm) {
       this.confirm();
@@ -416,10 +414,7 @@ function EvolvClient(opts) {
    * Force all beacons to transmit.
    */
   this.flush = function() {
-    if (options.analytics) {
-      contextBeacon.flush();
-    }
-
+    contextBeacon.flush();
   };
 
   /**
@@ -428,9 +423,7 @@ function EvolvClient(opts) {
    * then calling this will allow data to be sent back to Evolv
    */
   this.allowEvents = function() {
-    if (options.analytics) {
     contextBeacon.unblockAndFlush();
-    }
   };
 
   /**
