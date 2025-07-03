@@ -59,7 +59,7 @@ async function validateClient(evolv, opts, uid) {
   expect(contextInitializedSpy).to.not.have.been.called;
 
   let analyticsPayloads = [];
-  let eventPayloads = [];
+
   const beaconHandler = (req, res) => {
     expect(req.method()).to.equal('POST');
     expect(req.header('Content-Type')).to.equal('application/json; charset=UTF-8');
@@ -69,8 +69,6 @@ async function validateClient(evolv, opts, uid) {
 
     if (req.url().path.endsWith('data')) {
       analyticsPayloads.push(data);
-    } else if (req.url().path.endsWith('events')) {
-      eventPayloads.push(data);
     } else {
       res.status(500);
     }
@@ -79,7 +77,6 @@ async function validateClient(evolv, opts, uid) {
 
   xhrMock.post(`${options.endpoint}/${options.environment}/data`, beaconHandler);
 
-  xhrMock.post(`${options.endpoint}/${options.environment}/events`, beaconHandler);
 
   evolv.initialize(uid, {
       remote: true,
@@ -199,7 +196,7 @@ async function validateClient(evolv, opts, uid) {
   return new Promise((resolve, reject) => {
     setTimeout(function() {
       try {
-        resolve({analyticsPayloads, eventPayloads});
+        resolve({analyticsPayloads});
       } catch (ex) {
         reject(ex);
       }
@@ -704,11 +701,6 @@ describe('Evolv client integration tests', () => {
 
       const results = await validateClient(evolv, options, uid);
 
-      expect(results.eventPayloads.length).to.equal(2)
-      expect(results.eventPayloads[0].messages[0].type).to.equal("confirmation")
-      expect(results.eventPayloads[0].messages[0].payload.eid).to.equal("0f39849197")
-      expect(results.eventPayloads[1].messages[0].type).to.equal("lunch-time")
-
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
@@ -873,9 +865,6 @@ describe('Evolv client integration tests', () => {
 
       const results = await validateClient(evolv, options, uid);
 
-      expect(results.eventPayloads.length).to.equal(1)
-      expect(results.eventPayloads[0].messages[0].type).to.equal("lunch-time")
-
       expect(results.analyticsPayloads.length).to.equal(1);
       expect(results.analyticsPayloads[0].uid).to.equal(uid);
 
@@ -1019,7 +1008,6 @@ describe('Evolv client integration tests', () => {
       const results = await validateClient(evolv, options, uid);
 
       expect(results.analyticsPayloads.length).to.equal(0);
-      expect(results.eventPayloads.length).to.equal(0);
 
       evolv.allowEvents();
 
@@ -1037,11 +1025,6 @@ describe('Evolv client integration tests', () => {
           "url": "https://www.lunch.com/dev1/index.html"
         }
       });
-
-      expect(results.eventPayloads.length).to.equal(1);
-      const eventsMessages = results.eventPayloads[0].messages;
-      expect(eventsMessages.length).to.equal(3);
-      expect(eventsMessages[0].type).to.equal("confirmation");
     });
   });
 });
@@ -1309,35 +1292,6 @@ describe('Evolv client unit tests', () => {
       }
 
       expect(correctlyErrored).to.be.equal(true);
-    });
-
-    it('should should send the contamination details to the events endpoint', (done) => {
-      store.activeEntryPoints = () => new Promise((resolve) => { resolve(['1234']) });
-      Object.defineProperty(store, 'configuration', { get: function() { return { foo: 'bar' }; }, });
-      Object.defineProperty(store, 'activeEids', { get: function() { return new Set(['1234']); } });
-      options.store = store;
-
-      let contaminationDetails = {
-        reason: 'broken',
-        details: 'mistake'
-      };
-
-      context.initialize();
-      context.set("experiments.allocations", [{eid: '1234', cid: '5678'}]);
-      options.context = context;
-      options.beacon = {
-        emit: function(type, details) {
-          expect(details.contaminationReason).to.equal(contaminationDetails);
-          done();
-        }
-      };
-
-      const client = new Evolv(options);
-
-      client.contaminate(contaminationDetails);
-
-      expect(context.remoteContext.contaminations).to.be.lengthOf(1);
-      expect(context.remoteContext.contaminations[0].cid).to.be.equal('5678');
     });
 
     it('should not confirm into allocated experiments that have been contaminated', (done) => {
