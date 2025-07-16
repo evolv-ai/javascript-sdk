@@ -14,6 +14,11 @@ export const INTERNAL_CONFIRMATIONS_KEY = 'experiments.confirmationsInternal';
 
 export const DEFAULT_QUEUE_LIMIT = 50;
 
+// Storage type constants
+export const STORAGE_TYPE_USER = 'user';
+export const STORAGE_TYPE_SESSION = 'session';
+export const STORAGE_TYPE_NONE = 'none';
+
 /**
  * The EvolvContext provides functionality to manage data relating to the client state, or context in which the
  * variants will be applied.
@@ -27,6 +32,86 @@ function EvolvContext(store) {
   let remoteContext;
   let localContext;
   let initialized = false;
+  let persistenceMapping = {}; // Maps keys to storage types
+
+  // Storage utility functions
+  function getStoragePrefix() {
+    return 'evolv_' + (uid || 'default') + '_';
+  }
+
+  function saveToStorage(key, value, storageType, isLocal) {
+    if (!storageType || storageType === STORAGE_TYPE_NONE) return;
+
+    const storageKey = getStoragePrefix() + key;
+    const storageData = {
+      value: value,
+      isLocal: !!isLocal
+    };
+    const serializedValue = JSON.stringify(storageData);
+
+    try {
+      if (storageType === STORAGE_TYPE_USER && typeof localStorage !== 'undefined') {
+        localStorage.setItem(storageKey, serializedValue);
+      } else if (storageType === STORAGE_TYPE_SESSION && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(storageKey, serializedValue);
+      }
+    } catch (e) {
+      // Silently fail if storage is not available or quota exceeded
+      console.warn('Evolv: Failed to save to storage:', e.message);
+    }
+  }
+
+      function loadFromStorage(key, storageType) {
+    if (!storageType || storageType === STORAGE_TYPE_NONE) return undefined;
+
+    const storageKey = getStoragePrefix() + key;
+
+    try {
+      let storedValue;
+      if (storageType === STORAGE_TYPE_USER && typeof localStorage !== 'undefined') {
+        storedValue = localStorage.getItem(storageKey);
+      } else if (storageType === STORAGE_TYPE_SESSION && typeof sessionStorage !== 'undefined') {
+        storedValue = sessionStorage.getItem(storageKey);
+      }
+
+      if (!storedValue) return undefined;
+
+      return JSON.parse(storedValue); // Expected format: {value: actualValue, isLocal: boolean}
+    } catch (e) {
+      // Silently fail if storage is not available or value is not parseable
+      console.warn('Evolv: Failed to load from storage:', e.message);
+      return undefined;
+    }
+  }
+
+  function removeFromStorage(key, storageType) {
+    if (!storageType || storageType === STORAGE_TYPE_NONE) return;
+
+    const storageKey = getStoragePrefix() + key;
+
+    try {
+      if (storageType === STORAGE_TYPE_USER && typeof localStorage !== 'undefined') {
+        localStorage.removeItem(storageKey);
+      } else if (storageType === STORAGE_TYPE_SESSION && typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(storageKey);
+      }
+    } catch (e) {
+      // Silently fail if storage is not available
+      console.warn('Evolv: Failed to remove from storage:', e.message);
+    }
+  }
+
+    function loadPersistedData() {
+    Object.keys(persistenceMapping).forEach(function(key) {
+      const storageType = persistenceMapping[key];
+      const storageData = loadFromStorage(key, storageType);
+
+      if (storageData !== undefined) {
+        const targetContext = storageData.isLocal ? localContext : remoteContext;
+        objects.setKeyToValue(key, storageData.value, targetContext);
+      }
+    });
+  }
 
   /**
    * A unique identifier for the participant.
@@ -60,6 +145,10 @@ function EvolvContext(store) {
     uid = _uid;
     remoteContext = _remoteContext ? objects.deepClone(_remoteContext) : {};
     localContext = _localContext ? objects.deepClone(_localContext) : {};
+
+    // Load any persisted data
+    loadPersistedData();
+
     initialized = true;
     emit(this, CONTEXT_INITIALIZED, this.resolve());
   };
@@ -99,6 +188,11 @@ function EvolvContext(store) {
     }
 
     objects.setKeyToValue(key, value, context);
+
+    // Handle persistence if configured
+    if (persistenceMapping[key]) {
+      saveToStorage(key, value, persistenceMapping[key], local);
+    }
 
     const updated = this.resolve();
     if (typeof before === 'undefined') {
@@ -141,6 +235,13 @@ function EvolvContext(store) {
       context = remoteContext;
     }
 
+    // Handle persistence for all updated keys
+    Object.keys(flattened).forEach(function(key) {
+      if (persistenceMapping[key]) {
+        saveToStorage(key, flattened[key], persistenceMapping[key], local);
+      }
+    });
+
     const thisRef = this;
     const updated = this.resolve();
     Object.keys(flattened).forEach(function(key) {
@@ -163,11 +264,16 @@ function EvolvContext(store) {
    */
   this.remove = function(key) {
     ensureInitialized();
-    const local = objects.removeValueForKey(key, localContext);
+        const local = objects.removeValueForKey(key, localContext);
     const remote = objects.removeValueForKey(key, remoteContext);
     const removed = local || remote;
 
     if (removed) {
+      // Remove from persistent storage if key was removed
+      if (persistenceMapping[key]) {
+        removeFromStorage(key, persistenceMapping[key]);
+      }
+
       const updated = this.resolve();
       emit(this, CONTEXT_VALUE_REMOVED, key, !remote, updated);
       emit(this, CONTEXT_CHANGED, updated);
@@ -230,7 +336,51 @@ function EvolvContext(store) {
     const newArray = combined.slice(combined.length - limit);
 
     return this.set(key, newArray, local);
-  }
+  };
+
+  /**
+   * Configures persistence for a specific key.
+   *
+   * @param {String} key The key to configure persistence for.
+   * @param {String} storageType The storage type: 'user' (localStorage), 'session' (sessionStorage), or 'none'.
+   */
+  this.setPersistence = function(key, storageType) {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Evolv: Key must be a non-empty string');
+    }
+
+    if (![STORAGE_TYPE_USER, STORAGE_TYPE_SESSION, STORAGE_TYPE_NONE].includes(storageType)) {
+      throw new Error('Evolv: Storage type must be "user", "session", or "none"');
+    }
+
+    if (storageType === STORAGE_TYPE_NONE) {
+      // Remove persistence mapping
+      delete persistenceMapping[key];
+      // Remove any existing stored data
+      removeFromStorage(key, STORAGE_TYPE_USER);
+      removeFromStorage(key, STORAGE_TYPE_SESSION);
+    } else {
+                  // Set new persistence mapping
+      persistenceMapping[key] = storageType;
+
+      // If the key already exists in context and context is initialized, save it with the new storage type
+      if (initialized) {
+        // Check if value exists in local context first, then remote
+        let currentValue, isLocal;
+        if (objects.hasKey(key, localContext)) {
+          currentValue = objects.getValueForKey(key, localContext);
+          isLocal = true;
+        } else if (objects.hasKey(key, remoteContext)) {
+          currentValue = objects.getValueForKey(key, remoteContext);
+          isLocal = false;
+        }
+
+        if (currentValue !== undefined) {
+          saveToStorage(key, currentValue, storageType, isLocal);
+        }
+      }
+    }
+  };
 }
 
 export default EvolvContext;
