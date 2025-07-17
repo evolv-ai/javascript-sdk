@@ -34,22 +34,22 @@ function EvolvContext(store) {
   let initialized = false;
   let persistenceMapping = {}; // Maps keys to storage types
 
-  // Storage utility functions
-  function getStoragePrefix() {
-    return 'evolv_' + (uid || 'default') + '_';
+    // Storage utility functions
+  function getStorageKey(key) {
+    return 'evolv_' + (uid || 'default') + '_' + key;
   }
 
   function saveToStorage(key, value, storageType, isLocal) {
     if (!storageType || storageType === STORAGE_TYPE_NONE) return;
 
-    const storageKey = getStoragePrefix() + key;
+    const storageKey = getStorageKey(key);
     const storageData = {
       value: value,
       isLocal: !!isLocal
     };
-    const serializedValue = JSON.stringify(storageData);
 
     try {
+      const serializedValue = JSON.stringify(storageData);
       if (storageType === STORAGE_TYPE_USER && typeof localStorage !== 'undefined') {
         localStorage.setItem(storageKey, serializedValue);
       } else if (storageType === STORAGE_TYPE_SESSION && typeof sessionStorage !== 'undefined') {
@@ -61,10 +61,10 @@ function EvolvContext(store) {
     }
   }
 
-      function loadFromStorage(key, storageType) {
+  function loadFromStorage(key, storageType) {
     if (!storageType || storageType === STORAGE_TYPE_NONE) return undefined;
 
-    const storageKey = getStoragePrefix() + key;
+    const storageKey = getStorageKey(key);
 
     try {
       let storedValue;
@@ -84,10 +84,10 @@ function EvolvContext(store) {
     }
   }
 
-  function removeFromStorage(key, storageType) {
+    function removeFromStorage(key, storageType) {
     if (!storageType || storageType === STORAGE_TYPE_NONE) return;
 
-    const storageKey = getStoragePrefix() + key;
+    const storageKey = getStorageKey(key);
 
     try {
       if (storageType === STORAGE_TYPE_USER && typeof localStorage !== 'undefined') {
@@ -344,7 +344,7 @@ function EvolvContext(store) {
    * @param {String} key The key to configure persistence for.
    * @param {String} storageType The storage type: 'user' (localStorage), 'session' (sessionStorage), or 'none'.
    */
-  this.setPersistence = function(key, storageType) {
+  this.configurePersistence = function(key, storageType) {
     if (!key || typeof key !== 'string') {
       throw new Error('Evolv: Key must be a non-empty string');
     }

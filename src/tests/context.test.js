@@ -51,18 +51,18 @@ describe('context', () => {
     });
 
     it('should configure persistence for a key', () => {
-      expect(() => context.setPersistence('user.preference', STORAGE_TYPE_USER)).to.not.throw();
-      expect(() => context.setPersistence('session.data', STORAGE_TYPE_SESSION)).to.not.throw();
-      expect(() => context.setPersistence('temp.data', STORAGE_TYPE_NONE)).to.not.throw();
+      expect(() => context.configurePersistence('user.preference', STORAGE_TYPE_USER)).to.not.throw();
+      expect(() => context.configurePersistence('session.data', STORAGE_TYPE_SESSION)).to.not.throw();
+      expect(() => context.configurePersistence('temp.data', STORAGE_TYPE_NONE)).to.not.throw();
     });
 
     it('should throw error for invalid key', () => {
-      expect(() => context.setPersistence('', STORAGE_TYPE_USER)).to.throw('Evolv: Key must be a non-empty string');
-      expect(() => context.setPersistence(null, STORAGE_TYPE_USER)).to.throw('Evolv: Key must be a non-empty string');
+      expect(() => context.configurePersistence('', STORAGE_TYPE_USER)).to.throw('Evolv: Key must be a non-empty string');
+      expect(() => context.configurePersistence(null, STORAGE_TYPE_USER)).to.throw('Evolv: Key must be a non-empty string');
     });
 
     it('should throw error for invalid storage type', () => {
-      expect(() => context.setPersistence('test.key', 'invalid')).to.throw('Evolv: Storage type must be "user", "session", or "none"');
+      expect(() => context.configurePersistence('test.key', 'invalid')).to.throw('Evolv: Storage type must be "user", "session", or "none"');
     });
 
     it('should save and retrieve data with persistence disabled by default', () => {
@@ -79,29 +79,29 @@ describe('context', () => {
     // In Node.js test environment, they will just verify the API works without throwing errors
     it('should handle storage operations gracefully in non-browser environment', () => {
       expect(() => {
-        context.setPersistence('user.data', STORAGE_TYPE_USER);
+        context.configurePersistence('user.data', STORAGE_TYPE_USER);
         context.set('user.data', { id: 123, name: 'Test User' });
       }).to.not.throw();
 
       expect(() => {
-        context.setPersistence('session.data', STORAGE_TYPE_SESSION);
+        context.configurePersistence('session.data', STORAGE_TYPE_SESSION);
         context.set('session.data', [1, 2, 3]);
       }).to.not.throw();
     });
 
     it('should remove persistence configuration when set to none', () => {
-      context.setPersistence('test.key', STORAGE_TYPE_USER);
+      context.configurePersistence('test.key', STORAGE_TYPE_USER);
       context.set('test.key', 'value');
 
       // Remove persistence
-      context.setPersistence('test.key', STORAGE_TYPE_NONE);
+      context.configurePersistence('test.key', STORAGE_TYPE_NONE);
 
       // This should work without throwing errors
       expect(context.get('test.key')).to.equal('value');
     });
 
         it('should persist local context values and restore them to local context', () => {
-      context.setPersistence('local.key', STORAGE_TYPE_USER);
+      context.configurePersistence('local.key', STORAGE_TYPE_USER);
       context.set('local.key', 'local-value', true); // Set as local
 
       expect(context.get('local.key')).to.equal('local-value');
@@ -111,7 +111,7 @@ describe('context', () => {
       // In Node.js, we just verify the API works without throwing errors
              expect(() => {
          const newContext = new Context();
-         newContext.setPersistence('local.key', STORAGE_TYPE_USER);
+         newContext.configurePersistence('local.key', STORAGE_TYPE_USER);
          newContext.initialize('test-persistence', {}, {});
        }).to.not.throw();
      });
@@ -132,18 +132,18 @@ describe('context', () => {
          const ctx1 = new Context();
          ctx1.initialize('test-user', {}, {});
 
-         // Configure persistence for both local and remote values
-         ctx1.setPersistence('remote.value', STORAGE_TYPE_USER);
-         ctx1.setPersistence('local.value', STORAGE_TYPE_USER);
+                  // Configure persistence for both local and remote values
+         ctx1.configurePersistence('remote.value', STORAGE_TYPE_USER);
+         ctx1.configurePersistence('local.value', STORAGE_TYPE_USER);
 
-                           // Set values in different contexts
+         // Set values in different contexts
          ctx1.set('remote.value', 'remote-data', false); // remote context
          ctx1.set('local.value', 'local-data', true);    // local context
 
          // Create new context to simulate page reload
          const ctx2 = new Context();
-         ctx2.setPersistence('remote.value', STORAGE_TYPE_USER);
-         ctx2.setPersistence('local.value', STORAGE_TYPE_USER);
+         ctx2.configurePersistence('remote.value', STORAGE_TYPE_USER);
+         ctx2.configurePersistence('local.value', STORAGE_TYPE_USER);
          ctx2.initialize('test-user', {}, {});
 
          // Verify values are restored to correct contexts

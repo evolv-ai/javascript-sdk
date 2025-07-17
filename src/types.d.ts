@@ -173,7 +173,7 @@ export class EvolvContext {
   get<T = any>(key: string): T;
   contains(key: string): boolean;
   pushToArray(key: string, value: any, local?: boolean, limit?: number): boolean;
-  setPersistence(key: string, storageType: StorageType): void;
+  configurePersistence(key: string, storageType: StorageType): void;
 }
 
 export default EvolvClient;
