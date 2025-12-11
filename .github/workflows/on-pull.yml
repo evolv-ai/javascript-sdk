@@ -10,12 +10,12 @@ jobs:
     name: Run Tests and Linting
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '16.14.2'
       - name: Checkout Ref
         uses: actions/checkout@v1
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
       - name: Run Tests and Lint
         run: bash -e ./scripts/test.sh
         env:

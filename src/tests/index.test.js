@@ -209,10 +209,8 @@ describe('Evolv client integration tests', () => {
     xhrMock.setup();
     // Uncomment to hit Frazer's endpoint
     // global.XMLHttpRequest = xmlhttprequest.XMLHttpRequest;
-    global.crypto = new Crypto();
   });
   afterEach(() => {
-    delete global.crypto;
     delete global.XMLHttpRequest;
     xhrMock.teardown();
   });
@@ -466,7 +464,7 @@ describe('Evolv client integration tests', () => {
       const evolv = new Evolv(options);
       const confirmedSpy = chai.spy();
       evolv.on(Evolv.CONFIRMED, confirmedSpy);
-  
+
       await validateClient(evolv, options, uid);
 
       expect(confirmedSpy).to.have.been.called.exactly(1);
@@ -529,7 +527,7 @@ describe('Evolv client integration tests', () => {
       const evolv = new Evolv(options);
       const confirmedSpy = chai.spy();
       evolv.on(Evolv.CONFIRMED, confirmedSpy);
-  
+
       await validateClient(evolv, options, uid);
 
       expect(confirmedSpy).to.have.been.called.exactly(1);
