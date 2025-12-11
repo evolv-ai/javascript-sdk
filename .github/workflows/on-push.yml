@@ -10,14 +10,14 @@ jobs:
     name: Tag Build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '16.14.2'
       - name: Checkout Ref
         uses: actions/checkout@v1
         with:
           ref: ${{ github.event.push.after }}
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
       - name: Set Up Variables
         id: variables
         run: |
