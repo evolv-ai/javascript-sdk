@@ -26,6 +26,12 @@ function EvolvContext(store) {
   let uid;
   let remoteContext;
   let localContext;
+  let localStorageKey;
+  let remoteStorageKey;
+
+  const persistedKeys = [];
+  const sessionPersistedKeys = [];
+
   let initialized = false;
 
   /**
@@ -53,13 +59,48 @@ function EvolvContext(store) {
     }
   }
 
+  function mergePersistedContext(contextKey, context, storage) {
+    const persistedContext = storage.getItem(contextKey);
+    if (persistedContext) {
+      const parsedContext = JSON.parse(persistedContext);
+      if (context) {
+        return objects.deepMerge(context, parsedContext);
+      }
+
+      return parsedContext;
+    }
+
+    return context || {};
+  }
+
+  function mergeAllPersistedStorage(contextKey, context) {
+    if (window === undefined || !window.localStorage) {
+      return context || {};
+    }
+
+    const localStorageContext = mergePersistedContext(contextKey, context, window.localStorage);
+    return mergePersistedContext(contextKey, localStorageContext, window.sessionStorage);
+  }
+
+  function persistValue(key, value, local, sessionOnly) {
+    const storage = sessionOnly ? window.sessionStorage : window.localStorage;
+    const persistedContext = storage.getItem(local ? localStorageKey : remoteStorageKey);
+    const context = persistedContext ? JSON.parse(persistedContext) : {};
+    objects.setKeyToValue(key, value, context);
+    storage.setItem(local ? localStorageKey : remoteStorageKey, JSON.stringify(context));
+  }
+
   this.initialize = function(_uid, _remoteContext, _localContext) {
     if (initialized) {
       throw new Error('Evolv: The context is already initialized');
     }
     uid = _uid;
-    remoteContext = _remoteContext ? objects.deepClone(_remoteContext) : {};
-    localContext = _localContext ? objects.deepClone(_localContext) : {};
+
+    localStorageKey = 'evolv_' + this.uid + '_local_context';
+    remoteStorageKey = 'evolv_' + this.uid + '_remote_context';
+
+    localContext = mergeAllPersistedStorage(localStorageKey, _localContext);
+    remoteContext = mergeAllPersistedStorage(remoteStorageKey, _remoteContext);
     initialized = true;
     emit(this, CONTEXT_INITIALIZED, this.resolve());
   };
@@ -81,6 +122,16 @@ function EvolvContext(store) {
   };
 
   /**
+   * Returns true if a context key is persisted.
+   *
+   * @param {String} key The key to associate the value to.
+   */
+
+  this.isPersisted = function(key) {
+    return persistedKeys.indexOf(key) >= 0 || sessionPersistedKeys.indexOf(key) >= 0;
+  }
+
+  /**
    * Sets a value in the current context.
    *
    * Note: This will cause the effective genome to be recomputed.
@@ -99,6 +150,9 @@ function EvolvContext(store) {
     }
 
     objects.setKeyToValue(key, value, context);
+    if (this.isPersisted(key)) {
+      persistValue(key, value, local, sessionPersistedKeys.indexOf(key) >= 0);
+    }
 
     const updated = this.resolve();
     if (typeof before === 'undefined') {
@@ -109,6 +163,31 @@ function EvolvContext(store) {
     emit(this, CONTEXT_CHANGED, updated);
     return true;
   };
+
+  /**
+   * Persist context key to sessionStorage.
+   *
+   * @param {String} key The key to persist.
+   * @param {boolean} [sessionOnly] If true, the value will only be persisted to sessionStorage.
+   *   Default: true
+   */
+  this.persist = function(key, sessionOnly) {
+    ensureInitialized();
+
+    if (window === undefined || !window.localStorage) {
+      console.log('Evolv: Unable to persist context key. LocalStorage is not available.');
+      return;
+    }
+
+    const keys = sessionOnly === false ? persistedKeys : sessionPersistedKeys;
+    if (!keys.indexOf(key)) {
+      keys.push(key);
+    }
+
+    const local = objects.hasKey(key, localContext);
+    const value = objects.getValueForKey(key, local ? localContext : remoteContext);
+    persistValue(key, value, local, sessionOnly);
+  }
 
   /**
    * Merge the specified object into the current context.
@@ -191,11 +270,8 @@ function EvolvContext(store) {
        ' and "contaminations" is deprecated. Please use "experiments.confirmations" and "experiments.contaminations" instead.');
     }
 
-    const valueFromRemote = objects.getValueForKey(key, remoteContext);
-
-    return objects.hasKey(key, remoteContext)
-      ? valueFromRemote
-      : objects.getValueForKey(key, localContext);
+    return objects.getValueForKey(key,
+      objects.hasKey(key, remoteContext)? remoteContext : localContext);
   };
 
   /**
