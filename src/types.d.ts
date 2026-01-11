@@ -156,6 +156,8 @@ export interface WebRemoteContext extends RemoteContext {
 
 export interface LocalContext extends Record<string, any> {}
 
+export type StorageType = 'user' | 'session' | 'none';
+
 export class EvolvContext {
   uid: string;
   remoteContext: RemoteContext | WebRemoteContext;
@@ -170,6 +172,7 @@ export class EvolvContext {
   get<T = any>(key: string): T;
   contains(key: string): boolean;
   pushToArray(key: string, value: any, local?: boolean, limit?: number): boolean;
+  configurePersistence(key: string, storageType: StorageType): void;
 }
 
 export default EvolvClient;
