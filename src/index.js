@@ -54,6 +54,28 @@ function EvolvClient(opts) {
   };
 
   const contextBeacon = new Beacon(options.endpoint + '/' + options.environment + '/data', context, beaconOptions);
+  let ingestionBeacon = null;
+  if (options.ingestionEndpoint) {
+    try {
+      ingestionBeacon = new Beacon(options.ingestionEndpoint + '/' + options.environment + '/data', context, beaconOptions);
+    } catch (err) {
+      console.log('Evolv: Ingestion beacon initialization failed');
+      console.log(err);
+    }
+  }
+
+  function safeIngestionBeaconCall(action) {
+    if (!ingestionBeacon) {
+      return;
+    }
+
+    try {
+      action();
+    } catch (err) {
+      console.log('Evolv: Ingestion beacon error');
+      console.log(err);
+    }
+  }
 
   /**
    * The context against which the key predicates will be evaluated.
@@ -377,6 +399,9 @@ function EvolvClient(opts) {
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
     waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
       contextBeacon.emit(type, context.remoteContext);
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.emit(type, context.remoteContext);
+    });
     });
     waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
       if (local) {
@@ -384,6 +409,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key, value: value});
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.emit(type, {key: key, value: value});
+    });
     });
     waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
       if (local) {
@@ -391,6 +419,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key, value: value});
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.emit(type, {key: key, value: value});
+    });
     });
     waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
       if (local) {
@@ -398,6 +429,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key});
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.emit(type, {key: key});
+    });
     });
 
     if (options.autoConfirm) {
@@ -414,6 +448,9 @@ function EvolvClient(opts) {
    */
   this.flush = function() {
     contextBeacon.flush();
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.flush();
+    });
   };
 
   /**
@@ -423,6 +460,9 @@ function EvolvClient(opts) {
    */
   this.allowEvents = function() {
     contextBeacon.unblockAndFlush();
+    safeIngestionBeaconCall(function() {
+      ingestionBeacon.unblockAndFlush();
+    });
   };
 
   /**

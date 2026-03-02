@@ -32,6 +32,7 @@ declare interface SubscribablePromise<T = any> extends Promise<T> {
 export interface EvolvClientOptions {
   environment: string;
   endpoint?: string;
+  ingestionEndpoint?: string;
   lazyUid?: boolean;
   requireConsent?: boolean;
   js?: boolean;

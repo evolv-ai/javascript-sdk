@@ -738,6 +738,101 @@ describe('Evolv client integration tests', () => {
       expect(messages[16]).to.be.a.message("context.value.changed", "keys.active", []);
       expect(messages[17]).to.be.a.message("context.value.changed", "variants.active", []);
     });
+
+    it('should send beacon payloads to both existing and ingestion endpoints', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
+      const ingestionEndpoint = 'https://participants-new-ingest.evolv.ai/v2';
+      const version = 2;
+      const existingPayloads = [];
+      const ingestionPayloads = [];
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {},
+          _experiments: []
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+
+      xhrMock.post(`${endpoint}v${version}/${environment}/data`, (req, res) => {
+        existingPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      xhrMock.post(`${ingestionEndpoint}/${environment}/data`, (req, res) => {
+        ingestionPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      const client = new Evolv({
+        environment,
+        endpoint,
+        ingestionEndpoint,
+        version
+      });
+
+      client.initialize(uid, { remote: true }, { local: true });
+      client.flush();
+
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(existingPayloads.length).to.be.greaterThan(0);
+      expect(ingestionPayloads.length).to.equal(existingPayloads.length);
+      expect(ingestionPayloads[0]).to.eql(existingPayloads[0]);
+    });
+
+    it('should keep existing beacon path working when ingestion endpoint fails', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants-frazer.evolv.ai/';
+      const ingestionEndpoint = 'https://participants-new-ingest.evolv.ai/v2';
+      const version = 2;
+      const existingPayloads = [];
+      let ingestionAttempts = 0;
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {},
+          _experiments: []
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+
+      xhrMock.post(`${endpoint}v${version}/${environment}/data`, (req, res) => {
+        existingPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      xhrMock.post(`${ingestionEndpoint}/${environment}/data`, (req, res) => {
+        ingestionAttempts += 1;
+        return res.status(500).body('boom');
+      });
+
+      const client = new Evolv({
+        environment,
+        endpoint,
+        ingestionEndpoint,
+        version
+      });
+
+      client.initialize(uid, { remote: true }, { local: true });
+      client.flush();
+
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(existingPayloads.length).to.be.greaterThan(0);
+      expect(ingestionAttempts).to.be.greaterThan(0);
+    });
   });
 
   describe('prevent beacon', () => {
