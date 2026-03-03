@@ -742,8 +742,8 @@ describe('Evolv client integration tests', () => {
     it('should send beacon payloads to both existing and ingestion endpoints', async () => {
       const uid = 123;
       const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const ingestionEndpoint = 'https://participants-new-ingest.evolv.ai/v2';
+      const endpoint = 'https://participants.evolv.ai/';
+      const ingestionEndpoint = 'https://analytics-data.evolvdev.com';
       const version = 2;
       const existingPayloads = [];
       const ingestionPayloads = [];
@@ -790,8 +790,8 @@ describe('Evolv client integration tests', () => {
     it('should keep existing beacon path working when ingestion endpoint fails', async () => {
       const uid = 123;
       const environment = '579b106c73';
-      const endpoint = 'https://participants-frazer.evolv.ai/';
-      const ingestionEndpoint = 'https://participants-new-ingest.evolv.ai/v2';
+      const endpoint = 'https://participants.evolv.ai/';
+      const ingestionEndpoint = 'https://analytics-data.evolvdev.com';
       const version = 2;
       const existingPayloads = [];
       let ingestionAttempts = 0;
@@ -832,6 +832,161 @@ describe('Evolv client integration tests', () => {
 
       expect(existingPayloads.length).to.be.greaterThan(0);
       expect(ingestionAttempts).to.be.greaterThan(0);
+    });
+
+    it('should not send to ingestion endpoint when ingestionEndpoint is not configured', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants.evolv.ai/';
+      const ingestionEndpoint = 'https://analytics-data.evolvdev.com';
+      const version = 2;
+      const existingPayloads = [];
+      const ingestionPayloads = [];
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {},
+          _experiments: []
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+
+      xhrMock.post(`${endpoint}v${version}/${environment}/data`, (req, res) => {
+        existingPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      xhrMock.post(`${ingestionEndpoint}/${environment}/data`, (req, res) => {
+        ingestionPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      const client = new Evolv({
+        environment,
+        endpoint,
+        version
+      });
+
+      client.initialize(uid, { remote: true }, { local: true });
+      client.flush();
+
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(existingPayloads.length).to.be.greaterThan(0);
+      expect(ingestionPayloads.length).to.equal(0);
+    });
+
+    it('should block and unblock both beacons with bufferEvents', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants.evolv.ai/';
+      const ingestionEndpoint = 'https://analytics-data.evolvdev.com';
+      const version = 2;
+      const existingPayloads = [];
+      const ingestionPayloads = [];
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {},
+          _experiments: []
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+
+      xhrMock.post(`${endpoint}v${version}/${environment}/data`, (req, res) => {
+        existingPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      xhrMock.post(`${ingestionEndpoint}/${environment}/data`, (req, res) => {
+        ingestionPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      const client = new Evolv({
+        environment,
+        endpoint,
+        ingestionEndpoint,
+        version,
+        bufferEvents: true
+      });
+
+      client.initialize(uid, { remote: true }, { local: true });
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(existingPayloads.length).to.equal(0);
+      expect(ingestionPayloads.length).to.equal(0);
+
+      client.allowEvents();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(existingPayloads.length).to.be.greaterThan(0);
+      expect(ingestionPayloads.length).to.equal(existingPayloads.length);
+    });
+
+    it('should flush queued remote context updates to both endpoints', async () => {
+      const uid = 123;
+      const environment = '579b106c73';
+      const endpoint = 'https://participants.evolv.ai/';
+      const ingestionEndpoint = 'https://analytics-data.evolvdev.com';
+      const version = 2;
+      const existingPayloads = [];
+      const ingestionPayloads = [];
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/configuration.json`, (req, res) => {
+        return res.status(200).body(JSON.stringify({
+          _published: 1584475383.3865728,
+          _client: {},
+          _experiments: []
+        }));
+      });
+
+      xhrMock.get(`${endpoint}v${version}/${environment}/${uid}/allocations`, (req, res) => {
+        return res.status(200).body(JSON.stringify([]));
+      });
+
+      xhrMock.post(`${endpoint}v${version}/${environment}/data`, (req, res) => {
+        existingPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      xhrMock.post(`${ingestionEndpoint}/${environment}/data`, (req, res) => {
+        ingestionPayloads.push(JSON.parse(req.body()));
+        return res.status(202);
+      });
+
+      const client = new Evolv({
+        environment,
+        endpoint,
+        ingestionEndpoint,
+        version
+      });
+
+      client.initialize(uid, { remote: true }, { local: true });
+      client.flush();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      existingPayloads.length = 0;
+      ingestionPayloads.length = 0;
+
+      client.context.set('new.remote.key', 'value');
+      client.flush();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      expect(existingPayloads.length).to.be.greaterThan(0);
+      expect(ingestionPayloads.length).to.equal(existingPayloads.length);
+      expect(existingPayloads[0].messages.some(function(msg) {
+        return msg.type === 'context.value.added' && msg.payload.key === 'new.remote.key';
+      })).to.be.true;
+      expect(ingestionPayloads[0].messages.some(function(msg) {
+        return msg.type === 'context.value.added' && msg.payload.key === 'new.remote.key';
+      })).to.be.true;
     });
   });
 
