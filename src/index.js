@@ -399,9 +399,9 @@ function EvolvClient(opts) {
     /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "ctx" }]*/
     waitFor(context, CONTEXT_INITIALIZED, function (type, ctx) {
       contextBeacon.emit(type, context.remoteContext);
-    safeIngestionBeaconCall(function() {
-      ingestionBeacon.emit(type, context.remoteContext);
-    });
+      safeIngestionBeaconCall(function() {
+        ingestionBeacon.emit(type, context.remoteContext);
+      });
     });
     waitFor(context, CONTEXT_VALUE_ADDED, function (type, key, value, local) {
       if (local) {
@@ -409,9 +409,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key, value: value});
-    safeIngestionBeaconCall(function() {
-      ingestionBeacon.emit(type, {key: key, value: value});
-    });
+      safeIngestionBeaconCall(function() {
+        ingestionBeacon.emit(type, {key: key, value: value});
+      });
     });
     waitFor(context, CONTEXT_VALUE_CHANGED, function (type, key, value, before, local) {
       if (local) {
@@ -419,9 +419,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key, value: value});
-    safeIngestionBeaconCall(function() {
-      ingestionBeacon.emit(type, {key: key, value: value});
-    });
+      safeIngestionBeaconCall(function() {
+        ingestionBeacon.emit(type, {key: key, value: value});
+      });
     });
     waitFor(context, CONTEXT_VALUE_REMOVED, function (type, key, local) {
       if (local) {
@@ -429,9 +429,9 @@ function EvolvClient(opts) {
       }
 
       contextBeacon.emit(type, {key: key});
-    safeIngestionBeaconCall(function() {
-      ingestionBeacon.emit(type, {key: key});
-    });
+      safeIngestionBeaconCall(function() {
+        ingestionBeacon.emit(type, {key: key});
+      });
     });
 
     if (options.autoConfirm) {
